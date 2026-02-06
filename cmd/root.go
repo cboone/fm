@@ -17,8 +17,9 @@ import (
 var ErrSilent = errors.New("error already printed")
 
 var (
-	cfgFile string
-	rootCmd = &cobra.Command{
+	cfgFile       string
+	initConfigErr error
+	rootCmd       = &cobra.Command{
 		Use:   "jm",
 		Short: "JMAP Mail -- a safe, read-oriented CLI for JMAP email (Fastmail)",
 		Long: `jm is a command-line tool for reading, searching, and triaging email
@@ -55,9 +56,18 @@ func init() {
 			panic(fmt.Sprintf("failed to bind flag %q: %v", bind.flag, err))
 		}
 	}
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if initConfigErr != nil {
+			return exitError("config_error", "failed to read config: "+initConfigErr.Error(), configErrorHint())
+		}
+		return nil
+	}
 }
 
 func initConfig() {
+	initConfigErr = nil
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -76,8 +86,20 @@ func initConfig() {
 	viper.SetDefault("session_url", "https://api.fastmail.com/jmap/session")
 	viper.SetDefault("format", "json")
 
-	// Ignore errors if config file doesn't exist.
-	viper.ReadInConfig()
+	if err := viper.ReadInConfig(); err != nil {
+		var notFound viper.ConfigFileNotFoundError
+		if errors.As(err, &notFound) {
+			return
+		}
+		initConfigErr = err
+	}
+}
+
+func configErrorHint() string {
+	if cfgFile != "" {
+		return "Fix the syntax in " + cfgFile + " or choose another file with --config"
+	}
+	return "Fix the syntax in ~/.config/jm/config.yaml or use --config"
 }
 
 // newClient creates an authenticated JMAP client from the current config.
