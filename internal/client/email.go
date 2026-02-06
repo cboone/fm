@@ -2,12 +2,14 @@ package client
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/mail"
 	"git.sr.ht/~rockorager/go-jmap/mail/email"
 	"git.sr.ht/~rockorager/go-jmap/mail/searchsnippet"
+	"git.sr.ht/~rockorager/go-jmap/mail/thread"
 
 	"github.com/cboone/jm/internal/types"
 )
@@ -135,40 +137,70 @@ func (c *Client) ReadEmail(emailID string, preferHTML bool, rawHeaders bool) (ty
 	return types.EmailDetail{}, fmt.Errorf("email/get: unexpected response")
 }
 
-// ReadThread retrieves the full thread for an email. It searches by subject
-// and filters by threadId client-side, since JMAP Email/query has no direct
-// threadId filter.
+// ReadThread retrieves the full thread for an email using Thread/get.
 func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (types.ThreadView, error) {
 	detail, err := c.ReadEmail(emailID, preferHTML, rawHeaders)
 	if err != nil {
 		return types.ThreadView{}, err
 	}
 
-	targetThreadID := jmap.ID(detail.ThreadID)
+	if detail.ThreadID == "" {
+		return types.ThreadView{
+			Email:  detail,
+			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+		}, nil
+	}
 
-	// Search by subject to find sibling emails, then filter by threadId.
 	req := &jmap.Request{}
-	queryCallID := req.Invoke(&email.Query{
-		Account: c.accountID,
-		Filter: &email.FilterCondition{
-			Subject: detail.Subject,
-		},
-		Sort:  []*email.SortComparator{{Property: "receivedAt", IsAscending: true}},
-		Limit: 50,
-	})
-	req.Invoke(&email.Get{
+	req.Invoke(&thread.Get{
 		Account:    c.accountID,
-		Properties: []string{"id", "threadId", "from", "to", "subject", "receivedAt", "preview", "keywords"},
-		ReferenceIDs: &jmap.ResultReference{
-			ResultOf: queryCallID,
-			Name:     "Email/query",
-			Path:     "/ids",
-		},
+		IDs:        []jmap.ID{jmap.ID(detail.ThreadID)},
+		Properties: []string{"id", "emailIds"},
 	})
 
 	resp, err := c.Do(req)
 	if err != nil {
-		// If thread lookup fails, return just the single email.
+		return types.ThreadView{
+			Email:  detail,
+			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+		}, nil
+	}
+
+	var threadEmailIDs []jmap.ID
+	for _, inv := range resp.Responses {
+		switch r := inv.Args.(type) {
+		case *thread.GetResponse:
+			if len(r.NotFound) > 0 || len(r.List) == 0 {
+				return types.ThreadView{
+					Email:  detail,
+					Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+				}, nil
+			}
+			threadEmailIDs = r.List[0].EmailIDs
+		case *jmap.MethodError:
+			return types.ThreadView{
+				Email:  detail,
+				Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+			}, nil
+		}
+	}
+
+	if len(threadEmailIDs) == 0 {
+		return types.ThreadView{
+			Email:  detail,
+			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+		}, nil
+	}
+
+	req = &jmap.Request{}
+	req.Invoke(&email.Get{
+		Account:    c.accountID,
+		IDs:        threadEmailIDs,
+		Properties: []string{"id", "threadId", "from", "to", "subject", "receivedAt", "preview", "keywords"},
+	})
+
+	resp, err = c.Do(req)
+	if err != nil {
 		return types.ThreadView{
 			Email:  detail,
 			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
@@ -177,11 +209,9 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 
 	var threadEmails []types.ThreadEmail
 	for _, inv := range resp.Responses {
-		if r, ok := inv.Args.(*email.GetResponse); ok {
+		switch r := inv.Args.(type) {
+		case *email.GetResponse:
 			for _, e := range r.List {
-				if e.ThreadID != targetThreadID {
-					continue
-				}
 				threadEmails = append(threadEmails, types.ThreadEmail{
 					ID:         string(e.ID),
 					From:       convertAddresses(e.From),
@@ -192,12 +222,21 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 					IsUnread:   !e.Keywords["$seen"],
 				})
 			}
+		case *jmap.MethodError:
+			return types.ThreadView{
+				Email:  detail,
+				Thread: []types.ThreadEmail{singleThreadEntry(detail)},
+			}, nil
 		}
 	}
 
 	if len(threadEmails) == 0 {
 		threadEmails = []types.ThreadEmail{singleThreadEntry(detail)}
 	}
+
+	sort.Slice(threadEmails, func(i, j int) bool {
+		return threadEmails[i].ReceivedAt.Before(threadEmails[j].ReceivedAt)
+	})
 
 	return types.ThreadView{
 		Email:  detail,
@@ -391,8 +430,8 @@ func (c *Client) MarkAsSpam(emailIDs []string, junkMailboxID jmap.ID) (succeeded
 		updates := make(map[jmap.ID]jmap.Patch)
 		for _, id := range batch {
 			updates[jmap.ID(id)] = jmap.Patch{
-				"mailboxIds":       map[jmap.ID]bool{junkMailboxID: true},
-				"keywords/$junk":   true,
+				"mailboxIds":     map[jmap.ID]bool{junkMailboxID: true},
+				"keywords/$junk": true,
 			}
 		}
 
