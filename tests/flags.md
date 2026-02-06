@@ -114,8 +114,21 @@ $ $TESTDIR/../jm search "test" --from alice --to bob --subject meeting --before 
 ```scrut
 $ $TESTDIR/../jm search --before "not-a-date" --token test --session-url http://localhost:1/jmap 2>&1
 {
-  "error": "authentication_failed",
-* (glob+)
+  "error": "general_error",
+  "message": "invalid --before date: *",
+  "hint": "Use RFC 3339 format, e.g. 2026-01-15T00:00:00Z"
+}
+[1]
+```
+
+## List with invalid limit
+
+```scrut
+$ $TESTDIR/../jm list --limit 0 2>&1
+{
+  "error": "general_error",
+  "message": "--limit must be at least 1"
+}
 [1]
 ```
 

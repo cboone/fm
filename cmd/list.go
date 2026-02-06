@@ -11,12 +11,6 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List emails in a mailbox",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := newClient()
-		if err != nil {
-			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
-		}
-
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
 		limit, _ := cmd.Flags().GetUint64("limit")
 		if limit == 0 {
@@ -27,6 +21,12 @@ var listCmd = &cobra.Command{
 		sort, _ := cmd.Flags().GetString("sort")
 
 		sortField, sortAsc := parseSort(sort)
+
+		c, err := newClient()
+		if err != nil {
+			return exitError("authentication_failed", err.Error(),
+				"Check your token in JMAP_TOKEN or config file")
+		}
 
 		result, err := c.ListEmails(mailboxName, limit, offset, unread, sortField, sortAsc)
 		if err != nil {

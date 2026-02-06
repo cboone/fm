@@ -17,12 +17,6 @@ The positional <query> argument searches across subject, from, to, and body.
 Use flags for more specific filtering.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := newClient()
-		if err != nil {
-			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
-		}
-
 		opts := client.SearchOptions{}
 
 		if len(args) > 0 {
@@ -39,13 +33,6 @@ Use flags for more specific filtering.`,
 		}
 
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
-		if mailboxName != "" {
-			mailboxID, err := c.ResolveMailboxID(mailboxName)
-			if err != nil {
-				return exitError("not_found", err.Error(), "")
-			}
-			opts.MailboxID = string(mailboxID)
-		}
 
 		if beforeStr, _ := cmd.Flags().GetString("before"); beforeStr != "" {
 			t, err := time.Parse(time.RFC3339, beforeStr)
@@ -63,6 +50,20 @@ Use flags for more specific filtering.`,
 					"Use RFC 3339 format, e.g. 2026-01-15T00:00:00Z")
 			}
 			opts.After = &t
+		}
+
+		c, err := newClient()
+		if err != nil {
+			return exitError("authentication_failed", err.Error(),
+				"Check your token in JMAP_TOKEN or config file")
+		}
+
+		if mailboxName != "" {
+			mailboxID, err := c.ResolveMailboxID(mailboxName)
+			if err != nil {
+				return exitError("not_found", err.Error(), "")
+			}
+			opts.MailboxID = string(mailboxID)
 		}
 
 		result, err := c.SearchEmails(opts)
