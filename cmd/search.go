@@ -34,6 +34,9 @@ Use flags for more specific filtering.`,
 		opts.Subject, _ = cmd.Flags().GetString("subject")
 		opts.HasAttachment, _ = cmd.Flags().GetBool("has-attachment")
 		opts.Limit, _ = cmd.Flags().GetUint64("limit")
+		if opts.Limit == 0 {
+			return exitError("general_error", "--limit must be at least 1", "")
+		}
 
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
 		if mailboxName != "" {

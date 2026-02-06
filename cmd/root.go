@@ -45,10 +45,16 @@ func init() {
 	rootCmd.PersistentFlags().String("format", "json", "output format: json or text")
 	rootCmd.PersistentFlags().String("account-id", "", "JMAP account ID (auto-detected if blank)")
 
-	viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
-	viper.BindPFlag("session_url", rootCmd.PersistentFlags().Lookup("session-url"))
-	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
-	viper.BindPFlag("account_id", rootCmd.PersistentFlags().Lookup("account-id"))
+	for _, bind := range []struct{ key, flag string }{
+		{"token", "token"},
+		{"session_url", "session-url"},
+		{"format", "format"},
+		{"account_id", "account-id"},
+	} {
+		if err := viper.BindPFlag(bind.key, rootCmd.PersistentFlags().Lookup(bind.flag)); err != nil {
+			panic(fmt.Sprintf("failed to bind flag %q: %v", bind.flag, err))
+		}
+	}
 }
 
 func initConfig() {

@@ -19,6 +19,9 @@ var listCmd = &cobra.Command{
 
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
 		limit, _ := cmd.Flags().GetUint64("limit")
+		if limit == 0 {
+			return exitError("general_error", "--limit must be at least 1", "")
+		}
 		offset, _ := cmd.Flags().GetInt64("offset")
 		unread, _ := cmd.Flags().GetBool("unread")
 		sort, _ := cmd.Flags().GetString("sort")

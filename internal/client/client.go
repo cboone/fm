@@ -108,12 +108,13 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			return resp, nil
 		}
 		if attempt == maxRetries {
-			return resp, nil
+			resp.Body.Close()
+			return nil, fmt.Errorf("max retries exceeded: received status %d", resp.StatusCode)
 		}
 
 		wait := retryDelay(resp, attempt)
-		time.Sleep(wait)
 		resp.Body.Close()
+		time.Sleep(wait)
 	}
 
 	return resp, err

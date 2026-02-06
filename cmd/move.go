@@ -17,9 +17,6 @@ Moving to Trash or Deleted Items is not permitted.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		target, _ := cmd.Flags().GetString("to")
-		if target == "" {
-			return exitError("general_error", "--to flag is required", "Specify a target mailbox name or ID")
-		}
 
 		c, err := newClient()
 		if err != nil {
