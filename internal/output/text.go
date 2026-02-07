@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/cboone/jm/internal/types"
@@ -42,7 +43,13 @@ func (f *TextFormatter) FormatError(w io.Writer, code string, message string, hi
 func (f *TextFormatter) formatSession(w io.Writer, s types.SessionInfo) error {
 	fmt.Fprintf(w, "Username: %s\n", s.Username)
 	fmt.Fprintf(w, "Capabilities: %s\n", strings.Join(s.Capabilities, ", "))
-	for id, acct := range s.Accounts {
+	ids := make([]string, 0, len(s.Accounts))
+	for id := range s.Accounts {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	for _, id := range ids {
+		acct := s.Accounts[id]
 		personal := ""
 		if acct.IsPersonal {
 			personal = " (personal)"

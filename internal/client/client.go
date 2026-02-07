@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -83,6 +84,7 @@ func (c *Client) SessionInfo() types.SessionInfo {
 	for uri := range s.Capabilities {
 		caps = append(caps, string(uri))
 	}
+	sort.Strings(caps)
 
 	return types.SessionInfo{
 		Username:     s.Username,
