@@ -121,10 +121,10 @@ func (c *Client) ReadEmail(emailID string, preferHTML bool, rawHeaders bool) (ty
 		switch r := inv.Args.(type) {
 		case *email.GetResponse:
 			if len(r.NotFound) > 0 {
-				return types.EmailDetail{}, fmt.Errorf("email not found: %s", emailID)
+				return types.EmailDetail{}, fmt.Errorf("email %s: %w", emailID, ErrNotFound)
 			}
 			if len(r.List) == 0 {
-				return types.EmailDetail{}, fmt.Errorf("email not found: %s", emailID)
+				return types.EmailDetail{}, fmt.Errorf("email %s: %w", emailID, ErrNotFound)
 			}
 			return convertDetail(r.List[0], preferHTML, rawHeaders), nil
 		case *jmap.MethodError:

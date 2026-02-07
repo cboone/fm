@@ -14,6 +14,9 @@ import (
 	"github.com/cboone/jm/internal/types"
 )
 
+// ErrNotFound indicates that a requested resource was not found.
+var ErrNotFound = fmt.Errorf("not found")
+
 const maxRetries = 3
 
 // Client wraps the go-jmap client with convenience methods and safety guardrails.

@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"os"
-	"strings"
 
+	"github.com/cboone/jm/internal/client"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ var readCmd = &cobra.Command{
 
 // readErrorCode returns "not_found" for missing-email errors and "jmap_error" for others.
 func readErrorCode(err error) string {
-	if strings.Contains(err.Error(), "not found") {
+	if errors.Is(err, client.ErrNotFound) {
 		return "not_found"
 	}
 	return "jmap_error"
