@@ -127,7 +127,14 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		wait := retryDelay(resp, attempt)
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
-		time.Sleep(wait)
+
+		timer := time.NewTimer(wait)
+		select {
+		case <-timer.C:
+		case <-req.Context().Done():
+			timer.Stop()
+			return nil, req.Context().Err()
+		}
 	}
 
 	return resp, err
