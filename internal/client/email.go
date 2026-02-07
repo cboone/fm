@@ -107,11 +107,9 @@ func (c *Client) ReadEmail(emailID string, preferHTML bool, rawHeaders bool) (ty
 			"partId", "blobId", "size", "name", "type", "charset", "disposition",
 		},
 	}
-	if preferHTML {
-		get.FetchHTMLBodyValues = true
-	} else {
-		get.FetchTextBodyValues = true
-	}
+	// Always fetch both so extractBody can fall back between HTML and text.
+	get.FetchHTMLBodyValues = true
+	get.FetchTextBodyValues = true
 	req.Invoke(get)
 
 	resp, err := c.Do(req)

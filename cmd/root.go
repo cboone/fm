@@ -61,6 +61,12 @@ func init() {
 		if initConfigErr != nil {
 			return exitError("config_error", "failed to read config: "+initConfigErr.Error(), configErrorHint())
 		}
+		format := viper.GetString("format")
+		if format != "json" && format != "text" {
+			return exitError("general_error",
+				fmt.Sprintf("unsupported output format: %q", format),
+				"supported formats: json, text")
+		}
 		return nil
 	}
 }
