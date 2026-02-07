@@ -47,4 +47,14 @@ jm move <email-id> --to Receipts     # move to a named mailbox
 - No deleting email (no `Email/set` destroy, no move to Trash)
 - The `move` command refuses Trash, Deleted Items, and Deleted Messages
 
+## Development
+
+```bash
+make          # build the binary
+make test     # run unit tests
+make test-cli # build + run scrut CLI tests
+make test-all # run all tests (unit + CLI)
+make help     # show all targets
+```
+
 See [PLAN.md](PLAN.md) for the full design document.
