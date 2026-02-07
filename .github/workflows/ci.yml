@@ -17,13 +17,10 @@ jobs:
           go-version-file: go.mod
 
       - name: Run unit tests
-        run: go test ./...
-
-      - name: Build binary
-        run: go build -o jm .
+        run: make test
 
       - name: Install scrut
         run: curl --proto '=https' --tlsv1.2 -sSf https://facebookincubator.github.io/scrut/install.sh | bash
 
       - name: Run CLI tests
-        run: scrut test tests/
+        run: make test-cli
