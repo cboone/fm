@@ -51,7 +51,9 @@ func TestMailboxInfo_JSON_WithParent(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["parent_id"] != "mb1" {
 		t.Errorf("expected parent_id=mb1, got %v", result["parent_id"])
@@ -79,7 +81,9 @@ func TestEmailSummary_JSON(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["id"] != "M1" {
 		t.Errorf("expected id=M1, got %v", result["id"])
@@ -107,7 +111,9 @@ func TestEmailSummary_JSON_WithSnippet(t *testing.T) {
 
 	data, _ := json.Marshal(s)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["snippet"] != "matching text" {
 		t.Errorf("expected snippet, got %v", result["snippet"])
@@ -137,7 +143,9 @@ func TestEmailDetail_JSON(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["body"] != "Hello" {
 		t.Errorf("expected body=Hello, got %v", result["body"])
@@ -161,7 +169,9 @@ func TestEmailDetail_JSON_NullSentAt(t *testing.T) {
 
 	data, _ := json.Marshal(detail)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, ok := result["sent_at"]; ok {
 		// sent_at should be null or omitted.
@@ -186,7 +196,9 @@ func TestMoveResult_JSON_Archive(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	archived, ok := result["archived"].([]interface{})
 	if !ok {
@@ -212,7 +224,9 @@ func TestMoveResult_JSON_Spam(t *testing.T) {
 
 	data, _ := json.Marshal(r)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	spam, ok := result["marked_as_spam"].([]interface{})
 	if !ok {
@@ -231,7 +245,9 @@ func TestMoveResult_JSON_WithErrors(t *testing.T) {
 
 	data, _ := json.Marshal(r)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	errors, ok := result["errors"].([]interface{})
 	if !ok {
@@ -258,7 +274,9 @@ func TestAppError_JSON(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["error"] != "auth_failed" {
 		t.Errorf("expected error=auth_failed, got %v", result["error"])
@@ -277,7 +295,9 @@ func TestAppError_JSON_EmptyHint(t *testing.T) {
 
 	data, _ := json.Marshal(e)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	// Hint has omitempty, so it should be absent when empty.
 	if _, ok := result["hint"]; ok {
@@ -316,7 +336,9 @@ func TestThreadView_JSON(t *testing.T) {
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	thread, ok := result["thread"].([]interface{})
 	if !ok {
@@ -339,7 +361,9 @@ func TestAddress_JSON(t *testing.T) {
 	a := Address{Name: "Alice", Email: "alice@test.com"}
 	data, _ := json.Marshal(a)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["name"] != "Alice" {
 		t.Errorf("expected name=Alice, got %v", result["name"])
@@ -358,7 +382,9 @@ func TestEmailListResult_JSON(t *testing.T) {
 
 	data, _ := json.Marshal(r)
 	var result map[string]interface{}
-	json.Unmarshal(data, &result)
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
 
 	if result["total"] != float64(42) {
 		t.Errorf("expected total=42, got %v", result["total"])

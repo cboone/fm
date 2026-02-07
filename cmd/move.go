@@ -52,6 +52,8 @@ Moving to Trash or Deleted Items is not permitted.`,
 
 func init() {
 	moveCmd.Flags().String("to", "", "target mailbox name or ID (required)")
-	moveCmd.MarkFlagRequired("to")
+	if err := moveCmd.MarkFlagRequired("to"); err != nil {
+		panic(err)
+	}
 	rootCmd.AddCommand(moveCmd)
 }

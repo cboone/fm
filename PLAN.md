@@ -248,10 +248,11 @@ out of scope for this tool.
 
 ---
 
-### `jm search <query>`
+### `jm search [query]`
 
-Full-text search across emails. Uses JMAP's `text` filter which matches against
-subject, from, to, and body content.
+Full-text search across emails. If `query` is provided, it is used with JMAP's
+`text` filter, which matches against subject, from, to, and body content; if
+omitted, a filter-only search is performed using the flags below.
 
 **Flags:**
 
@@ -401,28 +402,27 @@ internal representations.
 
 ## Safety Implementation (`internal/client/safety.go`)
 
-Centralized safety checks, called before any `Email/set` invocation:
+Safety is enforced through two complementary mechanisms:
+
+**1. Structural omission** -- `MoveEmails` and `MarkAsSpam` in `email.go` only
+populate the `Update` field of `Email/set`. The `Destroy` and `Create` fields are
+never set, making destructive operations and outbound email structurally impossible.
+
+**2. Runtime validation** -- `ValidateTargetMailbox` in `safety.go` rejects
+trash-role mailboxes and known trash folder names, preventing indirect deletion:
 
 ```go
-// Blocked operations -- these functions always return an error
-func ValidateNoDestroy(ids []string) error       // prevents Email/set destroy
-func ValidateNoSubmission() error                // prevents EmailSubmission calls
-func ValidateTargetMailbox(mailbox Mailbox) error // rejects trash-role targets
+func ValidateTargetMailbox(mb *mailbox.Mailbox) error // rejects trash-role targets
 ```
 
-The `Email/set` wrapper in `client.go` will:
-1. Never populate the `Destroy` field
-2. Never create emails (no `Create` field)
-3. Only use `Update` to change `mailboxIds` and `keywords`
-
-These are **compile-time structural guarantees**, not just runtime checks -- the
-wrapper functions simply don't accept parameters for forbidden operations.
+The `move` command calls `ValidateTargetMailbox` before issuing `Email/set`.
 
 ---
 
 ## Error Handling
 
-All errors are returned as structured JSON to stderr:
+Runtime command execution errors are returned as structured JSON to stderr (Cobra
+argument/flag validation errors use Cobra's default plain-text format):
 
 ```json
 {
@@ -441,9 +441,7 @@ Categories:
 
 Exit codes:
 - `0` -- success
-- `1` -- general error
-- `2` -- authentication error
-- `3` -- forbidden operation (safety guardrail triggered)
+- `1` -- all errors (authentication, not-found, forbidden, JMAP, network)
 
 ---
 

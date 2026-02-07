@@ -160,10 +160,7 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return types.ThreadView{
-			Email:  detail,
-			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
-		}, nil
+		return types.ThreadView{}, fmt.Errorf("thread/get: %w", err)
 	}
 
 	var threadEmailIDs []jmap.ID
@@ -178,10 +175,7 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 			}
 			threadEmailIDs = r.List[0].EmailIDs
 		case *jmap.MethodError:
-			return types.ThreadView{
-				Email:  detail,
-				Thread: []types.ThreadEmail{singleThreadEntry(detail)},
-			}, nil
+			return types.ThreadView{}, fmt.Errorf("thread/get: %s", r.Error())
 		}
 	}
 
@@ -201,10 +195,7 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 
 	resp, err = c.Do(req)
 	if err != nil {
-		return types.ThreadView{
-			Email:  detail,
-			Thread: []types.ThreadEmail{singleThreadEntry(detail)},
-		}, nil
+		return types.ThreadView{}, fmt.Errorf("thread email/get: %w", err)
 	}
 
 	var threadEmails []types.ThreadEmail
@@ -223,10 +214,7 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 				})
 			}
 		case *jmap.MethodError:
-			return types.ThreadView{
-				Email:  detail,
-				Thread: []types.ThreadEmail{singleThreadEntry(detail)},
-			}, nil
+			return types.ThreadView{}, fmt.Errorf("thread email/get: %s", r.Error())
 		}
 	}
 
@@ -367,6 +355,8 @@ type SearchOptions struct {
 // MoveEmails moves emails to a target mailbox by updating their mailboxIds.
 // It structurally cannot destroy emails or create new ones.
 func (c *Client) MoveEmails(emailIDs []string, targetMailboxID jmap.ID) (succeeded []string, errors []string) {
+	succeeded = []string{}
+	errors = []string{}
 	for start := 0; start < len(emailIDs); start += batchSize {
 		end := start + batchSize
 		if end > len(emailIDs) {
@@ -420,6 +410,8 @@ func (c *Client) MoveEmails(emailIDs []string, targetMailboxID jmap.ID) (succeed
 
 // MarkAsSpam moves emails to junk and sets the $junk keyword.
 func (c *Client) MarkAsSpam(emailIDs []string, junkMailboxID jmap.ID) (succeeded []string, errors []string) {
+	succeeded = []string{}
+	errors = []string{}
 	for start := 0; start < len(emailIDs); start += batchSize {
 		end := start + batchSize
 		if end > len(emailIDs) {

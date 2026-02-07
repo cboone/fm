@@ -10,11 +10,11 @@ import (
 )
 
 var searchCmd = &cobra.Command{
-	Use:   "search <query>",
+	Use:   "search [query]",
 	Short: "Search emails by text and filters",
 	Long: `Search emails using full-text search and/or structured filters.
-The positional <query> argument searches across subject, from, to, and body.
-Use flags for more specific filtering.`,
+The optional [query] argument searches across subject, from, to, and body.
+If omitted, only the provided flags/filters are used for matching.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := client.SearchOptions{}
