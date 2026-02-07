@@ -23,7 +23,7 @@ jobs:
         run: go build -o jm .
 
       - name: Install scrut
-        run: curl --proto '=https' --tlsv1.2 -sSf https://facebookincubator.github.io/scrut/install.sh | sh
+        run: curl --proto '=https' --tlsv1.2 -sSf https://facebookincubator.github.io/scrut/install.sh | bash
 
       - name: Run CLI tests
         run: scrut tests/
