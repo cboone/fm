@@ -46,7 +46,15 @@ Moving to Trash or Deleted Items is not permitted.`,
 			},
 		}
 
-		return formatter().Format(os.Stdout, result)
+		if err := formatter().Format(os.Stdout, result); err != nil {
+			return err
+		}
+
+		if len(errors) > 0 {
+			return exitError("partial_failure", "one or more emails failed to move", "")
+		}
+
+		return nil
 	},
 }
 

@@ -36,7 +36,15 @@ var spamCmd = &cobra.Command{
 			},
 		}
 
-		return formatter().Format(os.Stdout, result)
+		if err := formatter().Format(os.Stdout, result); err != nil {
+			return err
+		}
+
+		if len(errors) > 0 {
+			return exitError("partial_failure", "one or more emails failed to mark as spam", "")
+		}
+
+		return nil
 	},
 }
 
