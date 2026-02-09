@@ -110,7 +110,7 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 ## Invalid token produces connection error
 
 ```scrut
-$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID $TESTDIR/../jm session --token "invalid-token-xxx" 2>&1
+$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm session --token "invalid-token-xxx" 2>&1
 {
   "error": "authentication_failed",
 * (glob+)

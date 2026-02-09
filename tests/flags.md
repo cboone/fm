@@ -40,7 +40,7 @@ When a token is set via env var, the error changes from "no token" to
 a connection/auth error.
 
 ```scrut
-$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID JMAP_TOKEN=test-token $TESTDIR/../jm session 2>&1
+$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent JMAP_TOKEN=test-token $TESTDIR/../jm session 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -50,7 +50,7 @@ $ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID JMAP_TOKEN=test-toke
 ## Token flag overrides env var
 
 ```scrut
-$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID JMAP_TOKEN=env-token $TESTDIR/../jm session --token flag-token 2>&1
+$ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent JMAP_TOKEN=env-token $TESTDIR/../jm session --token flag-token 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -70,7 +70,7 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 ## JMAP_SESSION_URL env var
 
 ```scrut
-$ env -u JMAP_FORMAT -u JMAP_ACCOUNT_ID JMAP_TOKEN=test JMAP_SESSION_URL=http://localhost:1/jmap $TESTDIR/../jm session 2>&1
+$ env -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent JMAP_TOKEN=test JMAP_SESSION_URL=http://localhost:1/jmap $TESTDIR/../jm session 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -112,7 +112,7 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 ## Search with invalid date format
 
 ```scrut
-$ env -u JMAP_TOKEN -u JMAP_FORMAT -u JMAP_ACCOUNT_ID $TESTDIR/../jm search --before "not-a-date" --token test --session-url http://localhost:1/jmap 2>&1
+$ env -u JMAP_TOKEN -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search --before "not-a-date" --token test --session-url http://localhost:1/jmap 2>&1
 {
   "error": "general_error",
   "message": "invalid --before date: *", (glob)
