@@ -25,6 +25,7 @@ type Client struct {
 	jmap         *jmap.Client
 	accountID    jmap.ID
 	mailboxCache []*mailbox.Mailbox
+	doFunc       func(*jmap.Request) (*jmap.Response, error)
 }
 
 // New creates a Client, authenticates, and discovers the session.
@@ -71,6 +72,9 @@ func (c *Client) Session() *jmap.Session {
 
 // Do executes a JMAP request.
 func (c *Client) Do(req *jmap.Request) (*jmap.Response, error) {
+	if c.doFunc != nil {
+		return c.doFunc(req)
+	}
 	return c.jmap.Do(req)
 }
 

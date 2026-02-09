@@ -241,19 +241,19 @@ func TestConvertDetail_Basic(t *testing.T) {
 	sentAt := time.Date(2026, 2, 4, 10, 29, 0, 0, time.UTC)
 
 	e := &email.Email{
-		ID:       "M1",
-		ThreadID: "T1",
-		From:     []*mail.Address{{Name: "Alice", Email: "alice@test.com"}},
-		To:       []*mail.Address{{Name: "Bob", Email: "bob@test.com"}},
-		CC:       []*mail.Address{{Name: "Charlie", Email: "charlie@test.com"}},
-		BCC:      nil,
-		ReplyTo:  nil,
-		Subject:  "Test",
-		SentAt:   &sentAt,
+		ID:         "M1",
+		ThreadID:   "T1",
+		From:       []*mail.Address{{Name: "Alice", Email: "alice@test.com"}},
+		To:         []*mail.Address{{Name: "Bob", Email: "bob@test.com"}},
+		CC:         []*mail.Address{{Name: "Charlie", Email: "charlie@test.com"}},
+		BCC:        nil,
+		ReplyTo:    nil,
+		Subject:    "Test",
+		SentAt:     &sentAt,
 		ReceivedAt: &now,
-		Size:     5000,
-		Keywords: map[string]bool{"$seen": false, "$flagged": true},
-		TextBody: []*email.BodyPart{{PartID: "1"}},
+		Size:       5000,
+		Keywords:   map[string]bool{"$seen": false, "$flagged": true},
+		TextBody:   []*email.BodyPart{{PartID: "1"}},
 		BodyValues: map[string]*email.BodyValue{
 			"1": {Value: "Hello world"},
 		},
@@ -443,42 +443,44 @@ func TestMoveEmailsPatchStructure(t *testing.T) {
 // TestSearchSnippetReference verifies that SearchSnippet/get references
 // Email/query at path /ids (not Email/get at /list/*/id).
 func TestSearchSnippetReference(t *testing.T) {
-	filter := &email.FilterCondition{Text: "meeting"}
+	var captured *jmap.Request
 
-	req := &jmap.Request{}
-	queryCallID := req.Invoke(&email.Query{
-		Account:        "test-account",
-		Filter:         filter,
-		Sort:           []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
-		Limit:          25,
-		CalculateTotal: true,
-	})
-
-	_ = req.Invoke(&email.Get{
-		Account:    "test-account",
-		Properties: summaryProperties,
-		ReferenceIDs: &jmap.ResultReference{
-			ResultOf: queryCallID,
-			Name:     "Email/query",
-			Path:     "/ids",
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 1, IDs: []jmap.ID{"M1"}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{{ID: "M1", Subject: "meeting"}}}},
+				{Name: "SearchSnippet/get", CallID: "2", Args: &searchsnippet.GetResponse{List: []*searchsnippet.SearchSnippet{{Email: "M1", Preview: "...<mark>meeting</mark>..."}}}},
+			}}, nil
 		},
-	})
-
-	req.Invoke(&searchsnippet.Get{
-		Account: "test-account",
-		Filter:  filter,
-		ReferenceIDs: &jmap.ResultReference{
-			ResultOf: queryCallID,
-			Name:     "Email/query",
-			Path:     "/ids",
-		},
-	})
-
-	if len(req.Calls) != 3 {
-		t.Fatalf("expected 3 method calls, got %d", len(req.Calls))
 	}
 
-	snippetCall := req.Calls[2]
+	result, err := c.SearchEmails(SearchOptions{Text: "meeting", Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("SearchEmails returned error: %v", err)
+	}
+	if len(result.Emails) != 1 {
+		t.Fatalf("expected 1 email in result, got %d", len(result.Emails))
+	}
+	if result.Emails[0].Snippet == "" {
+		t.Fatal("expected snippet to be populated for text search")
+	}
+
+	if captured == nil {
+		t.Fatal("expected SearchEmails to send a request")
+	}
+	if len(captured.Calls) != 3 {
+		t.Fatalf("expected 3 method calls, got %d", len(captured.Calls))
+	}
+
+	queryCall := captured.Calls[0]
+	if _, ok := queryCall.Args.(*email.Query); !ok {
+		t.Fatalf("expected first call args to be *email.Query, got %T", queryCall.Args)
+	}
+
+	snippetCall := captured.Calls[2]
 	snippetGet, ok := snippetCall.Args.(*searchsnippet.Get)
 	if !ok {
 		t.Fatalf("expected third call args to be *searchsnippet.Get, got %T", snippetCall.Args)
@@ -488,8 +490,8 @@ func TestSearchSnippetReference(t *testing.T) {
 	if ref == nil {
 		t.Fatal("expected ReferenceIDs to be set")
 	}
-	if ref.ResultOf != queryCallID {
-		t.Errorf("expected ResultOf=%s (queryCallID), got %s", queryCallID, ref.ResultOf)
+	if ref.ResultOf != queryCall.CallID {
+		t.Errorf("expected ResultOf=%s (query call id), got %s", queryCall.CallID, ref.ResultOf)
 	}
 	if ref.Name != "Email/query" {
 		t.Errorf("expected Name=Email/query, got %s", ref.Name)
