@@ -61,6 +61,7 @@ var validSortFields = map[string]string{
 }
 
 func parseSort(s string) (field string, ascending bool, err error) {
+	s = strings.ReplaceAll(s, ":", " ")
 	parts := strings.Fields(s)
 	field = "receivedAt"
 	ascending = false
@@ -72,8 +73,15 @@ func parseSort(s string) (field string, ascending bool, err error) {
 		}
 		field = normalized
 	}
-	if len(parts) >= 2 && strings.EqualFold(parts[1], "asc") {
-		ascending = true
+	if len(parts) >= 2 {
+		switch strings.ToLower(parts[1]) {
+		case "asc":
+			ascending = true
+		case "desc":
+			// already default
+		default:
+			return "", false, fmt.Errorf("unsupported sort direction %q (use asc or desc)", parts[1])
+		}
 	}
 	return field, ascending, nil
 }

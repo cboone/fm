@@ -114,8 +114,11 @@ Flags: (glob)
 *--help* (glob)
 *--limit* (glob)
 *--mailbox* (glob)
+*--offset* (glob)
+*--sort* (glob)
 *--subject* (glob)
 *--to* (glob)
+*--unread* (glob)
 * (glob*)
 ```
 

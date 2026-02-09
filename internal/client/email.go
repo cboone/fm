@@ -265,20 +265,29 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 	if opts.HasAttachment {
 		filter.HasAttachment = true
 	}
+	if opts.UnreadOnly {
+		filter.NotKeyword = "$seen"
+	}
 	if opts.MailboxID != "" {
 		filter.InMailbox = jmap.ID(opts.MailboxID)
+	}
+
+	sortField := opts.SortField
+	if sortField == "" {
+		sortField = "receivedAt"
 	}
 
 	req := &jmap.Request{}
 	queryCallID := req.Invoke(&email.Query{
 		Account:        c.accountID,
 		Filter:         filter,
-		Sort:           []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
+		Sort:           []*email.SortComparator{{Property: sortField, IsAscending: opts.SortAsc}},
+		Position:       opts.Offset,
 		Limit:          opts.Limit,
 		CalculateTotal: true,
 	})
 
-	getCallID := req.Invoke(&email.Get{
+	_ = req.Invoke(&email.Get{
 		Account:    c.accountID,
 		Properties: summaryProperties,
 		ReferenceIDs: &jmap.ResultReference{
@@ -295,9 +304,9 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 			Account: c.accountID,
 			Filter:  filter,
 			ReferenceIDs: &jmap.ResultReference{
-				ResultOf: getCallID,
-				Name:     "Email/get",
-				Path:     "/list/*/id",
+				ResultOf: queryCallID,
+				Name:     "Email/query",
+				Path:     "/ids",
 			},
 		})
 	}
@@ -307,7 +316,7 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		return types.EmailListResult{}, fmt.Errorf("search: %w", err)
 	}
 
-	result := types.EmailListResult{}
+	result := types.EmailListResult{Offset: opts.Offset}
 	snippets := make(map[string]string)
 
 	for _, inv := range resp.Responses {
@@ -323,7 +332,11 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 				}
 			}
 		case *jmap.MethodError:
-			return types.EmailListResult{}, fmt.Errorf("search: %s", r.Error())
+			method := inv.Name
+			if method == "" || method == "error" {
+				method = "unknown"
+			}
+			return types.EmailListResult{}, fmt.Errorf("search: %s returned %s", method, r.Error())
 		}
 	}
 
@@ -347,7 +360,11 @@ type SearchOptions struct {
 	Before        *time.Time
 	After         *time.Time
 	HasAttachment bool
+	UnreadOnly    bool
 	Limit         uint64
+	Offset        int64
+	SortField     string
+	SortAsc       bool
 }
 
 // MoveEmails moves emails to a target mailbox by updating their mailboxIds.

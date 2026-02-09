@@ -72,7 +72,7 @@ Search without a positional query argument should still work (it fails
 due to no token, not due to argument validation).
 
 ```scrut
-$ $TESTDIR/../jm search --from alice@test.com 2>&1
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -82,7 +82,7 @@ $ $TESTDIR/../jm search --from alice@test.com 2>&1
 ## Search accepts one argument
 
 ```scrut
-$ $TESTDIR/../jm search "test query" --from alice@test.com 2>&1
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search "test query" --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)

@@ -27,10 +27,23 @@ If omitted, only the provided flags/filters are used for matching.`,
 		opts.To, _ = cmd.Flags().GetString("to")
 		opts.Subject, _ = cmd.Flags().GetString("subject")
 		opts.HasAttachment, _ = cmd.Flags().GetBool("has-attachment")
+		opts.UnreadOnly, _ = cmd.Flags().GetBool("unread")
 		opts.Limit, _ = cmd.Flags().GetUint64("limit")
 		if opts.Limit == 0 {
 			return exitError("general_error", "--limit must be at least 1", "")
 		}
+		opts.Offset, _ = cmd.Flags().GetInt64("offset")
+		if opts.Offset < 0 {
+			return exitError("general_error", "--offset must be non-negative", "")
+		}
+
+		sortStr, _ := cmd.Flags().GetString("sort")
+		sortField, sortAsc, err := parseSort(sortStr)
+		if err != nil {
+			return exitError("general_error", err.Error(), "Supported sort fields: receivedAt, sentAt, from, subject")
+		}
+		opts.SortField = sortField
+		opts.SortAsc = sortAsc
 
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
 
@@ -78,6 +91,9 @@ If omitted, only the provided flags/filters are used for matching.`,
 func init() {
 	searchCmd.Flags().StringP("mailbox", "m", "", "restrict search to a specific mailbox")
 	searchCmd.Flags().Uint64P("limit", "l", 25, "maximum results")
+	searchCmd.Flags().Int64P("offset", "o", 0, "pagination offset")
+	searchCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
+	searchCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	searchCmd.Flags().String("from", "", "filter by sender address/name")
 	searchCmd.Flags().String("to", "", "filter by recipient address/name")
 	searchCmd.Flags().String("subject", "", "filter by subject text")

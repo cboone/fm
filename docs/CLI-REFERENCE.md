@@ -118,9 +118,9 @@ No arguments.
 | `--sort`    | `-s`  | `receivedAt desc` | Sort order: field + direction         |
 
 **Sort fields:** `receivedAt`, `sentAt`, `from`, `subject` (case-insensitive).
-**Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space.
+**Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space or colon.
 
-Examples: `"receivedAt desc"`, `"subject asc"`, `"from asc"`.
+Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 
 **JSON output:**
 
@@ -298,18 +298,26 @@ jm search [query] [flags]
 
 0 or 1 argument. The optional `[query]` searches across subject, from, to, and body. If omitted, only the provided flags are used for filtering (filter-only search).
 
-| Flag               | Short | Default         | Description                                 |
-| ------------------ | ----- | --------------- | ------------------------------------------- |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict search to a specific mailbox       |
-| `--limit`          | `-l`  | `25`            | Maximum results (minimum 1)                 |
-| `--from`           |       | (none)          | Filter by sender address or name            |
-| `--to`             |       | (none)          | Filter by recipient address or name         |
-| `--subject`        |       | (none)          | Filter by subject text                      |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339) |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339)  |
-| `--has-attachment` |       | `false`         | Only emails with attachments                |
+| Flag               | Short | Default           | Description                                 |
+| ------------------ | ----- | ----------------- | ------------------------------------------- |
+| `--mailbox`        | `-m`  | (all mailboxes)   | Restrict search to a specific mailbox       |
+| `--limit`          | `-l`  | `25`              | Maximum results (minimum 1)                 |
+| `--offset`         | `-o`  | `0`               | Pagination offset (non-negative)            |
+| `--unread`         | `-u`  | `false`           | Only show unread messages                   |
+| `--sort`           | `-s`  | `receivedAt desc` | Sort order: field + direction               |
+| `--from`           |       | (none)            | Filter by sender address or name            |
+| `--to`             |       | (none)            | Filter by recipient address or name         |
+| `--subject`        |       | (none)            | Filter by subject text                      |
+| `--before`         |       | (none)            | Emails received before this date (RFC 3339) |
+| `--after`          |       | (none)            | Emails received after this date (RFC 3339)  |
+| `--has-attachment` |       | `false`           | Only emails with attachments                |
 
 **Date format:** RFC 3339, e.g. `2026-01-15T00:00:00Z`.
+
+**Sort fields:** `receivedAt`, `sentAt`, `from`, `subject` (case-insensitive).
+**Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space or colon.
+
+Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 
 All filters are combined with AND logic.
 

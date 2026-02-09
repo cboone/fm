@@ -1,6 +1,6 @@
 BINARY := jm
 
-.PHONY: all build test test-cli test-all cover vet fmt clean help
+.PHONY: all build test test-cli test-cli-live test-all cover vet fmt clean help
 
 all: build ## Build the binary (default)
 
@@ -11,7 +11,10 @@ test: ## Run unit tests
 	go test ./...
 
 test-cli: build ## Run scrut CLI integration tests
-	scrut test tests/
+	scrut test tests/errors.md tests/flags.md tests/arguments.md tests/help.md
+
+test-cli-live: build ## Run opt-in live CLI integration tests (requires JMAP_TOKEN and JMAP_LIVE_TESTS=1)
+	scrut test tests/live.md
 
 test-all: test test-cli ## Run all tests (unit + CLI)
 

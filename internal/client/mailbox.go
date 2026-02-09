@@ -11,7 +11,12 @@ import (
 )
 
 // GetAllMailboxes retrieves all mailboxes in the account.
+// Results are cached for the lifetime of the Client instance.
 func (c *Client) GetAllMailboxes() ([]*mailbox.Mailbox, error) {
+	if c.mailboxCache != nil {
+		return c.mailboxCache, nil
+	}
+
 	req := &jmap.Request{}
 	req.Invoke(&mailbox.Get{
 		Account: c.accountID,
@@ -25,6 +30,7 @@ func (c *Client) GetAllMailboxes() ([]*mailbox.Mailbox, error) {
 	for _, inv := range resp.Responses {
 		switch r := inv.Args.(type) {
 		case *mailbox.GetResponse:
+			c.mailboxCache = r.List
 			return r.List, nil
 		case *jmap.MethodError:
 			return nil, fmt.Errorf("mailbox/get: %s", r.Error())
