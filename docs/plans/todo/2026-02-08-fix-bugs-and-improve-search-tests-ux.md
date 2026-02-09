@@ -62,7 +62,7 @@ req.Invoke(&searchsnippet.Get{
 
 ### 1.2 Fix CLI integration tests (scrut) environment isolation
 
-**Problem:** 22 of 47 scrut tests fail when `JMAP_TOKEN` is set in the environment. The tests expect `authentication_failed` errors but instead get successful API responses because `viper.AutomaticEnv()` picks up the ambient `JMAP_TOKEN`.
+**Problem:** 26 of 47 scrut tests fail when `JMAP_TOKEN` is set in the environment. The tests expect `authentication_failed` errors but instead get successful API responses because `viper.AutomaticEnv()` picks up the ambient `JMAP_TOKEN`.
 
 **Root cause:** The scrut test commands run as `$TESTDIR/../jm session 2>&1` without clearing environment variables. When `JMAP_TOKEN` is set in the shell, every test that expects "no token" errors instead succeeds.
 
@@ -96,7 +96,7 @@ $ env -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID JMAP_TOKEN=test-toke
 
 **Specific tests to update:**
 
-In `tests/errors.md` (8 tests):
+In `tests/errors.md` (9 tests):
 - "Missing token produces structured JSON error" (line 8)
 - "Missing token with text format" (line 20)
 - "List without token" (line 29)
@@ -107,7 +107,7 @@ In `tests/errors.md` (8 tests):
 - "Move without token" (line 89)
 - "Mailboxes without token" (line 101)
 
-In `tests/flags.md` (12 tests):
+In `tests/flags.md` (15 tests):
 - "Default format is JSON" (line 10)
 - "Format flag switches to text" (line 22)
 - "JMAP_FORMAT env var switches to text" (line 31)
@@ -213,6 +213,7 @@ This is a per-`Client`-instance cache (no disk persistence), so it only saves re
 **Changes:**
 1. Before splitting on whitespace, replace `:` with a space in the sort string
 2. This makes `"receivedAt:asc"`, `"receivedAt:desc"`, and `"receivedAt asc"` all work
+3. Add/adjust unit tests in `cmd/list_test.go` to cover colon syntax explicitly
 
 ```go
 func parseSort(s string) (field string, ascending bool, err error) {
@@ -263,13 +264,20 @@ func parseSort(s string) (field string, ascending bool, err error) {
 
 **File:** Create `tests/live.md` (or similar name indicating these require a token)
 
-**Approach:** Add a new test file that requires `JMAP_TOKEN` to be set. Use a guard at the top:
+**Approach:** Add a new test file for opt-in live integration tests. Keep default scrut runs deterministic.
+
+- `make test-cli` should continue running only deterministic tests (`tests/errors.md`, `tests/flags.md`, `tests/arguments.md`, `tests/help.md`)
+- Add a separate target (for example `make test-cli-live`) that runs `tests/live.md`
+- Gate `tests/live.md` behind both an explicit opt-in env var (for example `JMAP_LIVE_TESTS=1`) and `JMAP_TOKEN` presence
+
+Use a guard at the top:
 
 ```scrut
+$ test "$JMAP_LIVE_TESTS" = "1" || exit 80
 $ test -n "$JMAP_TOKEN" || exit 80
 ```
 
-(Exit code 80 causes scrut to skip the test if no token is available.)
+(Exit code 80 causes scrut to skip the test when live test preconditions are not met.)
 
 **Tests to add:**
 - `jm session` returns JSON with `username` field
@@ -284,7 +292,7 @@ $ test -n "$JMAP_TOKEN" || exit 80
 
 **Note:** These tests depend on account state and will need to use glob patterns for variable fields (IDs, counts, dates).
 
-**Verification:** `make test-cli` passes with these new tests when `JMAP_TOKEN` is set, and skips them when it's not.
+**Verification:** `make test-cli` remains stable in any environment. `make test-cli-live` runs when explicitly opted in and skips cleanly when preconditions are not met.
 
 ---
 
@@ -349,9 +357,12 @@ Steps 1-3 can be done in parallel. Steps 4-8 can be done in parallel after step 
 | `tests/errors.md` | Add environment isolation (1.2) |
 | `tests/flags.md` | Add environment isolation (1.2) |
 | `tests/arguments.md` | Add environment isolation (1.2) |
+| `tests/help.md` | Update search help snapshot for new search flags (2.1-2.3) |
 | `tests/live.md` | New file: success-path and text format tests (4.1, 4.2) |
 | `internal/client/email_test.go` | Add search snippet reference test (4.3) |
+| `cmd/list_test.go` | Add parseSort colon syntax coverage (3.1) |
 | `docs/CLI-REFERENCE.md` | Update search command docs to reflect new flags (2.1-2.3) |
+| `Makefile` | Add opt-in live scrut target (4.1) |
 
 ---
 
