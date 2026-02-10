@@ -34,7 +34,7 @@ $ jm search --subject "Burlington" --limit 3
 
 **Investigation steps:**
 
-1. Enable HTTP-level request/response logging to see the exact JSON being sent to the JMAP server for the `SearchSnippet/get` call
+1. Enable HTTP-level request/response logging to see the exact JSON being sent to the JMAP server for the `SearchSnippet/get` call (redact `Authorization` headers and any bearer tokens before saving logs)
 2. Compare the outgoing request against the JMAP spec (RFC 8621, Section 5.1) for `SearchSnippet/get` -- in particular, verify whether `filter` is being serialized with the correct property names
 3. Check the `go-jmap` library's `searchsnippet.Get` struct to see if there's a field mapping or serialization issue (e.g., `Filter` field might need a different type than `email.FilterCondition`)
 4. Test removing the `filter` parameter from the `SearchSnippet/get` call to see if the server accepts it without a filter (this would confirm the filter is the problem)
@@ -70,6 +70,14 @@ if hasTextSearch {
 - `jm search "meeting" --limit 3` should return results with `snippet` fields containing `<mark>` highlight tags
 - `jm search Burlington --subject ice --limit 3` should work (combined text + filter)
 - `jm search --from alice --limit 3` should continue working (no text query, no snippets)
+- If `SearchSnippet/get` fails but `Email/query` + `Email/get` succeed, return results without snippets instead of failing the entire command
+
+**Tests:**
+
+- Add/extend unit tests in `internal/client/email_test.go` to verify:
+  - Text search request wiring for `SearchSnippet/get` remains correct
+  - Method error messages identify the failing method by call ID
+  - Optional resilience behavior: snippet failure does not fail the whole search when query/get succeeded
 
 ---
 
@@ -90,7 +98,7 @@ $ jm search --has-attachment --after 2026-02-01 --limit 3
 
 **Changes:**
 
-1. Before attempting `time.Parse(time.RFC3339, ...)`, try parsing as a bare date with `time.Parse("2006-01-02", ...)`
+1. Attempt `time.Parse(time.RFC3339, ...)` first, then fall back to parsing a bare date with `time.Parse("2006-01-02", ...)`
 2. If the bare date parse succeeds, treat it as midnight UTC on that day
 3. Keep the RFC 3339 parse as the primary path; the bare date is a fallback
 4. Update the hint text to mention that bare dates are also accepted
@@ -122,6 +130,13 @@ Apply this to both the `--before` and `--after` flag parsing blocks.
 - `jm search --after 2026-02-01T00:00:00Z --limit 3` should continue working (RFC 3339)
 - `jm search --before 2026-02-10 --after 2026-02-01 --limit 3` should work (both bare)
 - `jm search --after "not-a-date" --limit 3` should still produce a clear error
+
+**Tests:**
+
+- Add CLI flag parsing tests to `tests/flags.md`:
+  - `--before 2026-02-01` accepted
+  - `--after 2026-02-01` accepted
+  - Invalid dates still return a `general_error` with updated hint text
 
 ---
 
@@ -169,6 +184,10 @@ Or, if the library exposes a description:
 
 **Verification:** Trigger a method error and confirm the message identifies the failing method.
 
+**Tests:**
+
+- Add/extend unit tests in `internal/client/email_test.go` for `MethodError` reporting to ensure failures map to `Email/query`, `Email/get`, or `SearchSnippet/get` by call ID when invocation names are empty/opaque
+
 ---
 
 ## Phase 3: Functional Improvement
@@ -211,7 +230,7 @@ func (c *Client) MarkAsRead(emailIDs []string) (succeeded []string, errors []str
 
 ```json
 {
-  "succeeded": ["id1", "id2"],
+  "marked_as_read": ["id1", "id2"],
   "errors": []
 }
 ```
@@ -219,7 +238,7 @@ func (c *Client) MarkAsRead(emailIDs []string) (succeeded []string, errors []str
 **Output format (text):**
 
 ```
-Marked 2 email(s) as read.
+Marked as read: id1, id2
 ```
 
 **Verification:**
@@ -256,13 +275,14 @@ Steps 1 and 3 can be done in parallel. Step 2 benefits from the investigation wo
 | File | Changes |
 |------|---------|
 | `internal/client/email.go` | Fix SearchSnippet/get call (1.1), improve error messages (2.2), add MarkAsRead method (3.1) |
+| `internal/client/email_test.go` | Add/extend tests for search snippets, method error mapping, and optional snippet-failure fallback |
 | `cmd/search.go` | Accept bare dates in --before/--after (2.1) |
 | `cmd/mark-read.go` | New file: mark-read command (3.1) |
-| `cmd/root.go` | Register mark-read command (3.1) |
-| `internal/output/json.go` | Format mark-read output (3.1, if not already handled by existing MoveResult type) |
+| `internal/types/types.go` | Add `marked_as_read` field to operation result type (3.1) |
 | `internal/output/text.go` | Format mark-read output (3.1) |
 | `tests/help.md` | Add mark-read help test (3.1) |
 | `tests/arguments.md` | Add mark-read argument validation (3.1) |
 | `tests/errors.md` | Add mark-read auth error test (3.1) |
+| `tests/flags.md` | Add bare date acceptance tests and updated date hint expectations (2.1) |
 | `tests/live.md` | Add mark-read live test (3.1) |
 | `docs/CLI-REFERENCE.md` | Document mark-read command, updated date flag behavior (2.1, 3.1) |
