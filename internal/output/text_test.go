@@ -338,6 +338,25 @@ func TestTextFormatter_MoveResultSpam(t *testing.T) {
 	}
 }
 
+func TestTextFormatter_MoveResultMarkedAsRead(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		MarkedAsRead: []string{"M1", "M2"},
+		Errors:       []string{},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Marked as read: M1, M2") {
+		t.Errorf("expected marked-as-read IDs, got: %s", out)
+	}
+}
+
 func TestTextFormatter_ErrorWithHint(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer
