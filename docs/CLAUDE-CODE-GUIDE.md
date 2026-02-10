@@ -66,15 +66,16 @@ Add this to your project's `CLAUDE.md` to give Claude Code context about `jm`:
 
 - `jm archive <id> [id...]` -- move to Archive
 - `jm spam <id> [id...]` -- move to Junk
+- `jm mark-read <id> [id...]` -- mark as read
 - `jm move <id> [id...] --to <mailbox>` -- move to a named mailbox
 
 ### Notes
 
 - Output is JSON by default; errors are JSON on stderr with exit code 1
-- Email IDs from `list` and `search` chain directly into `read`, `archive`, `spam`, and `move`
+- Email IDs from `list` and `search` chain directly into `read`, `archive`, `spam`, `mark-read`, and `move`
 - Sending and deleting email are structurally disallowed
-- Date filters use RFC 3339 format (e.g., `2026-01-15T00:00:00Z`)
-- Batch operations (`archive`, `spam`, `move`) accept multiple IDs
+- Date filters accept RFC 3339 (e.g., `2026-01-15T00:00:00Z`) or bare dates (e.g., `2026-01-15`)
+- Batch operations (`archive`, `spam`, `mark-read`, `move`) accept multiple IDs
 ```
 
 ## Workflows
@@ -141,10 +142,10 @@ jm search --has-attachment --after 2026-01-01T00:00:00Z --before 2026-02-01T00:0
 
 ## Tips
 
-- **Chaining IDs:** Email IDs from `list` and `search` results chain directly into `read`, `archive`, `spam`, and `move`.
-- **Batch operations:** `archive`, `spam`, and `move` accept multiple email IDs in a single call.
+- **Chaining IDs:** Email IDs from `list` and `search` results chain directly into `read`, `archive`, `spam`, `mark-read`, and `move`.
+- **Batch operations:** `archive`, `spam`, `mark-read`, and `move` accept multiple email IDs in a single call.
 - **Filter-only search:** Omit the query argument and use only flags to search by sender, date range, attachments, etc.
-- **Date format:** All date flags (`--before`, `--after`) use RFC 3339 format, e.g. `2026-01-15T00:00:00Z`.
+- **Date format:** All date flags (`--before`, `--after`) accept RFC 3339 format (e.g. `2026-01-15T00:00:00Z`) or bare dates (e.g. `2026-01-15`).
 - **Thread view:** Use `jm read <id> --thread` to see the full conversation context for a single email.
 - **Mailbox names:** Both `--mailbox` and `--to` accept mailbox names (e.g., "Inbox", "Receipts") or mailbox IDs.
 - **Sort order:** `jm list --sort "subject asc"` sorts by subject ascending. Fields: `receivedAt`, `sentAt`, `from`, `subject`.
