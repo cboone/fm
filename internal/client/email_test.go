@@ -558,6 +558,57 @@ func TestSearchErrorIdentifiesMethod(t *testing.T) {
 	if !strings.Contains(errMsg, "Email/query") {
 		t.Errorf("expected error to identify Email/query, got: %s", errMsg)
 	}
+	if !strings.Contains(errMsg, "call 0") {
+		t.Errorf("expected error to include call index/call id, got: %s", errMsg)
+	}
+}
+
+// TestSearchErrorIdentifiesEmailGetByCallID verifies that method errors with
+// opaque invocation names still map to Email/get by call ID.
+func TestSearchErrorIdentifiesEmailGetByCallID(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 1, IDs: []jmap.ID{"M1"}}},
+				{Name: "error", CallID: "1", Args: &jmap.MethodError{Type: "invalidArguments"}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{From: "alice", Limit: 25, SortField: "receivedAt"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Email/get") {
+		t.Errorf("expected error to identify Email/get, got: %s", errMsg)
+	}
+	if !strings.Contains(errMsg, "call 1") {
+		t.Errorf("expected error to include call id, got: %s", errMsg)
+	}
+}
+
+// TestSearchErrorFallsBackToInvocationIndex verifies that when both method
+// name and call ID are unavailable, the error reports the invocation index.
+func TestSearchErrorFallsBackToInvocationIndex(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "", Args: &jmap.MethodError{Type: "invalidArguments"}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{From: "alice", Limit: 25, SortField: "receivedAt"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "call 0") {
+		t.Errorf("expected fallback to invocation index, got: %s", errMsg)
+	}
 }
 
 // TestMarkAsReadPatchStructure verifies the patch structure for mark-as-read.

@@ -314,8 +314,9 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 
 	// Request search snippets if doing a text search.
 	hasTextSearch := opts.Text != ""
+	var snippetCallID string
 	if hasTextSearch {
-		snippetCallID := req.Invoke(&searchSnippetGet{searchsnippet.Get{
+		snippetCallID = req.Invoke(&searchSnippetGet{searchsnippet.Get{
 			Account: c.accountID,
 			Filter:  filter,
 			ReferenceIDs: &jmap.ResultReference{
@@ -335,7 +336,7 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 	result := types.EmailListResult{Offset: opts.Offset}
 	snippets := make(map[string]string)
 
-	for _, inv := range resp.Responses {
+	for i, inv := range resp.Responses {
 		switch r := inv.Args.(type) {
 		case *email.QueryResponse:
 			result.Total = r.Total
@@ -352,14 +353,23 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 			if method == "" {
 				method = inv.Name
 			}
+			// If snippets fail but query+get succeeded, degrade gracefully.
+			if hasTextSearch && (method == "SearchSnippet/get" || inv.CallID == snippetCallID) {
+				continue
+			}
 			if method == "" || method == "error" {
 				method = "unknown"
 			}
-			// If snippets fail but query+get succeeded, degrade gracefully.
-			if hasTextSearch && method == "SearchSnippet/get" {
-				continue
+
+			callRef := inv.CallID
+			if callRef == "" {
+				callRef = fmt.Sprintf("%d", i)
 			}
-			return types.EmailListResult{}, fmt.Errorf("search: %s returned %s", method, r.Error())
+
+			if method == "unknown" {
+				return types.EmailListResult{}, fmt.Errorf("search: call %s returned %s", callRef, r.Error())
+			}
+			return types.EmailListResult{}, fmt.Errorf("search: %s (call %s) returned %s", method, callRef, r.Error())
 		}
 	}
 
