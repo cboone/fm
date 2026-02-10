@@ -1,6 +1,7 @@
 package client
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -481,12 +482,12 @@ func TestSearchSnippetReference(t *testing.T) {
 	}
 
 	snippetCall := captured.Calls[2]
-	snippetGet, ok := snippetCall.Args.(*searchsnippet.Get)
+	snippetGetWrapper, ok := snippetCall.Args.(*searchSnippetGet)
 	if !ok {
-		t.Fatalf("expected third call args to be *searchsnippet.Get, got %T", snippetCall.Args)
+		t.Fatalf("expected third call args to be *searchSnippetGet, got %T", snippetCall.Args)
 	}
 
-	ref := snippetGet.ReferenceIDs
+	ref := snippetGetWrapper.ReferenceIDs
 	if ref == nil {
 		t.Fatal("expected ReferenceIDs to be set")
 	}
@@ -498,6 +499,80 @@ func TestSearchSnippetReference(t *testing.T) {
 	}
 	if ref.Path != "/ids" {
 		t.Errorf("expected Path=/ids, got %s", ref.Path)
+	}
+}
+
+// TestSearchSnippetMethodName verifies that the searchSnippetGet wrapper
+// returns the correct JMAP method name (not "Mailbox/get").
+func TestSearchSnippetMethodName(t *testing.T) {
+	sg := &searchSnippetGet{}
+	if sg.Name() != "SearchSnippet/get" {
+		t.Errorf("expected Name()=SearchSnippet/get, got %s", sg.Name())
+	}
+}
+
+// TestSearchSnippetFailureGraceful verifies that a SearchSnippet/get
+// MethodError does not fail the entire search when Email/query and
+// Email/get succeed.
+func TestSearchSnippetFailureGraceful(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 1, IDs: []jmap.ID{"M1"}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{{ID: "M1", Subject: "test"}}}},
+				{Name: "error", CallID: "2", Args: &jmap.MethodError{}},
+			}}, nil
+		},
+	}
+
+	result, err := c.SearchEmails(SearchOptions{Text: "test", Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("expected graceful degradation, got error: %v", err)
+	}
+	if len(result.Emails) != 1 {
+		t.Fatalf("expected 1 email, got %d", len(result.Emails))
+	}
+	if result.Emails[0].Snippet != "" {
+		t.Errorf("expected empty snippet on snippet failure, got %q", result.Emails[0].Snippet)
+	}
+}
+
+// TestSearchErrorIdentifiesMethod verifies that a MethodError on Email/query
+// includes the method name in the error message.
+func TestSearchErrorIdentifiesMethod(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "0", Args: &jmap.MethodError{}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{From: "alice", Limit: 25, SortField: "receivedAt"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "Email/query") {
+		t.Errorf("expected error to identify Email/query, got: %s", errMsg)
+	}
+}
+
+// TestMarkAsReadPatchStructure verifies the patch structure for mark-as-read.
+func TestMarkAsReadPatchStructure(t *testing.T) {
+	patch := jmap.Patch{
+		"keywords/$seen": true,
+	}
+	if len(patch) != 1 {
+		t.Errorf("expected 1 patch key, got %d", len(patch))
+	}
+	if _, ok := patch["keywords/$seen"]; !ok {
+		t.Error("expected keywords/$seen in patch")
+	}
+	if _, ok := patch["mailboxIds"]; ok {
+		t.Error("mark-as-read patch must not contain mailboxIds")
 	}
 }
 

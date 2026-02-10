@@ -83,6 +83,18 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 [1]
 ```
 
+## Mark-read without token
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm mark-read M123 2>&1
+{
+  "error": "authentication_failed",
+  "message": "no token configured; set JMAP_TOKEN, --token, or token in config file",
+  "hint": "Check your token in JMAP_TOKEN or config file"
+}
+[1]
+```
+
 ## Move without token
 
 ```scrut

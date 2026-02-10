@@ -102,13 +102,14 @@ type AccountInfo struct {
 	IsPersonal bool   `json:"is_personal"`
 }
 
-// MoveResult reports the outcome of a move/archive/spam operation.
+// MoveResult reports the outcome of a move/archive/spam/mark-read operation.
 type MoveResult struct {
-	Moved       []string         `json:"moved,omitempty"`
-	Archived    []string         `json:"archived,omitempty"`
-	MarkedSpam  []string         `json:"marked_as_spam,omitempty"`
-	Destination *DestinationInfo `json:"destination,omitempty"`
-	Errors      []string         `json:"errors"`
+	Moved        []string         `json:"moved,omitempty"`
+	Archived     []string         `json:"archived,omitempty"`
+	MarkedSpam   []string         `json:"marked_as_spam,omitempty"`
+	MarkedAsRead []string         `json:"marked_as_read,omitempty"`
+	Destination  *DestinationInfo `json:"destination,omitempty"`
+	Errors       []string         `json:"errors"`
 }
 
 // DestinationInfo identifies the target mailbox of a move.

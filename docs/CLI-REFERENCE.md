@@ -308,11 +308,11 @@ jm search [query] [flags]
 | `--from`           |       | (none)            | Filter by sender address or name            |
 | `--to`             |       | (none)            | Filter by recipient address or name         |
 | `--subject`        |       | (none)            | Filter by subject text                      |
-| `--before`         |       | (none)            | Emails received before this date (RFC 3339) |
-| `--after`          |       | (none)            | Emails received after this date (RFC 3339)  |
+| `--before`         |       | (none)            | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)            | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
 | `--has-attachment` |       | `false`           | Only emails with attachments                |
 
-**Date format:** RFC 3339, e.g. `2026-01-15T00:00:00Z`.
+**Date format:** RFC 3339 (e.g. `2026-01-15T00:00:00Z`) or a bare date (e.g. `2026-01-15`). Bare dates are treated as midnight UTC.
 
 **Sort fields:** `receivedAt`, `sentAt`, `from`, `subject` (case-insensitive).
 **Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space or colon.
@@ -415,6 +415,35 @@ jm spam <email-id> [email-id...]
 ```text
 Marked as spam: M-email-id-1
 Destination: Junk Mail (mb-junk-id)
+```
+
+If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+
+---
+
+### mark-read
+
+Mark one or more emails as read by setting the `$seen` keyword.
+
+```bash
+jm mark-read <email-id> [email-id...]
+```
+
+1 or more arguments required. No command-specific flags.
+
+**JSON output:**
+
+```json
+{
+  "marked_as_read": ["M-email-id-1", "M-email-id-2"],
+  "errors": []
+}
+```
+
+**Text output:**
+
+```text
+Marked as read: M-email-id-1, M-email-id-2
 ```
 
 If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
@@ -598,15 +627,16 @@ Returned by the `session` command.
 
 ### MoveResult
 
-Returned by `archive`, `spam`, and `move` commands. Only the relevant action field is populated.
+Returned by `archive`, `spam`, `mark-read`, and `move` commands. Only the relevant action field is populated.
 
-| Field            | Type            | Notes                            |
-| ---------------- | --------------- | -------------------------------- |
-| `moved`          | string[]        | Omitted unless `move` command    |
-| `archived`       | string[]        | Omitted unless `archive` command |
-| `marked_as_spam` | string[]        | Omitted unless `spam` command    |
-| `destination`    | DestinationInfo | Omitted on total failure         |
-| `errors`         | string[]        | Empty array on full success      |
+| Field            | Type            | Notes                                |
+| ---------------- | --------------- | ------------------------------------ |
+| `moved`          | string[]        | Omitted unless `move` command        |
+| `archived`       | string[]        | Omitted unless `archive` command     |
+| `marked_as_spam` | string[]        | Omitted unless `spam` command        |
+| `marked_as_read` | string[]        | Omitted unless `mark-read` command   |
+| `destination`    | DestinationInfo | Omitted on total failure             |
+| `errors`         | string[]        | Empty array on full success          |
 
 ### DestinationInfo
 

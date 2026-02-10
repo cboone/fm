@@ -21,6 +21,7 @@ Available Commands: (glob)
   help * (glob)
   list * (glob)
   mailboxes * (glob)
+  mark-read * (glob)
   move * (glob)
   read * (glob)
   search * (glob)
@@ -141,6 +142,17 @@ Move emails to the Junk/Spam mailbox (glob)
  (regex)
 Usage: (glob)
   jm spam <email-id> [email-id...] [flags] (glob)
+* (glob+)
+```
+
+## Mark-read command help
+
+```scrut
+$ $TESTDIR/../jm mark-read --help
+Mark emails as read (set the $seen keyword) (glob)
+ (regex)
+Usage: (glob)
+  jm mark-read <email-id> [email-id...] [flags] (glob)
 * (glob+)
 ```
 

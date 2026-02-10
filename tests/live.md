@@ -109,6 +109,18 @@ $ test "$JMAP_LIVE_TESTS" = "1" -a -n "$JMAP_TOKEN" || exit 80; $TESTDIR/../jm m
 * (glob+)
 ```
 
+## Mark-read marks an email as read
+
+```scrut
+$ test "$JMAP_LIVE_TESTS" = "1" -a -n "$JMAP_TOKEN" || exit 80; EMAIL_ID=$($TESTDIR/../jm list --limit 1 --format json | python3 -c 'import json,sys; d=json.load(sys.stdin); emails=d.get("emails", []); print(emails[0]["id"] if emails else "")'); test -n "$EMAIL_ID" || exit 80; $TESTDIR/../jm mark-read "$EMAIL_ID" --format json 2>&1
+{
+  "marked_as_read": [
+    "*" (glob)
+  ],
+  "errors": []
+}
+```
+
 ## Error in text format uses Error prefix
 
 ```scrut

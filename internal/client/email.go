@@ -14,6 +14,16 @@ import (
 	"github.com/cboone/jm/internal/types"
 )
 
+// searchSnippetGet wraps searchsnippet.Get to fix the incorrect method name
+// in go-jmap v0.5.3 (returns "Mailbox/get" instead of "SearchSnippet/get").
+type searchSnippetGet struct {
+	searchsnippet.Get
+}
+
+func (m *searchSnippetGet) Name() string { return "SearchSnippet/get" }
+
+func (m *searchSnippetGet) Requires() []jmap.URI { return []jmap.URI{mail.URI} }
+
 const batchSize = 50
 
 // summaryProperties are the Email/get properties used for list and search results.
@@ -277,6 +287,9 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		sortField = "receivedAt"
 	}
 
+	// Track call IDs so we can identify which method failed in errors.
+	callMethods := make(map[string]string) // callID -> method name
+
 	req := &jmap.Request{}
 	queryCallID := req.Invoke(&email.Query{
 		Account:        c.accountID,
@@ -286,8 +299,9 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		Limit:          opts.Limit,
 		CalculateTotal: true,
 	})
+	callMethods[queryCallID] = "Email/query"
 
-	_ = req.Invoke(&email.Get{
+	getCallID := req.Invoke(&email.Get{
 		Account:    c.accountID,
 		Properties: summaryProperties,
 		ReferenceIDs: &jmap.ResultReference{
@@ -296,11 +310,12 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 			Path:     "/ids",
 		},
 	})
+	callMethods[getCallID] = "Email/get"
 
 	// Request search snippets if doing a text search.
 	hasTextSearch := opts.Text != ""
 	if hasTextSearch {
-		req.Invoke(&searchsnippet.Get{
+		snippetCallID := req.Invoke(&searchSnippetGet{searchsnippet.Get{
 			Account: c.accountID,
 			Filter:  filter,
 			ReferenceIDs: &jmap.ResultReference{
@@ -308,7 +323,8 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 				Name:     "Email/query",
 				Path:     "/ids",
 			},
-		})
+		}})
+		callMethods[snippetCallID] = "SearchSnippet/get"
 	}
 
 	resp, err := c.Do(req)
@@ -332,9 +348,16 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 				}
 			}
 		case *jmap.MethodError:
-			method := inv.Name
+			method := callMethods[inv.CallID]
+			if method == "" {
+				method = inv.Name
+			}
 			if method == "" || method == "error" {
 				method = "unknown"
+			}
+			// If snippets fail but query+get succeeded, degrade gracefully.
+			if hasTextSearch && method == "SearchSnippet/get" {
+				continue
 			}
 			return types.EmailListResult{}, fmt.Errorf("search: %s returned %s", method, r.Error())
 		}
@@ -441,6 +464,63 @@ func (c *Client) MarkAsSpam(emailIDs []string, junkMailboxID jmap.ID) (succeeded
 			updates[jmap.ID(id)] = jmap.Patch{
 				"mailboxIds":     map[jmap.ID]bool{junkMailboxID: true},
 				"keywords/$junk": true,
+			}
+		}
+
+		req := &jmap.Request{}
+		req.Invoke(&email.Set{
+			Account: c.accountID,
+			Update:  updates,
+		})
+
+		resp, err := c.Do(req)
+		if err != nil {
+			for _, id := range batch {
+				errors = append(errors, fmt.Sprintf("%s: %v", id, err))
+			}
+			continue
+		}
+
+		for _, inv := range resp.Responses {
+			switch r := inv.Args.(type) {
+			case *email.SetResponse:
+				for _, idStr := range batch {
+					jid := jmap.ID(idStr)
+					if _, ok := r.Updated[jid]; ok {
+						succeeded = append(succeeded, idStr)
+					} else if setErr, ok := r.NotUpdated[jid]; ok {
+						desc := "unknown error"
+						if setErr.Description != nil {
+							desc = *setErr.Description
+						}
+						errors = append(errors, fmt.Sprintf("%s: %s", idStr, desc))
+					}
+				}
+			case *jmap.MethodError:
+				for _, id := range batch {
+					errors = append(errors, fmt.Sprintf("%s: %s", id, r.Error()))
+				}
+			}
+		}
+	}
+	return succeeded, errors
+}
+
+// MarkAsRead sets the $seen keyword on emails.
+func (c *Client) MarkAsRead(emailIDs []string) (succeeded []string, errors []string) {
+	succeeded = []string{}
+	errors = []string{}
+	for start := 0; start < len(emailIDs); start += batchSize {
+		end := start + batchSize
+		if end > len(emailIDs) {
+			end = len(emailIDs)
+		}
+		batch := emailIDs[start:end]
+
+		updates := make(map[jmap.ID]jmap.Patch)
+		for _, id := range batch {
+			updates[jmap.ID(id)] = jmap.Patch{
+				"keywords/$seen": true,
 			}
 		}
 

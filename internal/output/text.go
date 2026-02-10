@@ -139,6 +139,9 @@ func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error 
 	if len(r.MarkedSpam) > 0 {
 		fmt.Fprintf(w, "Marked as spam: %s\n", strings.Join(r.MarkedSpam, ", "))
 	}
+	if len(r.MarkedAsRead) > 0 {
+		fmt.Fprintf(w, "Marked as read: %s\n", strings.Join(r.MarkedAsRead, ", "))
+	}
 	if len(r.Moved) > 0 {
 		fmt.Fprintf(w, "Moved: %s\n", strings.Join(r.Moved, ", "))
 	}

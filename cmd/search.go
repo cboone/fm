@@ -48,19 +48,19 @@ If omitted, only the provided flags/filters are used for matching.`,
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
 
 		if beforeStr, _ := cmd.Flags().GetString("before"); beforeStr != "" {
-			t, err := time.Parse(time.RFC3339, beforeStr)
+			t, err := parseDate(beforeStr)
 			if err != nil {
 				return exitError("general_error", "invalid --before date: "+err.Error(),
-					"Use RFC 3339 format, e.g. 2026-01-15T00:00:00Z")
+					"Use RFC 3339 format (e.g. 2026-01-15T00:00:00Z) or a bare date (e.g. 2026-01-15)")
 			}
 			opts.Before = &t
 		}
 
 		if afterStr, _ := cmd.Flags().GetString("after"); afterStr != "" {
-			t, err := time.Parse(time.RFC3339, afterStr)
+			t, err := parseDate(afterStr)
 			if err != nil {
 				return exitError("general_error", "invalid --after date: "+err.Error(),
-					"Use RFC 3339 format, e.g. 2026-01-15T00:00:00Z")
+					"Use RFC 3339 format (e.g. 2026-01-15T00:00:00Z) or a bare date (e.g. 2026-01-15)")
 			}
 			opts.After = &t
 		}
@@ -88,6 +88,20 @@ If omitted, only the provided flags/filters are used for matching.`,
 	},
 }
 
+// parseDate parses a date string in RFC 3339 format or as a bare date (YYYY-MM-DD).
+// Bare dates are treated as midnight UTC on that day.
+func parseDate(s string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, s)
+	if err == nil {
+		return t, nil
+	}
+	t, err2 := time.Parse("2006-01-02", s)
+	if err2 == nil {
+		return t, nil
+	}
+	return time.Time{}, err
+}
+
 func init() {
 	searchCmd.Flags().StringP("mailbox", "m", "", "restrict search to a specific mailbox")
 	searchCmd.Flags().Uint64P("limit", "l", 25, "maximum results")
@@ -97,8 +111,8 @@ func init() {
 	searchCmd.Flags().String("from", "", "filter by sender address/name")
 	searchCmd.Flags().String("to", "", "filter by recipient address/name")
 	searchCmd.Flags().String("subject", "", "filter by subject text")
-	searchCmd.Flags().String("before", "", "emails received before this date (RFC 3339)")
-	searchCmd.Flags().String("after", "", "emails received after this date (RFC 3339)")
+	searchCmd.Flags().String("before", "", "emails received before this date (RFC 3339 or YYYY-MM-DD)")
+	searchCmd.Flags().String("after", "", "emails received after this date (RFC 3339 or YYYY-MM-DD)")
 	searchCmd.Flags().Bool("has-attachment", false, "only emails with attachments")
 	rootCmd.AddCommand(searchCmd)
 }

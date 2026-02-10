@@ -109,6 +109,26 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 [1]
 ```
 
+## Search with bare date in --before flag
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search --before 2026-02-01 --token test --session-url http://localhost:1/jmap 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Search with bare date in --after flag
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search --after 2026-02-01 --token test --session-url http://localhost:1/jmap 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
 ## Search with invalid date format
 
 ```scrut
@@ -116,7 +136,7 @@ $ env -u JMAP_TOKEN -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR
 {
   "error": "general_error",
   "message": "invalid --before date: *", (glob)
-  "hint": "Use RFC 3339 format, e.g. 2026-01-15T00:00:00Z"
+  "hint": "Use RFC 3339 format (e.g. 2026-01-15T00:00:00Z) or a bare date (e.g. 2026-01-15)"
 }
 [1]
 ```
@@ -166,6 +186,16 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 
 ```scrut
 $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm spam M1 M2 M3 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Mark-read with multiple IDs
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm mark-read M1 M2 M3 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
