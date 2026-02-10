@@ -171,4 +171,4 @@ See [docs/CLAUDE-CODE-GUIDE.md](docs/CLAUDE-CODE-GUIDE.md) for setup instruction
 
 ## License
 
-[MIT](LICENSE). Have fun.
+[MIT License](./LICENSE). TL;DR: Do whatever you want with this software, just keep the copyright notice included. The authors aren't liable if something goes wrong.
