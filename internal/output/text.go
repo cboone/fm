@@ -215,9 +215,9 @@ func formatAddrs(addrs []types.Address) string {
 // truncate shortens s to maxLen characters, replacing the end with "..."
 // if truncation is needed. If maxLen < 4, it returns s unchanged.
 func truncate(s string, maxLen int) string {
-	runes := []rune(s)
-	if maxLen < 4 || len(runes) <= maxLen {
+	if maxLen < 4 || utf8.RuneCountInString(s) <= maxLen {
 		return s
 	}
+	runes := []rune(s)
 	return string(runes[:maxLen-3]) + "..."
 }

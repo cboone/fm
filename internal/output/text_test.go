@@ -434,6 +434,9 @@ func TestTextFormatter_MailboxesAlignment(t *testing.T) {
 	// With tabwriter, the ID column should start at the same position in both lines.
 	idx1 := strings.Index(lines[0], "mb1")
 	idx2 := strings.Index(lines[1], "mb2")
+	if idx1 == -1 || idx2 == -1 {
+		t.Fatalf("expected mailbox IDs in output for alignment check, got:\n%s", out)
+	}
 	if idx1 != idx2 {
 		t.Errorf("ID columns not aligned: line 1 at %d, line 2 at %d\nOutput:\n%s", idx1, idx2, out)
 	}
@@ -522,6 +525,9 @@ func TestTextFormatter_EmailListAlignment(t *testing.T) {
 	// The date column should start at the same position in both lines.
 	idx1 := strings.Index(mainLines[0], "2026-02-04")
 	idx2 := strings.Index(mainLines[1], "2026-02-04")
+	if idx1 == -1 || idx2 == -1 {
+		t.Fatalf("expected '2026-02-04' in output for alignment check, got:\n%s", out)
+	}
 	if idx1 != idx2 {
 		t.Errorf("date columns not aligned: line 1 at %d, line 2 at %d\nOutput:\n%s", idx1, idx2, out)
 	}
