@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	// maxFromWidth is the maximum display width for the sender column in email lists.
+	// maxFromWidth is the maximum rune count for the sender column in email lists.
 	maxFromWidth = 40
-	// maxSubjectWidth is the maximum display width for the subject column in email lists.
+	// maxSubjectWidth is the maximum rune count for the subject column in email lists.
 	maxSubjectWidth = 80
 )
 

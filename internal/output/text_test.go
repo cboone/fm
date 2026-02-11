@@ -527,7 +527,7 @@ func TestTextFormatter_EmailListAlignment(t *testing.T) {
 	}
 }
 
-func TestTextFormatter_EmailListAlignmentUnicodeWidth(t *testing.T) {
+func TestTextFormatter_EmailListAlignmentMultiByteRunes(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer
 
