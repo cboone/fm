@@ -385,6 +385,201 @@ func TestTextFormatter_ErrorWithoutHint(t *testing.T) {
 	}
 }
 
+// --- truncate tests ---
+
+func TestTruncate(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		maxLen int
+		want   string
+	}{
+		{"short string unchanged", "hello", 10, "hello"},
+		{"exact length unchanged", "hello", 5, "hello"},
+		{"truncated with ellipsis", "hello world", 8, "hello..."},
+		{"maxLen too small returns unchanged", "hello", 3, "hello"},
+		{"empty string", "", 10, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := truncate(tt.input, tt.maxLen)
+			if got != tt.want {
+				t.Errorf("truncate(%q, %d) = %q, want %q", tt.input, tt.maxLen, got, tt.want)
+			}
+		})
+	}
+}
+
+// --- alignment tests ---
+
+func TestTextFormatter_MailboxesAlignment(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	mailboxes := []types.MailboxInfo{
+		{ID: "mb1", Name: "Inbox", Role: "inbox", TotalEmails: 100, UnreadEmails: 5},
+		{ID: "mb2", Name: "A Very Long Mailbox Name That Exceeds Forty Characters Easily", Role: "", TotalEmails: 50, UnreadEmails: 0},
+	}
+
+	if err := f.Format(&buf, mailboxes); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+
+	// With tabwriter, the ID column should start at the same position in both lines.
+	idx1 := strings.Index(lines[0], "mb1")
+	idx2 := strings.Index(lines[1], "mb2")
+	if idx1 == -1 || idx2 == -1 {
+		t.Fatalf("expected mailbox IDs in output for alignment check, got:\n%s", out)
+	}
+	if idx1 != idx2 {
+		t.Errorf("ID columns not aligned: line 1 at %d, line 2 at %d\nOutput:\n%s", idx1, idx2, out)
+	}
+}
+
+func TestTextFormatter_EmailListTruncation(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	longName := strings.Repeat("A", 60)
+	longSubject := strings.Repeat("B", 100)
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Name: longName, Email: "a@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    longSubject,
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if strings.Contains(out, longName) {
+		t.Error("expected long sender name to be truncated")
+	}
+	if !strings.Contains(out, "...") {
+		t.Error("expected ellipsis in truncated output")
+	}
+	if strings.Contains(out, longSubject) {
+		t.Error("expected long subject to be truncated")
+	}
+}
+
+func TestTextFormatter_EmailListAlignment(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 2,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Name: "Al", Email: "al@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    "Short",
+				ReceivedAt: now,
+			},
+			{
+				ID:         "M2",
+				From:       []types.Address{{Name: "Alexander Hamilton", Email: "alexander@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    "A much longer subject line here",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	lines := strings.Split(out, "\n")
+
+	// Find the two main email lines (contain a date timestamp).
+	var mainLines []string
+	for _, line := range lines {
+		if strings.Contains(line, "2026-02-04 10:30") {
+			mainLines = append(mainLines, line)
+		}
+	}
+	if len(mainLines) != 2 {
+		t.Fatalf("expected 2 main email lines, got %d\nOutput:\n%s", len(mainLines), out)
+	}
+
+	// The date column should start at the same position in both lines.
+	idx1 := strings.Index(mainLines[0], "2026-02-04")
+	idx2 := strings.Index(mainLines[1], "2026-02-04")
+	if idx1 == -1 || idx2 == -1 {
+		t.Fatalf("expected '2026-02-04' in output for alignment check, got:\n%s", out)
+	}
+	if idx1 != idx2 {
+		t.Errorf("date columns not aligned: line 1 at %d, line 2 at %d\nOutput:\n%s", idx1, idx2, out)
+	}
+}
+
+func TestTextFormatter_EmailListAlignmentMultiByteRunes(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Name: strings.Repeat("界", 50), Email: "wide@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    "Subj",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	var mainLine string
+	for _, line := range lines {
+		if strings.Contains(line, "2026-02-04 10:30") {
+			mainLine = line
+			break
+		}
+	}
+	if mainLine == "" {
+		t.Fatalf("expected main email line with timestamp\nOutput:\n%s", buf.String())
+	}
+
+	subjByteIdx := strings.Index(mainLine, "Subj")
+	if subjByteIdx == -1 {
+		t.Fatalf("expected subject in output line\nLine:\n%s", mainLine)
+	}
+
+	// Unread marker + space (2 runes) + maxFromWidth (40 runes) + 2 spaces separator.
+	expectedSubjRuneIdx := 2 + maxFromWidth + 2
+	subjRuneIdx := len([]rune(mainLine[:subjByteIdx]))
+	if subjRuneIdx != expectedSubjRuneIdx {
+		t.Errorf("unexpected subject column start: got %d runes, want %d\nLine:\n%s", subjRuneIdx, expectedSubjRuneIdx, mainLine)
+	}
+}
+
 // --- formatAddr / formatAddrs tests ---
 
 func TestFormatAddr_WithName(t *testing.T) {

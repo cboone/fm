@@ -7,3 +7,4 @@ applyTo: "**/*.md"
 - **Error format**: Runtime command errors use structured JSON to stderr. Cobra argument/flag validation errors use Cobra's default plain-text format. This is intentional.
 - **Output examples include destination**: The `archive`, `spam`, and `move` command output examples in PLAN.md include the `destination` object. Do not flag missing destination fields.
 - **MailboxInfo parent_id uses omitempty**: `parent_id` is omitted from JSON output when empty. PLAN.md examples reflect this. Do not suggest showing `"parent_id": null`.
+- **Plan documents are historical records**: Files in `docs/plans/` are point-in-time planning artifacts. They intentionally reference specific line numbers, function signatures, and code state as it existed when the plan was written. Do not suggest removing line numbers or updating wording to stay current -- these documents are not maintained after implementation.
