@@ -7,7 +7,7 @@ Addresses: GitHub issues #3 and #4.
 The text formatter in `internal/output/text.go` uses hardcoded fixed-width columns that break alignment or silently truncate content:
 
 - **Mailboxes** (`formatMailboxes`, line 68): `%-40s` for mailbox name -- breaks alignment when names exceed 40 characters.
-- **Email lists** (`formatEmailList`, line 85): `%-30s` for sender, `%-50s` for subject -- silently clips long values with no indication.
+- **Email lists** (`formatEmailList`, line 85): `%-30s` for sender, `%-50s` for subject -- fixed minimum widths that cause uneven spacing and poor readability with longer values.
 
 Both were identified during Copilot PR review of PR #1.
 

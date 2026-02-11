@@ -527,6 +527,53 @@ func TestTextFormatter_EmailListAlignment(t *testing.T) {
 	}
 }
 
+func TestTextFormatter_EmailListAlignmentUnicodeWidth(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Name: strings.Repeat("界", 50), Email: "wide@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    "Subj",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	var mainLine string
+	for _, line := range lines {
+		if strings.Contains(line, "2026-02-04 10:30") {
+			mainLine = line
+			break
+		}
+	}
+	if mainLine == "" {
+		t.Fatalf("expected main email line with timestamp\nOutput:\n%s", buf.String())
+	}
+
+	subjByteIdx := strings.Index(mainLine, "Subj")
+	if subjByteIdx == -1 {
+		t.Fatalf("expected subject in output line\nLine:\n%s", mainLine)
+	}
+
+	// Unread marker + space (2 runes) + maxFromWidth (40 runes) + 2 spaces separator.
+	expectedSubjRuneIdx := 2 + maxFromWidth + 2
+	subjRuneIdx := len([]rune(mainLine[:subjByteIdx]))
+	if subjRuneIdx != expectedSubjRuneIdx {
+		t.Errorf("unexpected subject column start: got %d runes, want %d\nLine:\n%s", subjRuneIdx, expectedSubjRuneIdx, mainLine)
+	}
+}
+
 // --- formatAddr / formatAddrs tests ---
 
 func TestFormatAddr_WithName(t *testing.T) {

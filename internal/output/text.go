@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"unicode/utf8"
 
 	"github.com/cboone/jm/internal/types"
 )
@@ -108,11 +109,13 @@ func (f *TextFormatter) formatEmailList(w io.Writer, result types.EmailListResul
 
 		rows[i] = displayRow{unread, from, subject, e.ReceivedAt.Format("2006-01-02 15:04")}
 
-		if len(from) > maxFrom {
-			maxFrom = len(from)
+		fromWidth := utf8.RuneCountInString(from)
+		if fromWidth > maxFrom {
+			maxFrom = fromWidth
 		}
-		if len(subject) > maxSubject {
-			maxSubject = len(subject)
+		subjectWidth := utf8.RuneCountInString(subject)
+		if subjectWidth > maxSubject {
+			maxSubject = subjectWidth
 		}
 	}
 
