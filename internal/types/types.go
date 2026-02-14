@@ -102,7 +102,7 @@ type AccountInfo struct {
 	IsPersonal bool   `json:"is_personal"`
 }
 
-// MoveResult reports the outcome of a move/archive/spam/mark-read/flag operation.
+// MoveResult reports the outcome of a move/archive/spam/mark-read/flag/unflag operation.
 type MoveResult struct {
 	Moved        []string         `json:"moved,omitempty"`
 	Archived     []string         `json:"archived,omitempty"`
