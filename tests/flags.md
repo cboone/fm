@@ -2,6 +2,13 @@
 
 Verify that flags and configuration work correctly.
 
+## Version flag
+
+```scrut
+$ $TESTDIR/../jm --version
+jm version * (glob)
+```
+
 ## Default format is JSON
 
 The error output uses JSON format by default.
