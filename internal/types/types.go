@@ -91,9 +91,9 @@ type ThreadView struct {
 
 // SessionInfo is a simplified session for output.
 type SessionInfo struct {
-	Username     string                `json:"username"`
+	Username     string                 `json:"username"`
 	Accounts     map[string]AccountInfo `json:"accounts"`
-	Capabilities []string              `json:"capabilities"`
+	Capabilities []string               `json:"capabilities"`
 }
 
 // AccountInfo is a simplified account for output.
@@ -102,12 +102,14 @@ type AccountInfo struct {
 	IsPersonal bool   `json:"is_personal"`
 }
 
-// MoveResult reports the outcome of a move/archive/spam/mark-read operation.
+// MoveResult reports the outcome of a move/archive/spam/mark-read/flag operation.
 type MoveResult struct {
 	Moved        []string         `json:"moved,omitempty"`
 	Archived     []string         `json:"archived,omitempty"`
 	MarkedSpam   []string         `json:"marked_as_spam,omitempty"`
 	MarkedAsRead []string         `json:"marked_as_read,omitempty"`
+	Flagged      []string         `json:"flagged,omitempty"`
+	Unflagged    []string         `json:"unflagged,omitempty"`
 	Destination  *DestinationInfo `json:"destination,omitempty"`
 	Errors       []string         `json:"errors"`
 }

@@ -42,6 +42,22 @@ Error: requires at least 1 arg(s), only received 0
 [1]
 ```
 
+## Flag requires at least one argument
+
+```scrut
+$ $TESTDIR/../jm flag 2>&1
+Error: requires at least 1 arg(s), only received 0
+[1]
+```
+
+## Unflag requires at least one argument
+
+```scrut
+$ $TESTDIR/../jm unflag 2>&1
+Error: requires at least 1 arg(s), only received 0
+[1]
+```
+
 ## Move requires at least one argument
 
 ```scrut

@@ -450,6 +450,64 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ---
 
+### flag
+
+Flag one or more emails by setting the `$flagged` keyword.
+
+```bash
+jm flag <email-id> [email-id...]
+```
+
+1 or more arguments required. No command-specific flags.
+
+**JSON output:**
+
+```json
+{
+  "flagged": ["M-email-id-1", "M-email-id-2"],
+  "errors": []
+}
+```
+
+**Text output:**
+
+```text
+Flagged: M-email-id-1, M-email-id-2
+```
+
+If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+
+---
+
+### unflag
+
+Unflag one or more emails by removing the `$flagged` keyword.
+
+```bash
+jm unflag <email-id> [email-id...]
+```
+
+1 or more arguments required. No command-specific flags.
+
+**JSON output:**
+
+```json
+{
+  "unflagged": ["M-email-id-1", "M-email-id-2"],
+  "errors": []
+}
+```
+
+**Text output:**
+
+```text
+Unflagged: M-email-id-1, M-email-id-2
+```
+
+If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+
+---
+
 ### move
 
 Move one or more emails to a specified mailbox by name or ID.
@@ -627,7 +685,7 @@ Returned by the `session` command.
 
 ### MoveResult
 
-Returned by `archive`, `spam`, `mark-read`, and `move` commands. Only the relevant action field is populated.
+Returned by `archive`, `spam`, `mark-read`, `flag`, `unflag`, and `move` commands. Only the relevant action field is populated.
 
 | Field            | Type            | Notes                                |
 | ---------------- | --------------- | ------------------------------------ |
@@ -635,6 +693,8 @@ Returned by `archive`, `spam`, `mark-read`, and `move` commands. Only the releva
 | `archived`       | string[]        | Omitted unless `archive` command     |
 | `marked_as_spam` | string[]        | Omitted unless `spam` command        |
 | `marked_as_read` | string[]        | Omitted unless `mark-read` command   |
+| `flagged`        | string[]        | Omitted unless `flag` command        |
+| `unflagged`      | string[]        | Omitted unless `unflag` command      |
 | `destination`    | DestinationInfo | Omitted on total failure             |
 | `errors`         | string[]        | Empty array on full success          |
 

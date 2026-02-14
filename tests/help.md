@@ -18,6 +18,7 @@ Usage: (glob)
 Available Commands: (glob)
   archive * (glob)
   completion * (glob)
+  flag * (glob)
   help * (glob)
   list * (glob)
   mailboxes * (glob)
@@ -27,6 +28,7 @@ Available Commands: (glob)
   search * (glob)
   session * (glob)
   spam * (glob)
+  unflag * (glob)
  (regex)
 Flags: (glob)
 * (glob+)
@@ -153,6 +155,28 @@ Mark emails as read (set the $seen keyword) (glob)
  (regex)
 Usage: (glob)
   jm mark-read <email-id> [email-id...] [flags] (glob)
+* (glob+)
+```
+
+## Flag command help
+
+```scrut
+$ $TESTDIR/../jm flag --help
+Flag emails (set the $flagged keyword) (glob)
+ (regex)
+Usage: (glob)
+  jm flag <email-id> [email-id...] [flags] (glob)
+* (glob+)
+```
+
+## Unflag command help
+
+```scrut
+$ $TESTDIR/../jm unflag --help
+Unflag emails (remove the $flagged keyword) (glob)
+ (regex)
+Usage: (glob)
+  jm unflag <email-id> [email-id...] [flags] (glob)
 * (glob+)
 ```
 

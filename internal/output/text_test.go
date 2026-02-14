@@ -357,6 +357,44 @@ func TestTextFormatter_MoveResultMarkedAsRead(t *testing.T) {
 	}
 }
 
+func TestTextFormatter_MoveResultFlagged(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		Flagged: []string{"M1", "M2"},
+		Errors:  []string{},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Flagged: M1, M2") {
+		t.Errorf("expected flagged IDs, got: %s", out)
+	}
+}
+
+func TestTextFormatter_MoveResultUnflagged(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		Unflagged: []string{"M3"},
+		Errors:    []string{},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Unflagged: M3") {
+		t.Errorf("expected unflagged IDs, got: %s", out)
+	}
+}
+
 func TestTextFormatter_ErrorWithHint(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer

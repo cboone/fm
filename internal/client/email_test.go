@@ -627,6 +627,42 @@ func TestMarkAsReadPatchStructure(t *testing.T) {
 	}
 }
 
+// TestFlagPatchStructure verifies the patch structure for flag (set $flagged).
+func TestFlagPatchStructure(t *testing.T) {
+	patch := jmap.Patch{
+		"keywords/$flagged": true,
+	}
+	if len(patch) != 1 {
+		t.Errorf("expected 1 patch key, got %d", len(patch))
+	}
+	if _, ok := patch["keywords/$flagged"]; !ok {
+		t.Error("expected keywords/$flagged in patch")
+	}
+	if _, ok := patch["mailboxIds"]; ok {
+		t.Error("flag patch must not contain mailboxIds")
+	}
+}
+
+// TestUnflagPatchStructure verifies the patch structure for unflag (remove $flagged).
+func TestUnflagPatchStructure(t *testing.T) {
+	patch := jmap.Patch{
+		"keywords/$flagged": nil,
+	}
+	if len(patch) != 1 {
+		t.Errorf("expected 1 patch key, got %d", len(patch))
+	}
+	val, ok := patch["keywords/$flagged"]
+	if !ok {
+		t.Error("expected keywords/$flagged in patch")
+	}
+	if val != nil {
+		t.Errorf("expected keywords/$flagged to be nil (remove), got %v", val)
+	}
+	if _, ok := patch["mailboxIds"]; ok {
+		t.Error("unflag patch must not contain mailboxIds")
+	}
+}
+
 func TestSpamPatchStructure(t *testing.T) {
 	targetID := jmap.ID("junk-mb")
 	patch := jmap.Patch{

@@ -182,6 +182,12 @@ func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error 
 	if len(r.MarkedAsRead) > 0 {
 		fmt.Fprintf(w, "Marked as read: %s\n", strings.Join(r.MarkedAsRead, ", "))
 	}
+	if len(r.Flagged) > 0 {
+		fmt.Fprintf(w, "Flagged: %s\n", strings.Join(r.Flagged, ", "))
+	}
+	if len(r.Unflagged) > 0 {
+		fmt.Fprintf(w, "Unflagged: %s\n", strings.Join(r.Unflagged, ", "))
+	}
 	if len(r.Moved) > 0 {
 		fmt.Fprintf(w, "Moved: %s\n", strings.Join(r.Moved, ", "))
 	}

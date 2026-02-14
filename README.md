@@ -85,6 +85,10 @@ jm search --from alice@example.com --after 2026-01-01
 # Mark emails as read
 jm mark-read <email-id>
 
+# Flag or unflag emails
+jm flag <email-id>
+jm unflag <email-id>
+
 # Archive emails
 jm archive <email-id>
 
@@ -111,6 +115,8 @@ jm move <email-id-1> <email-id-2> --to Receipts
 | `jm archive <id> [id...]`             | Move emails to the Archive mailbox   |
 | `jm spam <id> [id...]`                | Move emails to the Junk/Spam mailbox |
 | `jm mark-read <id> [id...]`           | Mark emails as read                  |
+| `jm flag <id> [id...]`                | Flag emails (set $flagged keyword)   |
+| `jm unflag <id> [id...]`              | Unflag emails (remove $flagged)      |
 | `jm move <id> [id...] --to <mailbox>` | Move emails to a specified mailbox   |
 
 See [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) for full details on all flags, output schemas, and examples.

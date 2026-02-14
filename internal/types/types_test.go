@@ -246,6 +246,64 @@ func TestMoveResult_JSON_Spam(t *testing.T) {
 	}
 }
 
+func TestMoveResult_JSON_Flagged(t *testing.T) {
+	r := MoveResult{
+		Flagged: []string{"M1", "M2"},
+		Errors:  []string{},
+	}
+
+	data, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	flagged, ok := result["flagged"].([]interface{})
+	if !ok {
+		t.Fatal("expected flagged array")
+	}
+	if len(flagged) != 2 {
+		t.Errorf("expected 2 flagged, got %d", len(flagged))
+	}
+	// Other action fields should be omitted.
+	if _, ok := result["moved"]; ok {
+		t.Error("expected moved to be omitted for flag result")
+	}
+	if _, ok := result["unflagged"]; ok {
+		t.Error("expected unflagged to be omitted for flag result")
+	}
+}
+
+func TestMoveResult_JSON_Unflagged(t *testing.T) {
+	r := MoveResult{
+		Unflagged: []string{"M3"},
+		Errors:    []string{},
+	}
+
+	data, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	unflagged, ok := result["unflagged"].([]interface{})
+	if !ok {
+		t.Fatal("expected unflagged array")
+	}
+	if len(unflagged) != 1 {
+		t.Errorf("expected 1 unflagged, got %d", len(unflagged))
+	}
+	if _, ok := result["flagged"]; ok {
+		t.Error("expected flagged to be omitted for unflag result")
+	}
+}
+
 func TestMoveResult_JSON_WithErrors(t *testing.T) {
 	r := MoveResult{
 		Moved:  []string{"M1"},
