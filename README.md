@@ -12,6 +12,14 @@ Sending and deleting are structurally disallowed, not merely hidden behind flags
 
 ## Install
 
+### Homebrew
+
+```bash
+brew install cboone/tap/jm
+```
+
+### Go install
+
 ```bash
 go install github.com/cboone/jm@latest
 ```

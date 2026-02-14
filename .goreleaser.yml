@@ -1,0 +1,55 @@
+version: 2
+
+builds:
+  - id: jm
+    main: .
+    binary: jm
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/cboone/jm/cmd.version={{.Version}}
+
+archives:
+  - ids:
+      - jm
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  prerelease: auto
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - repository:
+      owner: cboone
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/cboone/jm"
+    description: "Safe, read-oriented CLI for JMAP email"
+    license: MIT
+    test: |
+      assert_match version.to_s, shell_output("#{bin}/jm --version")

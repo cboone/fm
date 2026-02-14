@@ -19,6 +19,7 @@ var ErrSilent = errors.New("error already printed")
 var (
 	cfgFile       string
 	initConfigErr error
+	version       = "dev"
 	rootCmd       = &cobra.Command{
 		Use:   "jm",
 		Short: "JMAP Mail -- a safe, read-oriented CLI for JMAP email (Fastmail)",
@@ -27,6 +28,7 @@ via the JMAP protocol. It connects to Fastmail (or any JMAP server) and
 provides read, search, archive, and spam operations.
 
 Sending and deleting email are structurally disallowed.`,
+		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
