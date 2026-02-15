@@ -150,6 +150,13 @@ Files: `cmd/archive.go:20`, `cmd/flag.go:19`, `cmd/list.go:40`, `cmd/mailboxes.g
 - CLAUDE.md snippet section: update all `jm` -> `fm` and `JMAP_TOKEN` -> `FM_TOKEN`
 - Keep "JMAP" where it refers to the protocol
 
+**File:** `.env.example`
+- `JMAP_TOKEN` -> `FM_TOKEN`
+- `JMAP_SESSION_URL` -> `FM_SESSION_URL`
+- `JMAP_FORMAT` -> `FM_FORMAT`
+- `JMAP_ACCOUNT_ID` -> `FM_ACCOUNT_ID`
+- Keep JMAP scope URNs unchanged (`urn:ietf:params:jmap:*`) because they are protocol identifiers
+
 ### Step 11: Scrut CLI test files
 
 All test files reference the binary as `$TESTDIR/../jm` and expect output containing `jm`. These all change to `fm`.
@@ -157,7 +164,7 @@ All test files reference the binary as `$TESTDIR/../jm` and expect output contai
 **File:** `tests/help.md`
 - Title: `# jm help output` -> `# fm help output`
 - All `$TESTDIR/../jm` -> `$TESTDIR/../fm`
-- Expected output: `jm is a command-line tool` -> `fm is a command-line tool`
+- Expected output: `jm is a command-line tool for reading, searching, and triaging email` -> `fm is a command-line tool for reading, searching, and triaging Fastmail email`
 - Expected output: `jm [command]` -> `fm [command]`
 - Expected output: `"jm [command] --help"` -> `"fm [command] --help"`
 - All `jm session`, `jm mailboxes`, etc. in Usage lines -> `fm session`, `fm mailboxes`, etc.
