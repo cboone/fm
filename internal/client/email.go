@@ -542,8 +542,9 @@ func (c *Client) GetEmailSummaries(ids []string) ([]types.EmailSummary, []string
 	var allSummaries []types.EmailSummary
 	var allNotFound []string
 
-	for start := 0; start < len(ids); start += batchSize {
-		end := start + batchSize
+	size := c.maxBatchSize()
+	for start := 0; start < len(ids); start += size {
+		end := start + size
 		if end > len(ids) {
 			end = len(ids)
 		}
