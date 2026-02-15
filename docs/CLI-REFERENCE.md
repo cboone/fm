@@ -109,18 +109,30 @@ jm list [flags]
 
 No arguments.
 
-| Flag        | Short | Default           | Description                           |
-| ----------- | ----- | ----------------- | ------------------------------------- |
-| `--mailbox` | `-m`  | `inbox`           | Mailbox name or ID                    |
-| `--limit`   | `-l`  | `25`              | Maximum number of results (minimum 1) |
-| `--offset`  | `-o`  | `0`               | Pagination offset (non-negative)      |
-| `--unread`  | `-u`  | `false`           | Only show unread messages             |
-| `--sort`    | `-s`  | `receivedAt desc` | Sort order: field + direction         |
+| Flag           | Short | Default           | Description                           |
+| -------------- | ----- | ----------------- | ------------------------------------- |
+| `--mailbox`    | `-m`  | `inbox`           | Mailbox name or ID                    |
+| `--limit`      | `-l`  | `25`              | Maximum number of results (minimum 1) |
+| `--offset`     | `-o`  | `0`               | Pagination offset (non-negative)      |
+| `--unread`     | `-u`  | `false`           | Only show unread messages             |
+| `--flagged`    | `-f`  | `false`           | Only show flagged messages            |
+| `--unflagged`  |       | `false`           | Only show unflagged messages          |
+| `--sort`       | `-s`  | `receivedAt desc` | Sort order: field + direction         |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 **Sort fields:** `receivedAt`, `sentAt`, `from`, `subject` (case-insensitive).
 **Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space or colon.
 
 Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
+
+**Filtering examples:**
+
+```bash
+jm list --flagged                # only flagged emails
+jm list --unflagged              # only unflagged emails
+jm list --unread --unflagged     # unread and unflagged emails
+```
 
 **JSON output:**
 
@@ -304,6 +316,8 @@ jm search [query] [flags]
 | `--limit`          | `-l`  | `25`              | Maximum results (minimum 1)                 |
 | `--offset`         | `-o`  | `0`               | Pagination offset (non-negative)            |
 | `--unread`         | `-u`  | `false`           | Only show unread messages                   |
+| `--flagged`        | `-f`  | `false`           | Only show flagged messages                  |
+| `--unflagged`      |       | `false`           | Only show unflagged messages                |
 | `--sort`           | `-s`  | `receivedAt desc` | Sort order: field + direction               |
 | `--from`           |       | (none)            | Filter by sender address or name            |
 | `--to`             |       | (none)            | Filter by recipient address or name         |
@@ -312,12 +326,22 @@ jm search [query] [flags]
 | `--after`          |       | (none)            | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
 | `--has-attachment` |       | `false`           | Only emails with attachments                |
 
+`--flagged` and `--unflagged` are mutually exclusive.
+
 **Date format:** RFC 3339 (e.g. `2026-01-15T00:00:00Z`) or a bare date (e.g. `2026-01-15`). Bare dates are treated as midnight UTC.
 
 **Sort fields:** `receivedAt`, `sentAt`, `from`, `subject` (case-insensitive).
 **Sort direction:** `asc` or `desc` (default: `desc`). Append after the field name, separated by a space or colon.
 
 Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
+
+**Filtering examples:**
+
+```bash
+jm search --flagged                       # only flagged emails
+jm search --unread --unflagged            # unread and unflagged emails
+jm search "invoice" --flagged --from acme
+```
 
 All filters are combined with AND logic.
 

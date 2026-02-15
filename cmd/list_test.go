@@ -129,3 +129,19 @@ func TestParseSort_ColonSyntaxDesc(t *testing.T) {
 		t.Error("expected ascending=false for :desc")
 	}
 }
+
+func TestListCmd_FlaggedAndUnflaggedMutuallyExclusive(t *testing.T) {
+	rootCmd.SetArgs([]string{"list", "--flagged", "--unflagged"})
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when both --flagged and --unflagged are set")
+	}
+}
+
+func TestSearchCmd_FlaggedAndUnflaggedMutuallyExclusive(t *testing.T) {
+	rootCmd.SetArgs([]string{"search", "--flagged", "--unflagged"})
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when both --flagged and --unflagged are set")
+	}
+}

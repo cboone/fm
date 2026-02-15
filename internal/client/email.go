@@ -40,17 +40,36 @@ var detailProperties = []string{
 }
 
 // ListEmails queries emails in a mailbox and returns summaries.
-func (c *Client) ListEmails(mailboxNameOrID string, limit uint64, offset int64, unreadOnly bool, sortField string, sortAsc bool) (types.EmailListResult, error) {
+func (c *Client) ListEmails(mailboxNameOrID string, limit uint64, offset int64, unreadOnly bool, flaggedOnly bool, unflaggedOnly bool, sortField string, sortAsc bool) (types.EmailListResult, error) {
 	mailboxID, err := c.ResolveMailboxID(mailboxNameOrID)
 	if err != nil {
 		return types.EmailListResult{}, err
 	}
 
-	filter := &email.FilterCondition{
+	fc := &email.FilterCondition{
 		InMailbox: mailboxID,
 	}
 	if unreadOnly {
-		filter.NotKeyword = "$seen"
+		fc.NotKeyword = "$seen"
+	}
+	if flaggedOnly {
+		fc.HasKeyword = "$flagged"
+	}
+
+	// Build the final filter. When both unflaggedOnly and unreadOnly are set,
+	// they each need a separate NotKeyword field, so we must use a compound
+	// FilterOperator with AND. InMailbox stays on the first FilterCondition
+	// inside the operator so the mailbox scope is preserved.
+	var filter email.Filter = fc
+	if unflaggedOnly {
+		if unreadOnly {
+			filter = &email.FilterOperator{
+				Operator:   jmap.OperatorAND,
+				Conditions: []email.Filter{fc, &email.FilterCondition{NotKeyword: "$flagged"}},
+			}
+		} else {
+			fc.NotKeyword = "$flagged"
+		}
 	}
 
 	req := &jmap.Request{}
@@ -253,33 +272,51 @@ func singleThreadEntry(d types.EmailDetail) types.ThreadEmail {
 
 // SearchEmails performs a filtered search across emails.
 func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error) {
-	filter := &email.FilterCondition{}
+	fc := &email.FilterCondition{}
 	if opts.Text != "" {
-		filter.Text = opts.Text
+		fc.Text = opts.Text
 	}
 	if opts.From != "" {
-		filter.From = opts.From
+		fc.From = opts.From
 	}
 	if opts.To != "" {
-		filter.To = opts.To
+		fc.To = opts.To
 	}
 	if opts.Subject != "" {
-		filter.Subject = opts.Subject
+		fc.Subject = opts.Subject
 	}
 	if opts.Before != nil {
-		filter.Before = opts.Before
+		fc.Before = opts.Before
 	}
 	if opts.After != nil {
-		filter.After = opts.After
+		fc.After = opts.After
 	}
 	if opts.HasAttachment {
-		filter.HasAttachment = true
+		fc.HasAttachment = true
 	}
 	if opts.UnreadOnly {
-		filter.NotKeyword = "$seen"
+		fc.NotKeyword = "$seen"
 	}
 	if opts.MailboxID != "" {
-		filter.InMailbox = jmap.ID(opts.MailboxID)
+		fc.InMailbox = jmap.ID(opts.MailboxID)
+	}
+	if opts.FlaggedOnly {
+		fc.HasKeyword = "$flagged"
+	}
+
+	// Build the final filter. When both UnflaggedOnly and UnreadOnly are set,
+	// they each need a separate NotKeyword field, so we must use a compound
+	// FilterOperator with AND.
+	var filter email.Filter = fc
+	if opts.UnflaggedOnly {
+		if opts.UnreadOnly {
+			filter = &email.FilterOperator{
+				Operator:   jmap.OperatorAND,
+				Conditions: []email.Filter{fc, &email.FilterCondition{NotKeyword: "$flagged"}},
+			}
+		} else {
+			fc.NotKeyword = "$flagged"
+		}
 	}
 
 	sortField := opts.SortField
@@ -394,6 +431,8 @@ type SearchOptions struct {
 	After         *time.Time
 	HasAttachment bool
 	UnreadOnly    bool
+	FlaggedOnly   bool
+	UnflaggedOnly bool
 	Limit         uint64
 	Offset        int64
 	SortField     string

@@ -8,6 +8,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/mail"
 	"git.sr.ht/~rockorager/go-jmap/mail/email"
+	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 	"git.sr.ht/~rockorager/go-jmap/mail/searchsnippet"
 
 	"github.com/cboone/jm/internal/types"
@@ -842,6 +843,290 @@ func TestUnflagPatchStructure(t *testing.T) {
 	}
 	if _, ok := patch["mailboxIds"]; ok {
 		t.Error("unflag patch must not contain mailboxIds")
+	}
+}
+
+// --- Flagged/unflagged filter tests ---
+
+// TestSearchEmails_FlaggedOnly verifies that FlaggedOnly sets HasKeyword on the filter.
+func TestSearchEmails_FlaggedOnly(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{FlaggedOnly: true, Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.HasKeyword != "$flagged" {
+		t.Errorf("expected HasKeyword=$flagged, got %q", fc.HasKeyword)
+	}
+}
+
+// TestSearchEmails_UnflaggedOnly verifies that UnflaggedOnly sets NotKeyword on the filter.
+func TestSearchEmails_UnflaggedOnly(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{UnflaggedOnly: true, Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.NotKeyword != "$flagged" {
+		t.Errorf("expected NotKeyword=$flagged, got %q", fc.NotKeyword)
+	}
+}
+
+// TestSearchEmails_UnflaggedAndUnread verifies the compound FilterOperator for
+// UnflaggedOnly + UnreadOnly (both need NotKeyword).
+func TestSearchEmails_UnflaggedAndUnread(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{UnflaggedOnly: true, UnreadOnly: true, Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	op, ok := query.Filter.(*email.FilterOperator)
+	if !ok {
+		t.Fatalf("expected *email.FilterOperator for compound filter, got %T", query.Filter)
+	}
+	if op.Operator != jmap.OperatorAND {
+		t.Errorf("expected AND operator, got %q", op.Operator)
+	}
+	if len(op.Conditions) != 2 {
+		t.Fatalf("expected 2 conditions, got %d", len(op.Conditions))
+	}
+
+	first, ok := op.Conditions[0].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected first condition to be *email.FilterCondition, got %T", op.Conditions[0])
+	}
+	if first.NotKeyword != "$seen" {
+		t.Errorf("expected first condition NotKeyword=$seen, got %q", first.NotKeyword)
+	}
+
+	second, ok := op.Conditions[1].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected second condition to be *email.FilterCondition, got %T", op.Conditions[1])
+	}
+	if second.NotKeyword != "$flagged" {
+		t.Errorf("expected second condition NotKeyword=$flagged, got %q", second.NotKeyword)
+	}
+}
+
+// TestSearchEmails_UnflaggedAndUnread_SnippetFilter verifies that the compound
+// filter is also passed to SearchSnippet/get when doing a text search.
+func TestSearchEmails_UnflaggedAndUnread_SnippetFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+				{Name: "SearchSnippet/get", CallID: "2", Args: &searchsnippet.GetResponse{List: []*searchsnippet.SearchSnippet{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.SearchEmails(SearchOptions{Text: "test", UnflaggedOnly: true, UnreadOnly: true, Limit: 25, SortField: "receivedAt"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(captured.Calls) != 3 {
+		t.Fatalf("expected 3 calls, got %d", len(captured.Calls))
+	}
+
+	snippetGet, ok := captured.Calls[2].Args.(*searchSnippetGet)
+	if !ok {
+		t.Fatalf("expected *searchSnippetGet, got %T", captured.Calls[2].Args)
+	}
+	if _, ok := snippetGet.Filter.(*email.FilterOperator); !ok {
+		t.Errorf("expected snippet filter to be *email.FilterOperator, got %T", snippetGet.Filter)
+	}
+}
+
+// TestListEmails_FlaggedOnly verifies that flaggedOnly sets HasKeyword on the filter.
+func TestListEmails_FlaggedOnly(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+		mailboxCache: []*mailbox.Mailbox{{ID: "mb-inbox", Name: "Inbox", Role: mailbox.RoleInbox}},
+	}
+
+	_, err := c.ListEmails("inbox", 25, 0, false, true, false, "receivedAt", false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.HasKeyword != "$flagged" {
+		t.Errorf("expected HasKeyword=$flagged, got %q", fc.HasKeyword)
+	}
+	if fc.InMailbox == "" {
+		t.Error("expected InMailbox to be set")
+	}
+}
+
+// TestListEmails_UnflaggedOnly verifies that unflaggedOnly sets NotKeyword on the filter.
+func TestListEmails_UnflaggedOnly(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+		mailboxCache: []*mailbox.Mailbox{{ID: "mb-inbox", Name: "Inbox", Role: mailbox.RoleInbox}},
+	}
+
+	_, err := c.ListEmails("inbox", 25, 0, false, false, true, "receivedAt", false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.NotKeyword != "$flagged" {
+		t.Errorf("expected NotKeyword=$flagged, got %q", fc.NotKeyword)
+	}
+}
+
+// TestListEmails_UnflaggedAndUnread verifies the compound FilterOperator for
+// unflaggedOnly + unreadOnly, preserving InMailbox on the first condition.
+func TestListEmails_UnflaggedAndUnread(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+		mailboxCache: []*mailbox.Mailbox{{ID: "mb-inbox", Name: "Inbox", Role: mailbox.RoleInbox}},
+	}
+
+	_, err := c.ListEmails("inbox", 25, 0, true, false, true, "receivedAt", false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	op, ok := query.Filter.(*email.FilterOperator)
+	if !ok {
+		t.Fatalf("expected *email.FilterOperator for compound filter, got %T", query.Filter)
+	}
+	if op.Operator != jmap.OperatorAND {
+		t.Errorf("expected AND operator, got %q", op.Operator)
+	}
+	if len(op.Conditions) != 2 {
+		t.Fatalf("expected 2 conditions, got %d", len(op.Conditions))
+	}
+
+	first, ok := op.Conditions[0].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected first condition to be *email.FilterCondition, got %T", op.Conditions[0])
+	}
+	if first.NotKeyword != "$seen" {
+		t.Errorf("expected first condition NotKeyword=$seen, got %q", first.NotKeyword)
+	}
+	if first.InMailbox == "" {
+		t.Error("expected InMailbox to be preserved on first condition")
+	}
+
+	second, ok := op.Conditions[1].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected second condition to be *email.FilterCondition, got %T", op.Conditions[1])
+	}
+	if second.NotKeyword != "$flagged" {
+		t.Errorf("expected second condition NotKeyword=$flagged, got %q", second.NotKeyword)
 	}
 }
 

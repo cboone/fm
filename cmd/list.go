@@ -22,6 +22,11 @@ var listCmd = &cobra.Command{
 			return exitError("general_error", "--offset must be non-negative", "")
 		}
 		unread, _ := cmd.Flags().GetBool("unread")
+		flagged, _ := cmd.Flags().GetBool("flagged")
+		unflagged, _ := cmd.Flags().GetBool("unflagged")
+		if flagged && unflagged {
+			return exitError("general_error", "--flagged and --unflagged are mutually exclusive", "")
+		}
 		sort, _ := cmd.Flags().GetString("sort")
 
 		sortField, sortAsc, err := parseSort(sort)
@@ -35,7 +40,7 @@ var listCmd = &cobra.Command{
 				"Check your token in JMAP_TOKEN or config file")
 		}
 
-		result, err := c.ListEmails(mailboxName, limit, offset, unread, sortField, sortAsc)
+		result, err := c.ListEmails(mailboxName, limit, offset, unread, flagged, unflagged, sortField, sortAsc)
 		if err != nil {
 			return exitError("jmap_error", err.Error(), "")
 		}
@@ -49,6 +54,8 @@ func init() {
 	listCmd.Flags().Uint64P("limit", "l", 25, "maximum number of results")
 	listCmd.Flags().Int64P("offset", "o", 0, "pagination offset")
 	listCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
+	listCmd.Flags().BoolP("flagged", "f", false, "only show flagged messages")
+	listCmd.Flags().Bool("unflagged", false, "only show unflagged messages")
 	listCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	rootCmd.AddCommand(listCmd)
 }

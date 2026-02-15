@@ -4,31 +4,31 @@
 
 `jm` is a safety-first JMAP email CLI for Claude Code. It currently reads, searches, and triages email but cannot create or send. The goal is to add **draft creation** -- allowing Claude Code to compose email drafts that appear in the user's Fastmail Drafts folder for human review and sending -- while completely ruling out email sending.
 
-**Key JMAP insight:** Draft creation (`Email/set` with `Create`) and sending (`EmailSubmission/set`) are completely separate JMAP operations. `jm` can create server-side drafts using only its existing `urn:ietf:params:jmap:mail` scope -- no new permissions, no `urn:ietf:params:jmap:submission`.
+**Key JMAP insight:** Draft creation (`Email/set` with `create`) and sending (`EmailSubmission/set`) are separate JMAP operations. `jm` can create server-side drafts using only the existing `urn:ietf:params:jmap:mail` scope -- no new permissions, and no `urn:ietf:params:jmap:submission`.
 
-**Primary use case:** Claude Code reads an email, drafts a contextual reply, and the human reviews/edits/sends it from Fastmail's web or mobile UI.
+**Primary use case:** Claude Code reads an email, drafts a contextual reply, and the human reviews/edits/sends it from Fastmail web or mobile.
 
 ---
 
 ## Safety Design
 
 **Sending is structurally impossible:**
-- The `emailsubmission` package is never imported
-- The `urn:ietf:params:jmap:submission` scope is never requested
-- No `EmailSubmission/set` call is ever constructed
+- The `emailsubmission` package is never imported.
+- The `urn:ietf:params:jmap:submission` scope is never requested.
+- No `EmailSubmission/set` call is ever constructed.
 
 **Draft creation is validated with defense-in-depth:**
 - New `ValidateSetForDraft` function in `safety.go` validates the entire `Email/set` request before execution:
-  - `Create` contains exactly one email
-  - That email's `MailboxIDs` targets only the Drafts mailbox (verified by JMAP role, not name)
-  - That email has the `$draft` keyword set
-  - `Update` is nil/empty
-  - `Destroy` is nil/empty
+  - `Create` contains exactly one email.
+  - That email's `MailboxIDs` targets only the Drafts mailbox (verified by JMAP role, not mailbox name).
+  - That email has the `$draft` keyword set to `true`.
+  - `Update` is nil/empty.
+  - `Destroy` is nil/empty.
 
 **What remains unchanged:**
-- No `Destroy` (never used)
-- No `Update` in draft Set calls (triage commands continue using `Update` separately)
-- No trash moves (existing `ValidateTargetMailbox` unchanged)
+- No `Destroy` is used.
+- Existing triage commands still use `Update` only.
+- No trash moves (existing `ValidateTargetMailbox` remains unchanged).
 
 ---
 
@@ -42,10 +42,10 @@ Four composition modes via mutually exclusive flags:
 # New composition
 jm draft --to alice@example.com --subject "Meeting" --body "Let's meet Thursday."
 
-# Reply (auto-fills to, subject, threading headers)
+# Reply (auto-fills To, subject, threading headers)
 jm draft --reply-to <email-id> --body "Thanks, that works for me."
 
-# Reply-all (includes all original recipients, excludes self)
+# Reply-all (auto-computes recipients, excludes self)
 jm draft --reply-all <email-id> --body "Agreed, let's proceed."
 
 # Forward (quotes original body, requires --to)
@@ -59,24 +59,51 @@ echo "body" | jm draft --reply-to <email-id> --body-stdin
 
 | Flag | Description |
 |------|-------------|
-| `--to` | Recipient address(es), comma-separated. Required for new/forward. |
-| `--cc` | CC address(es), comma-separated. |
-| `--bcc` | BCC address(es), comma-separated. |
-| `--subject` | Subject line. Required for new composition. Auto-filled for reply/forward. |
-| `--body` | Plain text body. Mutually exclusive with `--body-stdin`. |
+| `--to` | Recipient address list. Required for new/forward. Optional for reply/reply-all and appended to auto-derived recipients. |
+| `--cc` | CC address list. Optional. Appended to auto-derived CC for reply-all. |
+| `--bcc` | BCC address list. Optional. |
+| `--subject` | Subject line. Required for new composition. Auto-derived for reply/reply-all/forward unless explicitly provided. |
+| `--body` | Message body. Mutually exclusive with `--body-stdin`. |
 | `--body-stdin` | Read body from stdin. Mutually exclusive with `--body`. |
 | `--reply-to` | Email ID to reply to. Mutually exclusive with `--reply-all`, `--forward`. |
 | `--reply-all` | Email ID to reply-all to. Mutually exclusive with `--reply-to`, `--forward`. |
 | `--forward` | Email ID to forward. Mutually exclusive with `--reply-to`, `--reply-all`. |
 | `--html` | Treat body as HTML instead of plain text. |
 
+Address flags (`--to`, `--cc`, `--bcc`) are parsed using RFC 5322 parsing (`net/mail` parsing), not naive comma splitting.
+
 ### Validation Rules
 
-- Exactly one of: (a) `--to` + `--subject` (new), (b) `--reply-to`, (c) `--reply-all`, (d) `--forward` + `--to`
-- Exactly one of `--body` or `--body-stdin` must be provided
-- `--reply-to`, `--reply-all`, `--forward` are mutually exclusive
-- For `--forward`, `--to` is required (must specify who to forward to)
-- For `--reply-to` and `--reply-all`, `--to` is optional (auto-derived from original email)
+- Exactly one mode:
+  - New: no reply/forward flag set, with `--to` and `--subject` required.
+  - Reply: `--reply-to`.
+  - Reply-all: `--reply-all`.
+  - Forward: `--forward` with `--to` required.
+- Exactly one of `--body` or `--body-stdin` must be provided.
+- `--reply-to`, `--reply-all`, `--forward` are mutually exclusive.
+- In reply and reply-all modes, user `--to/--cc/--bcc` are additive (appended, then deduplicated).
+
+### Recipient Computation Rules
+
+- Deduplication key is normalized email address (case-insensitive).
+- **Reply:**
+  - Base `To`: original `ReplyTo` if present, otherwise original `From`.
+  - Append user `--to`, dedupe, preserve first-seen order.
+  - `CC`: user-provided `--cc` only.
+- **Reply-all:**
+  - Base `To`: original `ReplyTo` if present, otherwise original `From`.
+  - Append user `--to`, dedupe.
+  - Base `CC`: original `To + CC` minus self, minus anything already in final `To`.
+  - Append user `--cc`, dedupe again against final `To` and `CC`.
+- **Forward/new:** recipients come from user flags only.
+
+### Threading Header Rules
+
+- Use RFC message IDs (`messageId` / `references`) from the original email, never JMAP email IDs.
+- If original has one or more `messageId` values:
+  - `InReplyTo` = original `messageId` list (as-is).
+  - `References` = original `references` + original `messageId` list, order-preserving with dedupe.
+- If original has no `messageId`, omit `InReplyTo`/`References` rather than inventing values.
 
 ### Output
 
@@ -85,10 +112,10 @@ echo "body" | jm draft --reply-to <email-id> --body-stdin
   "id": "M-new-draft-id",
   "mode": "reply",
   "mailbox": {"id": "mb-drafts-id", "name": "Drafts"},
-  "from": [{"name": "Me", "email": "me@fastmail.com"}],
+  "from": [{"name": "", "email": "me@fastmail.com"}],
   "to": [{"name": "Alice", "email": "alice@example.com"}],
   "subject": "Re: Meeting",
-  "in_reply_to": "M-original-email-id"
+  "in_reply_to": "<CAExample1234@example.com>"
 }
 ```
 
@@ -98,73 +125,82 @@ echo "body" | jm draft --reply-to <email-id> --body-stdin
 
 ### 1. New file: `cmd/draft.go`
 
-Pattern: Follow `cmd/move.go` structure.
+Pattern: follow `cmd/move.go` and other mutating command patterns.
 
 ```
 - Parse flags and determine composition mode (new / reply / reply-all / forward)
 - Read body from --body flag or stdin (--body-stdin)
-- Parse address flags into []Address (comma-split, trim)
+- Parse --to/--cc/--bcc with RFC-compliant parser
+- Build DraftOptions struct (including additive user recipients)
 - Call newClient()
-- Build DraftOptions struct
 - Call c.CreateDraft(opts)
 - Format result via formatter().Format()
 - Return exitError on failures
 ```
 
-Register command in `init()` with `rootCmd.AddCommand(draftCmd)`.
+Register in `init()` with `rootCmd.AddCommand(draftCmd)`.
 
 ### 2. New file: `internal/client/draft.go`
+
+Add types and helpers:
+- `type DraftMode string`
+- `type DraftOptions struct { ... }`
+- `func CreateDraft(opts DraftOptions) (types.DraftResult, error)`
+- private helpers for address normalization, dedupe, and subject prefixing.
 
 **`CreateDraft(opts DraftOptions) (types.DraftResult, error)`**
 
 Steps:
-1. Resolve the Drafts mailbox via `c.GetMailboxByRole(mailbox.RoleDrafts)`
-2. Determine the From address: use `c.Session().Username` as the email address
-3. For reply/reply-all/forward modes:
-   - Fetch the original email with properties: `id`, `messageId`, `inReplyTo`, `references`, `from`, `to`, `cc`, `replyTo`, `subject`, `textBody`, `bodyValues` (need `messageId`, `references` for threading -- these are NOT in the existing `detailProperties` so we make a dedicated `Email/get` call)
-   - Fetch with `FetchTextBodyValues: true` for forward quoting
-   - **Reply:** Set `To` = original's `ReplyTo` (if present) or original's `From`. Set `Subject` = "Re: " + original subject (if not already prefixed). Set `InReplyTo` = original's `MessageID`. Set `References` = original's `References` + original's `MessageID`.
-   - **Reply-all:** Same as reply, but also set `CC` = original's `To` + original's `CC`, minus self (the From address). Deduplicate.
-   - **Forward:** Set `Subject` = "Fwd: " + original subject. Append quoted original body below the new body text.
-4. Construct the `email.Email` struct:
+1. Resolve the Drafts mailbox via `c.GetMailboxByRole(mailbox.RoleDrafts)`.
+2. Determine `From` behavior:
+   - If `c.Session().Username` parses as a valid single email address, set it as `From`.
+   - If it does not parse cleanly, omit explicit `From` and let server defaults apply.
+3. For reply/reply-all/forward modes, fetch original email via dedicated `Email/get` with properties:
+   - `id`, `messageId`, `inReplyTo`, `references`, `from`, `to`, `cc`, `replyTo`, `subject`, `textBody`, `bodyValues`
+   - `FetchTextBodyValues: true` for forward quoting.
+4. Build recipients + subject + threading data:
+   - **Reply:** base `To` from original `ReplyTo` else `From`; subject `Re:` prefix if needed.
+   - **Reply-all:** base `To` same as reply; compute `CC` from original `To+CC` excluding self and final `To`.
+   - **Forward:** subject `Fwd:` prefix if needed; append quoted original plain-text body beneath user body.
+5. Construct `email.Email`:
    ```go
    &email.Email{
        MailboxIDs: map[jmap.ID]bool{draftsMailboxID: true},
        Keywords:   map[string]bool{"$draft": true, "$seen": true},
-       From:       []*mail.Address{{Email: fromAddr}},
-       To:         opts.To,
-       CC:         opts.CC,
-       BCC:        opts.BCC,
+       From:       fromAddrs, // optional; nil when username is not a valid address
+       To:         toAddrs,
+       CC:         ccAddrs,
+       BCC:        bccAddrs,
        Subject:    subject,
-       InReplyTo:  inReplyTo,   // []string
-       References: references,  // []string
+       InReplyTo:  inReplyTo,  // []string RFC message IDs
+       References: references, // []string RFC message IDs
        TextBody:   []*email.BodyPart{{PartID: "body", Type: "text/plain"}},
        BodyValues: map[string]*email.BodyValue{"body": {Value: body}},
    }
    ```
-   (Or `HTMLBody` with `Type: "text/html"` if `--html` flag is set.)
-5. Construct the `email.Set` request with `Create: map[jmap.ID]*email.Email{"draft": emailObj}`
-6. Call `ValidateSetForDraft(&set, draftsMailboxID)` -- defense-in-depth check before execution
-7. Call `c.Do(req)` and process `SetResponse`:
-   - Check `Created["draft"]` for the server-assigned ID
-   - Check `NotCreated["draft"]` for errors
-8. Return `types.DraftResult` with the new ID, mailbox info, recipients, subject
+   (Or `HTMLBody` + `Type: "text/html"` when `--html` is set.)
+6. Construct `email.Set` request with exactly one `Create` key (e.g., `"draft"`).
+7. Call `ValidateSetForDraft(&set, draftsMailboxID)` before execution.
+8. Call `c.Do(req)` and process `SetResponse`:
+   - success from `Created["draft"]`
+   - failure from `NotCreated["draft"]` or method error.
+9. Return `types.DraftResult` with new ID, mailbox info, recipients, subject, and first `InReplyTo` value (if present).
 
-**`fetchOriginalForReply(emailID string) (*email.Email, error)`** (private helper)
+**`fetchOriginalForReply(emailID string) (*email.Email, error)`**
 
-Fetches the original email with the specific properties needed for reply threading. Makes an `Email/get` call requesting: `id`, `messageId`, `inReplyTo`, `references`, `from`, `to`, `cc`, `replyTo`, `subject`, `textBody`, `bodyValues` with `FetchTextBodyValues: true`.
+Dedicated `Email/get` helper with properties and body fetch described above. Returns `ErrNotFound` when appropriate.
 
 ### 3. Modify: `internal/types/types.go`
 
 Add:
 
 ```go
-// DraftResult reports the outcome of a draft creation.
+// DraftResult reports the outcome of draft creation.
 type DraftResult struct {
     ID        string           `json:"id"`
     Mode      string           `json:"mode"`
     Mailbox   *DestinationInfo `json:"mailbox"`
-    From      []Address        `json:"from"`
+    From      []Address        `json:"from,omitempty"`
     To        []Address        `json:"to"`
     CC        []Address        `json:"cc,omitempty"`
     Subject   string           `json:"subject"`
@@ -182,64 +218,71 @@ func ValidateSetForDraft(set *email.Set, draftsMailboxID jmap.ID) error {
     // 1. Destroy must be empty
     // 2. Update must be empty
     // 3. Create must have exactly one entry
-    // 4. That entry's MailboxIDs must contain only draftsMailboxID
-    // 5. That entry's Keywords must include "$draft"
+    // 4. Created email MailboxIDs must contain exactly draftsMailboxID:true
+    // 5. Created email Keywords must include "$draft":true
 }
 ```
 
-This imports `git.sr.ht/~rockorager/go-jmap/mail/email` -- the first import of this package in `safety.go`. To avoid a circular import or tight coupling, the function can accept the concrete fields rather than the `email.Set` struct. Design decision: accept `(mailboxIDs map[jmap.ID]bool, keywords map[string]bool, draftsMailboxID jmap.ID, hasUpdate bool, hasDestroy bool)` to keep `safety.go` decoupled from the email package. Or just accept `*email.Set` and add the import -- the rest of the client package already imports it.
-
-Decision: Accept `*email.Set` directly. The `safety.go` file is in the `client` package which already imports `go-jmap/mail/email` in `email.go`. No new coupling.
+Decision: accept `*email.Set` directly.
 
 ### 5. Modify: `internal/output/text.go`
 
-Add `types.DraftResult` case to the `Format` type switch:
+Add `types.DraftResult` handling in the formatter switch and a `formatDraftResult` method.
+
+Expected text output:
 
 ```go
-case types.DraftResult:
-    return f.formatDraftResult(w, val)
-```
-
-```go
-func (f *TextFormatter) formatDraftResult(w io.Writer, r types.DraftResult) error {
-    fmt.Fprintf(w, "Draft created: %s\n", r.ID)
-    fmt.Fprintf(w, "Mode: %s\n", r.Mode)
-    fmt.Fprintf(w, "To: %s\n", formatAddrs(r.To))
-    if len(r.CC) > 0 {
-        fmt.Fprintf(w, "CC: %s\n", formatAddrs(r.CC))
-    }
-    fmt.Fprintf(w, "Subject: %s\n", r.Subject)
-    if r.Mailbox != nil {
-        fmt.Fprintf(w, "Mailbox: %s\n", r.Mailbox.Name)
-    }
-    if r.InReplyTo != "" {
-        fmt.Fprintf(w, "In-Reply-To: %s\n", r.InReplyTo)
-    }
-    return nil
-}
+Draft created: M-new-draft-id
+Mode: reply
+To: Alice <alice@example.com>
+Subject: Re: Meeting
+Mailbox: Drafts
+In-Reply-To: <CAExample1234@example.com>
 ```
 
 ### 6. New file: `internal/client/draft_test.go`
 
-Test cases:
-- New composition: basic fields, HTML mode
-- Reply: correct `To` (from `ReplyTo` or `From`), `Subject` prefixed, `InReplyTo`/`References` set
-- Reply-all: correct recipient computation (original To + CC minus self), deduplication
-- Forward: subject prefixed with "Fwd:", original body quoted
-- Safety validation: `ValidateSetForDraft` rejects empty create, wrong mailbox, missing `$draft` keyword, non-empty destroy, non-empty update
-- Error cases: drafts mailbox not found, server rejects creation
+Use `Client.doFunc` to mock JMAP responses (same style as `internal/client/email_test.go`).
 
-Uses the existing `doFunc` test hook on `Client` to mock JMAP responses (same pattern as `email_test.go`).
+Coverage:
+- **Mode validation:** new/reply/reply-all/forward exclusivity and required flags.
+- **Address parsing:** RFC-compliant parsing including quoted display names with commas.
+- **New draft:** basic fields and HTML mode path.
+- **Reply:** recipient derivation (`ReplyTo` fallback to `From`), subject prefixing, threading headers from `messageId`/`references`.
+- **Reply-all:** `To/CC` composition, self-exclusion, dedupe across `To+CC`, additive user recipients.
+- **Forward:** subject prefixing and quoted original body assembly.
+- **From behavior:** valid username sets `From`; invalid username omits `From`.
+- **Safety guard integration:** draft set rejected on wrong mailbox, missing `$draft`, update/destroy present, wrong create cardinality.
+- **Errors:** drafts mailbox missing, original email missing, server `NotCreated`, method errors.
 
 ### 7. Modify: `internal/client/safety_test.go`
 
-Add tests for `ValidateSetForDraft`:
-- Valid draft Set passes
-- Reject Set with Destroy populated
-- Reject Set with Update populated
-- Reject Set targeting wrong mailbox
-- Reject Set missing `$draft` keyword
-- Reject Set with multiple Create entries
+Add focused tests for `ValidateSetForDraft`:
+- Valid draft set passes.
+- Reject non-empty `Destroy`.
+- Reject non-empty `Update`.
+- Reject missing/empty `Create`.
+- Reject multiple `Create` entries.
+- Reject wrong mailbox target.
+- Reject missing `$draft` or `$draft=false`.
+
+### 8. CLI tests and command wiring
+
+Add/expand CLI tests (in existing CLI test location) to verify:
+- Flag validation errors for invalid combinations.
+- `--body-stdin` behavior.
+- JSON output includes expected draft fields.
+- Text output includes key lines and does not regress existing command output behavior.
+
+### 9. Documentation updates (required)
+
+Update docs in the same implementation PR so behavior and safety claims stay aligned:
+- `README.md`: add `jm draft` examples and safety description.
+- `docs/CLI-REFERENCE.md`: add full command syntax, flags, validation rules, and output examples.
+- `docs/plans/done/PLAN.md`: update hard-constraint wording from broad `Email/set` create prohibition to:
+  - no `EmailSubmission/set`, and
+  - no `Email/set create` except validated Drafts-only `$draft` creation.
+- Any command list/help snapshots used by tests.
 
 ---
 
@@ -247,32 +290,29 @@ Add tests for `ValidateSetForDraft`:
 
 | File | Action | ~Lines |
 |------|--------|--------|
-| `cmd/draft.go` | Create | 120 |
-| `internal/client/draft.go` | Create | 200 |
-| `internal/client/draft_test.go` | Create | 200 |
+| `cmd/draft.go` | Create | 140 |
+| `internal/client/draft.go` | Create | 260 |
+| `internal/client/draft_test.go` | Create | 280 |
 | `internal/types/types.go` | Modify | +12 |
-| `internal/client/safety.go` | Modify | +30 |
-| `internal/client/safety_test.go` | Modify | +60 |
-| `internal/output/text.go` | Modify | +20 |
-
----
-
-## Open Question: Safety Philosophy
-
-The original `PLAN.md` lists "No `Email/set` with creation of outbound messages" as a hard constraint. Adding draft creation is the first use of `Email/set Create`.
-
-**Arguments for:** Drafts are inert (sit in Drafts folder, not sent). JMAP cleanly separates creation from submission. No new scopes needed. `ValidateSetForDraft` provides defense-in-depth.
-
-**Arguments for caution:** Expands write surface from "modify metadata" to "create new objects." A draft with recipients is one click from sending in the Fastmail UI. The safety claim becomes more nuanced.
-
-This question remains open for the project owner to decide.
+| `internal/client/safety.go` | Modify | +35 |
+| `internal/client/safety_test.go` | Modify | +90 |
+| `internal/output/text.go` | Modify | +25 |
+| CLI test file(s) | Modify/Create | +80 |
+| `README.md` | Modify | +25 |
+| `docs/CLI-REFERENCE.md` | Modify | +60 |
+| `docs/plans/done/PLAN.md` | Modify | +20 |
 
 ---
 
 ## Verification
 
-1. `make build` -- compiles
-2. `make test` -- all unit tests pass (existing + new draft/safety tests)
-3. `make test-cli` -- CLI integration tests pass
-4. `make vet && make fmt` -- code quality
-5. Manual/live test: `jm draft --to test@example.com --subject "Test" --body "Hello"` → verify draft appears in Fastmail Drafts folder
+1. `make build` compiles.
+2. `make test` passes including new draft and safety unit tests.
+3. `make test-cli` passes including new `jm draft` command validation and output tests.
+4. `make vet && make fmt` pass cleanly.
+5. Manual live test (with valid token):
+   - `jm draft --to test@example.com --subject "Test" --body "Hello"`
+   - verify draft appears in Fastmail Drafts.
+6. Manual reply test:
+   - `jm draft --reply-to <email-id> --body "Thanks"`
+   - verify recipient and threading headers look correct in Fastmail draft view.

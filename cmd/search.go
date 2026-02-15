@@ -28,6 +28,11 @@ If omitted, only the provided flags/filters are used for matching.`,
 		opts.Subject, _ = cmd.Flags().GetString("subject")
 		opts.HasAttachment, _ = cmd.Flags().GetBool("has-attachment")
 		opts.UnreadOnly, _ = cmd.Flags().GetBool("unread")
+		opts.FlaggedOnly, _ = cmd.Flags().GetBool("flagged")
+		opts.UnflaggedOnly, _ = cmd.Flags().GetBool("unflagged")
+		if opts.FlaggedOnly && opts.UnflaggedOnly {
+			return exitError("general_error", "--flagged and --unflagged are mutually exclusive", "")
+		}
 		opts.Limit, _ = cmd.Flags().GetUint64("limit")
 		if opts.Limit == 0 {
 			return exitError("general_error", "--limit must be at least 1", "")
@@ -107,6 +112,8 @@ func init() {
 	searchCmd.Flags().Uint64P("limit", "l", 25, "maximum results")
 	searchCmd.Flags().Int64P("offset", "o", 0, "pagination offset")
 	searchCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
+	searchCmd.Flags().BoolP("flagged", "f", false, "only show flagged messages")
+	searchCmd.Flags().Bool("unflagged", false, "only show unflagged messages")
 	searchCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	searchCmd.Flags().String("from", "", "filter by sender address/name")
 	searchCmd.Flags().String("to", "", "filter by recipient address/name")
