@@ -11,6 +11,7 @@ Complete reference for all `fm` commands, flags, output schemas, and error codes
 | `--format`      | `FM_FORMAT`      | `json`                                  | Output format: `json` or `text`   |
 | `--account-id`  | `FM_ACCOUNT_ID`  | (auto-detected)                         | Fastmail account ID override      |
 | `--config`      | --               | `~/.config/fm/config.yaml`              | Config file path                  |
+| `--version`     | --               | --                                      | Print version and exit              |
 
 Configuration sources are resolved in priority order: flags > environment variables > config file.
 

@@ -24,6 +24,17 @@ brew install cboone/tap/fm
 go install github.com/cboone/fm@latest
 ```
 
+## Versioning
+
+`fm` follows [Semantic Versioning](https://semver.org/). The `--version` flag prints the current version:
+
+```bash
+fm --version
+# fm version 0.2.0
+```
+
+Development builds from source show `fm version dev`. Release binaries have the version injected at build time. Tagged releases (`v*`) on GitHub automatically publish binaries and update the [Homebrew formula](https://github.com/cboone/homebrew-tap).
+
 ## Configuration
 
 ### API Token
