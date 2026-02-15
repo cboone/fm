@@ -20,7 +20,7 @@ test-cli-live: binary ## Run opt-in live CLI integration tests (requires JMAP_TO
 
 test-all: test test-cli ## Run all tests (unit + CLI)
 
-test-ci: test-all ## Run CI test suite
+test-ci: vet fmt test-all ## Run CI test suite
 
 cover: ## Run unit tests with coverage
 	go test -coverprofile=coverage.out ./...
