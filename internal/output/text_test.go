@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 func TestTextFormatter_Session(t *testing.T) {
@@ -522,12 +522,12 @@ func TestTextFormatter_ErrorWithHint(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer
 
-	if err := f.FormatError(&buf, "auth_failed", "bad token", "set JMAP_TOKEN"); err != nil {
+	if err := f.FormatError(&buf, "auth_failed", "bad token", "set FM_TOKEN"); err != nil {
 		t.Fatal(err)
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Hint: set JMAP_TOKEN") {
+	if !strings.Contains(out, "Hint: set FM_TOKEN") {
 		t.Errorf("expected hint in output, got: %s", out)
 	}
 }

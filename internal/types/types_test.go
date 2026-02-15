@@ -359,7 +359,7 @@ func TestAppError_JSON(t *testing.T) {
 	e := AppError{
 		Error:   "auth_failed",
 		Message: "bad token",
-		Hint:    "check JMAP_TOKEN",
+		Hint:    "check FM_TOKEN",
 	}
 
 	data, err := json.Marshal(e)
@@ -375,7 +375,7 @@ func TestAppError_JSON(t *testing.T) {
 	if result["error"] != "auth_failed" {
 		t.Errorf("expected error=auth_failed, got %v", result["error"])
 	}
-	if result["hint"] != "check JMAP_TOKEN" {
+	if result["hint"] != "check FM_TOKEN" {
 		t.Errorf("expected hint, got %v", result["hint"])
 	}
 }

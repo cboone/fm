@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 func TestJSONFormatter_Format(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cboone/jm/internal/client"
-	"github.com/cboone/jm/internal/output"
+	"github.com/cboone/fm/internal/client"
+	"github.com/cboone/fm/internal/output"
 )
 
 // ErrSilent is returned by exitError to indicate the error has already been printed.
@@ -21,9 +21,9 @@ var (
 	initConfigErr error
 	version       = "dev"
 	rootCmd       = &cobra.Command{
-		Use:   "jm",
-		Short: "JMAP Mail -- a safe, read-oriented CLI for JMAP email (Fastmail)",
-		Long: `jm is a command-line tool for reading, searching, and triaging email
+		Use:   "fm",
+		Short: "Fastmail Mail -- a safe, read-oriented CLI for Fastmail email via JMAP",
+		Long: `fm is a command-line tool for reading, searching, and triaging Fastmail email
 via the JMAP protocol. It connects to Fastmail (or any JMAP server) and
 provides read, search, archive, and spam operations.
 
@@ -42,11 +42,11 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: ~/.config/jm/config.yaml)")
-	rootCmd.PersistentFlags().String("token", "", "JMAP bearer token")
-	rootCmd.PersistentFlags().String("session-url", "https://api.fastmail.com/jmap/session", "JMAP session endpoint")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: ~/.config/fm/config.yaml)")
+	rootCmd.PersistentFlags().String("token", "", "Fastmail API token")
+	rootCmd.PersistentFlags().String("session-url", "https://api.fastmail.com/jmap/session", "Fastmail session endpoint")
 	rootCmd.PersistentFlags().String("format", "json", "output format: json or text")
-	rootCmd.PersistentFlags().String("account-id", "", "JMAP account ID (auto-detected if blank)")
+	rootCmd.PersistentFlags().String("account-id", "", "Fastmail account ID (auto-detected if blank)")
 
 	for _, bind := range []struct{ key, flag string }{
 		{"token", "token"},
@@ -81,14 +81,14 @@ func initConfig() {
 	} else {
 		home, err := os.UserHomeDir()
 		if err == nil {
-			configDir := filepath.Join(home, ".config", "jm")
+			configDir := filepath.Join(home, ".config", "fm")
 			viper.AddConfigPath(configDir)
 			viper.SetConfigName("config")
 			viper.SetConfigType("yaml")
 		}
 	}
 
-	viper.SetEnvPrefix("JMAP")
+	viper.SetEnvPrefix("FM")
 	viper.AutomaticEnv()
 
 	viper.SetDefault("session_url", "https://api.fastmail.com/jmap/session")
@@ -107,14 +107,14 @@ func configErrorHint() string {
 	if cfgFile != "" {
 		return "Fix the syntax in " + cfgFile + " or choose another file with --config"
 	}
-	return "Fix the syntax in ~/.config/jm/config.yaml or use --config"
+	return "Fix the syntax in ~/.config/fm/config.yaml or use --config"
 }
 
 // newClient creates an authenticated JMAP client from the current config.
 func newClient() (*client.Client, error) {
 	token := viper.GetString("token")
 	if token == "" {
-		return nil, fmt.Errorf("no token configured; set JMAP_TOKEN, --token, or token in config file")
+		return nil, fmt.Errorf("no token configured; set FM_TOKEN, --token, or token in config file")
 	}
 	sessionURL := viper.GetString("session_url")
 	accountID := viper.GetString("account_id")

@@ -11,7 +11,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail/searchsnippet"
 	"git.sr.ht/~rockorager/go-jmap/mail/thread"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 // searchSnippetGet wraps searchsnippet.Get to fix the incorrect method name

@@ -1,4 +1,4 @@
-module github.com/cboone/jm
+module github.com/cboone/fm
 
 go 1.24.7
 

@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/cboone/jm/internal/client"
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/client"
+	"github.com/cboone/fm/internal/types"
 )
 
 func dryRunPreview(c *client.Client, ids []string, operation string, dest *types.DestinationInfo) error {

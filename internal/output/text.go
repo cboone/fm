@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 	"unicode/utf8"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 const (

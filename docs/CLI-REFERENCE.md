@@ -1,16 +1,16 @@
-# jm CLI Reference
+# fm CLI Reference
 
-Complete reference for all `jm` commands, flags, output schemas, and error codes.
+Complete reference for all `fm` commands, flags, output schemas, and error codes.
 
 ## Global Flags
 
 | Flag            | Env Var            | Default                                 | Description                     |
 | --------------- | ------------------ | --------------------------------------- | ------------------------------- |
-| `--token`       | `JMAP_TOKEN`       | (none)                                  | Bearer token for authentication |
-| `--session-url` | `JMAP_SESSION_URL` | `https://api.fastmail.com/jmap/session` | JMAP session endpoint           |
-| `--format`      | `JMAP_FORMAT`      | `json`                                  | Output format: `json` or `text` |
-| `--account-id`  | `JMAP_ACCOUNT_ID`  | (auto-detected)                         | JMAP account ID override        |
-| `--config`      | --                 | `~/.config/jm/config.yaml`              | Config file path                |
+| `--token`       | `FM_TOKEN`       | (none)                                  | Bearer token for authentication   |
+| `--session-url` | `FM_SESSION_URL` | `https://api.fastmail.com/jmap/session` | Fastmail session endpoint         |
+| `--format`      | `FM_FORMAT`      | `json`                                  | Output format: `json` or `text`   |
+| `--account-id`  | `FM_ACCOUNT_ID`  | (auto-detected)                         | Fastmail account ID override      |
+| `--config`      | --               | `~/.config/fm/config.yaml`              | Config file path                  |
 
 Configuration sources are resolved in priority order: flags > environment variables > config file.
 
@@ -23,7 +23,7 @@ Configuration sources are resolved in priority order: flags > environment variab
 Display JMAP session info. Useful for verifying connectivity, checking capabilities, and discovering account IDs.
 
 ```bash
-jm session
+fm session
 ```
 
 No arguments. No command-specific flags.
@@ -58,7 +58,7 @@ Account: abc123 - user@fastmail.com (personal)
 List all mailboxes (folders/labels) in the account.
 
 ```bash
-jm mailboxes
+fm mailboxes
 ```
 
 No arguments.
@@ -104,7 +104,7 @@ Fields with no role omit the `role` field in JSON and the `[role]` tag in text.
 List emails in a mailbox. Returns a summary of each email (not the full body).
 
 ```bash
-jm list [flags]
+fm list [flags]
 ```
 
 No arguments.
@@ -129,9 +129,9 @@ Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 **Filtering examples:**
 
 ```bash
-jm list --flagged                # only flagged emails
-jm list --unflagged              # only unflagged emails
-jm list --unread --unflagged     # unread and unflagged emails
+fm list --flagged                # only flagged emails
+fm list --unflagged              # only unflagged emails
+fm list --unread --unflagged     # unread and unflagged emails
 ```
 
 **JSON output:**
@@ -175,7 +175,7 @@ Unread emails are marked with `*` in text output.
 Read the full content of a specific email by ID.
 
 ```bash
-jm read <email-id> [flags]
+fm read <email-id> [flags]
 ```
 
 Exactly 1 argument required: the email ID.
@@ -305,7 +305,7 @@ The `>` marker indicates the target email. Thread emails other than the target s
 Search emails by full-text query and/or structured filters.
 
 ```bash
-jm search [query] [flags]
+fm search [query] [flags]
 ```
 
 0 or 1 argument. The optional `[query]` searches across subject, from, to, and body. If omitted, only the provided flags are used for filtering (filter-only search).
@@ -338,9 +338,9 @@ Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 **Filtering examples:**
 
 ```bash
-jm search --flagged                       # only flagged emails
-jm search --unread --unflagged            # unread and unflagged emails
-jm search "invoice" --flagged --from acme
+fm search --flagged                       # only flagged emails
+fm search --unread --unflagged            # unread and unflagged emails
+fm search "invoice" --flagged --from acme
 ```
 
 All filters are combined with AND logic.
@@ -382,7 +382,7 @@ The `snippet` field contains HTML `<mark>` tags highlighting matched terms. It i
 Move one or more emails to the Archive mailbox.
 
 ```bash
-jm archive <email-id> [email-id...]
+fm archive <email-id> [email-id...]
 ```
 
 1 or more arguments required.
@@ -424,7 +424,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 Move one or more emails to the Junk/Spam mailbox.
 
 ```bash
-jm spam <email-id> [email-id...]
+fm spam <email-id> [email-id...]
 ```
 
 1 or more arguments required.
@@ -466,7 +466,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 Mark one or more emails as read by setting the `$seen` keyword.
 
 ```bash
-jm mark-read <email-id> [email-id...]
+fm mark-read <email-id> [email-id...]
 ```
 
 1 or more arguments required.
@@ -503,7 +503,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 Flag one or more emails by setting the `$flagged` keyword.
 
 ```bash
-jm flag <email-id> [email-id...]
+fm flag <email-id> [email-id...]
 ```
 
 1 or more arguments required.
@@ -540,7 +540,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 Unflag one or more emails by removing the `$flagged` keyword.
 
 ```bash
-jm unflag <email-id> [email-id...]
+fm unflag <email-id> [email-id...]
 ```
 
 1 or more arguments required.
@@ -577,7 +577,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 Move one or more emails to a specified mailbox by name or ID.
 
 ```bash
-jm move <email-id> [email-id...] --to <mailbox>
+fm move <email-id> [email-id...] --to <mailbox>
 ```
 
 1 or more arguments required.
@@ -856,25 +856,25 @@ When a hint is present:
 
 ```text
 Error [authentication_failed]: JMAP session request returned 401: invalid bearer token
-Hint: Check your token in JMAP_TOKEN or config file
+Hint: Check your token in FM_TOKEN or config file
 ```
 
 ### Error Codes
 
 | Code                    | Description                                         | Example hint                                               |
 | ----------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
-| `authentication_failed` | Token is missing, invalid, or expired               | Check your token in JMAP_TOKEN or config file              |
+| `authentication_failed` | Token is missing, invalid, or expired               | Check your token in FM_TOKEN or config file                |
 | `not_found`             | Email ID or mailbox not found                       | (varies)                                                   |
 | `forbidden_operation`   | Attempted a disallowed action (e.g., move to Trash) | Deletion is not permitted by this tool                     |
 | `jmap_error`            | Server-side JMAP method error                       | (varies)                                                   |
 | `network_error`         | Connection or timeout failure                       | (varies)                                                   |
 | `general_error`         | Invalid flag values or other client-side errors     | (varies)                                                   |
-| `config_error`          | Malformed config file                               | Fix the syntax in ~/.config/jm/config.yaml or use --config |
+| `config_error`          | Malformed config file                               | Fix the syntax in ~/.config/fm/config.yaml or use --config |
 | `partial_failure`       | Some IDs in a batch operation failed                | (none)                                                     |
 
 ### Cobra Validation Errors
 
-Cobra (the CLI framework) handles argument and flag validation before `jm` commands run. These errors are printed as **plain text to stderr** and do not use the structured JSON/text error format.
+Cobra (the CLI framework) handles argument and flag validation before `fm` commands run. These errors are printed as **plain text to stderr** and do not use the structured JSON/text error format.
 
 Examples:
 

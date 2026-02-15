@@ -13,7 +13,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail"
 	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 // ErrNotFound indicates that a requested resource was not found.

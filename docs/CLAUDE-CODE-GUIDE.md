@@ -1,13 +1,13 @@
-# Using jm with Claude Code
+# Using fm with Claude Code
 
-`jm` is a command-line tool for reading, searching, and triaging JMAP email. It is designed as a tool for Claude Code: JSON output by default, structured errors on stderr, and safety constraints that prevent sending or deleting email.
+`fm` is a command-line tool for reading, searching, and triaging JMAP email. It is designed as a tool for Claude Code: JSON output by default, structured errors on stderr, and safety constraints that prevent sending or deleting email.
 
 ## Setup
 
 ### 1. Install
 
 ```bash
-go install github.com/cboone/jm@latest
+go install github.com/cboone/fm@latest
 ```
 
 ### 2. Configure your JMAP token
@@ -20,10 +20,10 @@ Create a Fastmail API token at **Settings > Privacy & Security > Integrations > 
 Set it as an environment variable:
 
 ```bash
-export JMAP_TOKEN="fmu1-..."
+export FM_TOKEN="fmu1-..."
 ```
 
-Or add it to `~/.config/jm/config.yaml`:
+Or add it to `~/.config/fm/config.yaml`:
 
 ```yaml
 token: "fmu1-..."
@@ -32,7 +32,7 @@ token: "fmu1-..."
 ### 3. Verify
 
 ```bash
-jm session
+fm session
 ```
 
 This should return JSON with your username, account info, and capabilities.
@@ -41,33 +41,33 @@ This should return JSON with your username, account info, and capabilities.
 
 ### Shell Commands (Primary Pattern)
 
-Claude Code calls `jm` directly via shell. No MCP server configuration is needed. All commands return JSON to stdout by default, and errors return structured JSON to stderr with exit code 1.
+Claude Code calls `fm` directly via shell. No MCP server configuration is needed. All commands return JSON to stdout by default, and errors return structured JSON to stderr with exit code 1.
 
 ### CLAUDE.md Snippet
 
-Add this to your project's `CLAUDE.md` to give Claude Code context about `jm`:
+Add this to your project's `CLAUDE.md` to give Claude Code context about `fm`:
 
 ```markdown
-## Email (jm)
+## Email (fm)
 
-`jm` is a CLI for reading and triaging JMAP email (Fastmail). All commands output JSON by default.
+`fm` is a CLI for reading and triaging JMAP email (Fastmail). All commands output JSON by default.
 
 ### Commands
 
 **Read commands:**
 
-- `jm session` -- verify connectivity and auth
-- `jm mailboxes` -- list all mailboxes (add `--roles-only` for just system mailboxes)
-- `jm list` -- list emails in inbox (flags: `--mailbox`, `--limit`, `--offset`, `--unread`, `--sort`)
-- `jm read <id>` -- read full email (flags: `--html`, `--raw-headers`, `--thread`)
-- `jm search [query]` -- search by text and/or filters (flags: `--mailbox`, `--limit`, `--from`, `--to`, `--subject`, `--before`, `--after`, `--has-attachment`)
+- `fm session` -- verify connectivity and auth
+- `fm mailboxes` -- list all mailboxes (add `--roles-only` for just system mailboxes)
+- `fm list` -- list emails in inbox (flags: `--mailbox`, `--limit`, `--offset`, `--unread`, `--sort`)
+- `fm read <id>` -- read full email (flags: `--html`, `--raw-headers`, `--thread`)
+- `fm search [query]` -- search by text and/or filters (flags: `--mailbox`, `--limit`, `--from`, `--to`, `--subject`, `--before`, `--after`, `--has-attachment`)
 
 **Triage commands:**
 
-- `jm archive <id> [id...]` -- move to Archive
-- `jm spam <id> [id...]` -- move to Junk
-- `jm mark-read <id> [id...]` -- mark as read
-- `jm move <id> [id...] --to <mailbox>` -- move to a named mailbox
+- `fm archive <id> [id...]` -- move to Archive
+- `fm spam <id> [id...]` -- move to Junk
+- `fm mark-read <id> [id...]` -- mark as read
+- `fm move <id> [id...] --to <mailbox>` -- move to a named mailbox
 
 ### Notes
 
@@ -86,10 +86,10 @@ Add this to your project's `CLAUDE.md` to give Claude Code context about `jm`:
 
 ```bash
 # List unread emails
-jm list --unread
+fm list --unread
 
 # Read each email for full content
-jm read <email-id>
+fm read <email-id>
 ```
 
 ### Search and Organize
@@ -98,13 +98,13 @@ jm read <email-id>
 
 ```bash
 # Search with filters
-jm search --from alice --after 2026-02-01T00:00:00Z
+fm search --from alice --after 2026-02-01T00:00:00Z
 
 # Read specific emails to check content
-jm read <email-id>
+fm read <email-id>
 
 # Archive the ones that are project updates
-jm archive <id-1> <id-2> <id-3>
+fm archive <id-1> <id-2> <id-3>
 ```
 
 ### Conversation Context
@@ -113,10 +113,10 @@ jm archive <id-1> <id-2> <id-3>
 
 ```bash
 # Find Bob's latest email
-jm search --from bob --limit 1
+fm search --from bob --limit 1
 
 # Read it with thread context
-jm read <email-id> --thread
+fm read <email-id> --thread
 ```
 
 ### Mailbox Organization
@@ -125,10 +125,10 @@ jm read <email-id> --thread
 
 ```bash
 # Search for receipts in inbox
-jm search "receipt" --mailbox inbox
+fm search "receipt" --mailbox inbox
 
 # Move matching emails
-jm move <id-1> <id-2> --to Receipts
+fm move <id-1> <id-2> --to Receipts
 ```
 
 ### Filter-Only Search
@@ -137,7 +137,7 @@ jm move <id-1> <id-2> --to Receipts
 
 ```bash
 # No text query needed -- just use flags
-jm search --has-attachment --after 2026-01-01T00:00:00Z --before 2026-02-01T00:00:00Z
+fm search --has-attachment --after 2026-01-01T00:00:00Z --before 2026-02-01T00:00:00Z
 ```
 
 ## Tips
@@ -146,9 +146,9 @@ jm search --has-attachment --after 2026-01-01T00:00:00Z --before 2026-02-01T00:0
 - **Batch operations:** `archive`, `spam`, `mark-read`, and `move` accept multiple email IDs in a single call.
 - **Filter-only search:** Omit the query argument and use only flags to search by sender, date range, attachments, etc.
 - **Date format:** All date flags (`--before`, `--after`) accept RFC 3339 format (e.g. `2026-01-15T00:00:00Z`) or bare dates (e.g. `2026-01-15`).
-- **Thread view:** Use `jm read <id> --thread` to see the full conversation context for a single email.
+- **Thread view:** Use `fm read <id> --thread` to see the full conversation context for a single email.
 - **Mailbox names:** Both `--mailbox` and `--to` accept mailbox names (e.g., "Inbox", "Receipts") or mailbox IDs.
-- **Sort order:** `jm list --sort "subject asc"` sorts by subject ascending. Fields: `receivedAt`, `sentAt`, `from`, `subject`.
+- **Sort order:** `fm list --sort "subject asc"` sorts by subject ascending. Fields: `receivedAt`, `sentAt`, `from`, `subject`.
 
 ## Error Handling
 
@@ -167,7 +167,7 @@ All errors produce exit code 1. Structured error details are written to **stderr
 
 | Error code              | Meaning                     | Typical cause                          |
 | ----------------------- | --------------------------- | -------------------------------------- |
-| `authentication_failed` | Token is missing or invalid | `JMAP_TOKEN` not set or expired        |
+| `authentication_failed` | Token is missing or invalid | `FM_TOKEN` not set or expired           |
 | `not_found`             | Email or mailbox not found  | Stale email ID or typo in mailbox name |
 | `forbidden_operation`   | Safety constraint triggered | Attempted to move to Trash             |
 

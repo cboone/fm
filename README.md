@@ -1,6 +1,6 @@
-# jm
+# fm
 
-A safe, read-oriented CLI for JMAP email (Fastmail). `jm` provides reading, searching, archiving, spam marking, and mailbox moves -- and nothing more. It is designed for use by Claude Code on the command line, with JSON output by default and structured errors.
+A safe, read-oriented CLI for Fastmail email via JMAP. `fm` provides reading, searching, archiving, spam marking, and mailbox moves -- and nothing more. It is designed for use by Claude Code on the command line, with JSON output by default and structured errors.
 
 ## Safety
 
@@ -15,13 +15,13 @@ Sending and deleting are structurally disallowed, not merely hidden behind flags
 ### Homebrew
 
 ```bash
-brew install cboone/tap/jm
+brew install cboone/tap/fm
 ```
 
 ### Go install
 
 ```bash
-go install github.com/cboone/jm@latest
+go install github.com/cboone/fm@latest
 ```
 
 ## Configuration
@@ -40,13 +40,13 @@ No other scopes are needed (specifically not `urn:ietf:params:jmap:submission`).
 Configuration is resolved in priority order:
 
 1. **Command-line flags** (`--token`, `--format`, etc.)
-2. **Environment variables** (`JMAP_TOKEN`, `JMAP_SESSION_URL`, etc.)
-3. **Config file** (`~/.config/jm/config.yaml`)
+2. **Environment variables** (`FM_TOKEN`, `FM_SESSION_URL`, etc.)
+3. **Config file** (`~/.config/fm/config.yaml`)
 
 ### Config File
 
 ```yaml
-# ~/.config/jm/config.yaml
+# ~/.config/fm/config.yaml
 token: "fmu1-..."
 session_url: "https://api.fastmail.com/jmap/session"
 format: "json"
@@ -57,54 +57,54 @@ All fields are optional. `session_url` defaults to Fastmail's endpoint. `format`
 
 ### Environment Variables
 
-| Variable           | Description                     | Default                                 |
-| ------------------ | ------------------------------- | --------------------------------------- |
-| `JMAP_TOKEN`       | Bearer token for authentication | (none)                                  |
-| `JMAP_SESSION_URL` | JMAP session endpoint           | `https://api.fastmail.com/jmap/session` |
-| `JMAP_FORMAT`      | Output format: `json` or `text` | `json`                                  |
-| `JMAP_ACCOUNT_ID`  | JMAP account ID override        | (auto-detected)                         |
+| Variable         | Description                     | Default                                 |
+| ---------------- | ------------------------------- | --------------------------------------- |
+| `FM_TOKEN`       | Bearer token for authentication | (none)                                  |
+| `FM_SESSION_URL` | JMAP session endpoint           | `https://api.fastmail.com/jmap/session` |
+| `FM_FORMAT`      | Output format: `json` or `text` | `json`                                  |
+| `FM_ACCOUNT_ID`  | JMAP account ID override        | (auto-detected)                         |
 
 ## Quick Start
 
 ```bash
 # Verify connectivity and authentication
-jm session
+fm session
 
 # List all mailboxes
-jm mailboxes
+fm mailboxes
 
 # List the 10 most recent emails in your inbox
-jm list --limit 10
+fm list --limit 10
 
 # List only unread emails
-jm list --unread
+fm list --unread
 
 # Read a specific email
-jm read <email-id>
+fm read <email-id>
 
 # Read an email with its full thread
-jm read <email-id> --thread
+fm read <email-id> --thread
 
 # Search for emails
-jm search "meeting agenda"
-jm search --from alice@example.com --after 2026-01-01T00:00:00Z
-jm search --from alice@example.com --after 2026-01-01
+fm search "meeting agenda"
+fm search --from alice@example.com --after 2026-01-01T00:00:00Z
+fm search --from alice@example.com --after 2026-01-01
 
 # Mark emails as read
-jm mark-read <email-id>
+fm mark-read <email-id>
 
 # Flag or unflag emails
-jm flag <email-id>
-jm unflag <email-id>
+fm flag <email-id>
+fm unflag <email-id>
 
 # Preview what archive would do (dry run)
-jm archive --dry-run <email-id-1> <email-id-2>
+fm archive --dry-run <email-id-1> <email-id-2>
 
 # Then actually archive
-jm archive <email-id-1> <email-id-2>
+fm archive <email-id-1> <email-id-2>
 
 # Move emails to a named mailbox
-jm move <email-id-1> <email-id-2> --to Receipts
+fm move <email-id-1> <email-id-2> --to Receipts
 ```
 
 All triage commands support `--dry-run` (`-n`) to preview affected emails without making changes.
@@ -115,28 +115,28 @@ All triage commands support `--dry-run` (`-n`) to preview affected emails withou
 
 | Command             | Description                                              |
 | ------------------- | -------------------------------------------------------- |
-| `jm session`        | Display JMAP session info (verify connectivity and auth) |
-| `jm mailboxes`      | List all mailboxes in the account                        |
-| `jm list`           | List emails in a mailbox                                 |
-| `jm read <id>`      | Read the full content of an email                        |
-| `jm search [query]` | Search emails by text and/or filters                     |
+| `fm session`        | Display JMAP session info (verify connectivity and auth) |
+| `fm mailboxes`      | List all mailboxes in the account                        |
+| `fm list`           | List emails in a mailbox                                 |
+| `fm read <id>`      | Read the full content of an email                        |
+| `fm search [query]` | Search emails by text and/or filters                     |
 
 ### Triage Commands
 
 | Command                               | Description                          |
 | ------------------------------------- | ------------------------------------ |
-| `jm archive <id> [id...]`             | Move emails to the Archive mailbox   |
-| `jm spam <id> [id...]`                | Move emails to the Junk/Spam mailbox |
-| `jm mark-read <id> [id...]`           | Mark emails as read                  |
-| `jm flag <id> [id...]`                | Flag emails (set $flagged keyword)   |
-| `jm unflag <id> [id...]`              | Unflag emails (remove $flagged)      |
-| `jm move <id> [id...] --to <mailbox>` | Move emails to a specified mailbox   |
+| `fm archive <id> [id...]`             | Move emails to the Archive mailbox   |
+| `fm spam <id> [id...]`                | Move emails to the Junk/Spam mailbox |
+| `fm mark-read <id> [id...]`           | Mark emails as read                  |
+| `fm flag <id> [id...]`                | Flag emails (set $flagged keyword)   |
+| `fm unflag <id> [id...]`              | Unflag emails (remove $flagged)      |
+| `fm move <id> [id...] --to <mailbox>` | Move emails to a specified mailbox   |
 
 See [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) for full details on all flags, output schemas, and examples.
 
 ## Output Formats
 
-`jm` supports two output formats, selected with `--format` or `JMAP_FORMAT`:
+`fm` supports two output formats, selected with `--format` or `FM_FORMAT`:
 
 **JSON (default):**
 
@@ -194,8 +194,8 @@ Errors are written to stderr as structured JSON (or text) with exit code 1:
 ```json
 {
   "error": "authentication_failed",
-  "message": "no token configured; set JMAP_TOKEN, --token, or token in config file",
-  "hint": "Check your token in JMAP_TOKEN or config file"
+  "message": "no token configured; set FM_TOKEN, --token, or token in config file",
+  "hint": "Check your token in FM_TOKEN or config file"
 }
 ```
 
@@ -205,7 +205,7 @@ See [docs/CLI-REFERENCE.md#error-reference](docs/CLI-REFERENCE.md#error-referenc
 
 ## Using with Claude Code
 
-`jm` is designed as a tool for Claude Code: JSON by default, structured errors, and safe operations only. Claude Code calls `jm` directly via shell commands with no additional configuration.
+`fm` is designed as a tool for Claude Code: JSON by default, structured errors, and safe operations only. Claude Code calls `fm` directly via shell commands with no additional configuration.
 
 See [docs/CLAUDE-CODE-GUIDE.md](docs/CLAUDE-CODE-GUIDE.md) for setup instructions, a CLAUDE.md snippet, and example workflows.
 

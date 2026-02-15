@@ -1,4 +1,4 @@
-BINARY := jm
+BINARY := fm
 
 .PHONY: all build binary test test-cli test-cli-live test-all test-ci cover vet fmt clean help
 
@@ -15,7 +15,7 @@ test: ## Run unit tests
 test-cli: binary ## Run scrut CLI integration tests
 	scrut test tests/errors.md tests/flags.md tests/arguments.md tests/help.md
 
-test-cli-live: binary ## Run opt-in live CLI integration tests (requires JMAP_TOKEN and JMAP_LIVE_TESTS=1)
+test-cli-live: binary ## Run opt-in live CLI integration tests (requires FM_TOKEN and FM_LIVE_TESTS=1)
 	scrut test tests/live.md
 
 test-all: test test-cli ## Run all tests (unit + CLI)

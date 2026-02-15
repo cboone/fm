@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cboone/jm/internal/client"
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/client"
+	"github.com/cboone/fm/internal/types"
 )
 
 var moveCmd = &cobra.Command{
@@ -21,7 +21,7 @@ Moving to Trash or Deleted Items is not permitted.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
+				"Check your token in FM_TOKEN or config file")
 		}
 
 		targetMB, err := c.GetMailboxByNameOrID(target)

@@ -1,11 +1,11 @@
-# jm argument validation
+# fm argument validation
 
 Verify that commands correctly validate their arguments.
 
 ## Read requires exactly one argument
 
 ```scrut
-$ $TESTDIR/../jm read 2>&1
+$ $TESTDIR/../fm read 2>&1
 Error: accepts 1 arg(s), received 0
 [1]
 ```
@@ -13,7 +13,7 @@ Error: accepts 1 arg(s), received 0
 ## Read rejects multiple arguments
 
 ```scrut
-$ $TESTDIR/../jm read M1 M2 2>&1
+$ $TESTDIR/../fm read M1 M2 2>&1
 Error: accepts 1 arg(s), received 2
 [1]
 ```
@@ -21,7 +21,7 @@ Error: accepts 1 arg(s), received 2
 ## Archive requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm archive 2>&1
+$ $TESTDIR/../fm archive 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -29,7 +29,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Spam requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm spam 2>&1
+$ $TESTDIR/../fm spam 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -37,7 +37,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Mark-read requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm mark-read 2>&1
+$ $TESTDIR/../fm mark-read 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -45,7 +45,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Flag requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm flag 2>&1
+$ $TESTDIR/../fm flag 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -53,7 +53,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Unflag requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm unflag 2>&1
+$ $TESTDIR/../fm unflag 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -61,7 +61,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Move requires at least one argument
 
 ```scrut
-$ $TESTDIR/../jm move 2>&1
+$ $TESTDIR/../fm move 2>&1
 Error: requires at least 1 arg(s), only received 0
 [1]
 ```
@@ -69,7 +69,7 @@ Error: requires at least 1 arg(s), only received 0
 ## Move requires --to flag
 
 ```scrut
-$ $TESTDIR/../jm move M123 2>&1
+$ $TESTDIR/../fm move M123 2>&1
 Error: required flag(s) "to" not set
 [1]
 ```
@@ -77,15 +77,15 @@ Error: required flag(s) "to" not set
 ## Unknown command shows error
 
 ```scrut
-$ $TESTDIR/../jm delete 2>&1
-Error: unknown command "delete" for "jm"
+$ $TESTDIR/../fm delete 2>&1
+Error: unknown command "delete" for "fm"
 [1]
 ```
 
 ## Unknown flag shows error
 
 ```scrut
-$ $TESTDIR/../jm list --nonexistent 2>&1
+$ $TESTDIR/../fm list --nonexistent 2>&1
 Error: unknown flag: --nonexistent
 [1]
 ```
@@ -96,7 +96,7 @@ Search without a positional query argument should still work (it fails
 due to no token, not due to argument validation).
 
 ```scrut
-$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search --from alice@test.com 2>&1
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -106,7 +106,7 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 ## Search accepts one argument
 
 ```scrut
-$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm search "test query" --from alice@test.com 2>&1
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search "test query" --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -116,7 +116,7 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 ## Search rejects multiple positional arguments
 
 ```scrut
-$ $TESTDIR/../jm search "query one" "query two" 2>&1
+$ $TESTDIR/../fm search "query one" "query two" 2>&1
 Error: accepts at most 1 arg(s), received 2
 [1]
 ```

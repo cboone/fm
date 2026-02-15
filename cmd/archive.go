@@ -6,7 +6,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 	"github.com/spf13/cobra"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 var archiveCmd = &cobra.Command{
@@ -17,7 +17,7 @@ var archiveCmd = &cobra.Command{
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
+				"Check your token in FM_TOKEN or config file")
 		}
 
 		archiveMB, err := c.GetMailboxByRole(mailbox.RoleArchive)

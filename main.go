@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cboone/jm/cmd"
+	"github.com/cboone/fm/cmd"
 )
 
 func main() {

@@ -13,7 +13,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 	"git.sr.ht/~rockorager/go-jmap/mail/searchsnippet"
 
-	"github.com/cboone/jm/internal/types"
+	"github.com/cboone/fm/internal/types"
 )
 
 // --- convertAddresses tests ---

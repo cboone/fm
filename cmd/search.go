@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cboone/jm/internal/client"
+	"github.com/cboone/fm/internal/client"
 )
 
 var searchCmd = &cobra.Command{
@@ -73,7 +73,7 @@ If omitted, only the provided flags/filters are used for matching.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
+				"Check your token in FM_TOKEN or config file")
 		}
 
 		if mailboxName != "" {

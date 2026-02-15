@@ -1,9 +1,9 @@
 version: 2
 
 builds:
-  - id: jm
+  - id: fm
     main: .
-    binary: jm
+    binary: fm
     env:
       - CGO_ENABLED=0
     goos:
@@ -15,11 +15,11 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/cboone/jm/cmd.version={{.Version}}
+      - -X github.com/cboone/fm/cmd.version={{.Version}}
 
 archives:
   - ids:
-      - jm
+      - fm
     formats:
       - tar.gz
     format_overrides:
@@ -48,8 +48,8 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/cboone/jm"
-    description: "Safe, read-oriented CLI for JMAP email"
+    homepage: "https://github.com/cboone/fm"
+    description: "Safe, read-oriented CLI for Fastmail email via JMAP"
     license: MIT
     test: |
-      assert_match version.to_s, shell_output("#{bin}/jm --version")
+      assert_match version.to_s, shell_output("#{bin}/fm --version")

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cboone/jm/internal/client"
+	"github.com/cboone/fm/internal/client"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var readCmd = &cobra.Command{
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in JMAP_TOKEN or config file")
+				"Check your token in FM_TOKEN or config file")
 		}
 
 		emailID := args[0]
