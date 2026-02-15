@@ -457,7 +457,7 @@ func TestTextFormatter_DryRunResult_NoDestination(t *testing.T) {
 
 	now := time.Date(2026, 2, 14, 10, 30, 0, 0, time.UTC)
 	result := types.DryRunResult{
-		Operation: "mark_read",
+		Operation: "mark-read",
 		Count:     1,
 		Emails: []types.EmailSummary{
 			{
@@ -474,7 +474,7 @@ func TestTextFormatter_DryRunResult_NoDestination(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Dry run: would mark_read 1 email(s)") {
+	if !strings.Contains(out, "Dry run: would mark-read 1 email(s)") {
 		t.Errorf("expected header line, got: %s", out)
 	}
 	if strings.Contains(out, "Destination:") {

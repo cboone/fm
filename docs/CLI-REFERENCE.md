@@ -756,7 +756,7 @@ Returned by any mutating command when `--dry-run` / `-n` is passed. Previews the
 
 | Field         | Type            | Notes                                             |
 | ------------- | --------------- | ------------------------------------------------- |
-| `operation`   | string          | One of: `archive`, `move`, `spam`, `mark_read`, `flag`, `unflag` |
+| `operation`   | string          | One of: `archive`, `move`, `spam`, `mark-read`, `flag`, `unflag` |
 | `count`       | number          | Number of emails that would be mutated            |
 | `emails`      | EmailSummary[]  | Summaries of found emails                         |
 | `not_found`   | string[]        | Omitted if empty; IDs that failed `Email/get`     |

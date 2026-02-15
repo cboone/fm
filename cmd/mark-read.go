@@ -21,7 +21,7 @@ var markReadCmd = &cobra.Command{
 
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		if dryRun {
-			return dryRunPreview(c, args, "mark_read", nil)
+			return dryRunPreview(c, args, "mark-read", nil)
 		}
 
 		succeeded, errors := c.MarkAsRead(args)
