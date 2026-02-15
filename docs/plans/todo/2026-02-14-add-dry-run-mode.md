@@ -24,6 +24,8 @@ type DryRunResult struct {
 
 `Operation` is one of: `archive`, `move`, `spam`, `mark_read`, `flag`, `unflag`. `Emails` reuses the existing `EmailSummary` type. `NotFound` captures IDs that fail `Email/get` (e.g. already deleted). `Destination` is populated for archive/spam/move.
 
+`Count` is the number of emails that would actually be mutated (`len(Emails)`), not the number of requested IDs.
+
 ### 2. Add `GetEmailSummaries` client method (`internal/client/email.go`)
 
 New method that does a read-only `Email/get` with `summaryProperties` (line 30) for a list of IDs, batched in groups of `batchSize` (50). Returns `([]types.EmailSummary, []string, error)` -- found summaries, not-found IDs, and error.
@@ -40,6 +42,10 @@ func dryRunPreview(c *client.Client, ids []string, operation string, dest *types
 
 Calls `c.GetEmailSummaries(ids)`, builds a `DryRunResult`, outputs via `formatter().Format(os.Stdout, result)`.
 
+Behavior:
+- API or method errors return immediately (same as normal command failure)
+- `NotFound` IDs are included in output and treated as partial failure: after printing preview, return `partial_failure` to stderr (mirrors mutating command behavior)
+
 ### 4. Add `--dry-run` flag and branching to each mutating command
 
 For each of `archive.go`, `spam.go`, `move.go`, `mark-read.go`, `flag.go`, `unflag.go`:
@@ -48,6 +54,8 @@ For each of `archive.go`, `spam.go`, `move.go`, `mark-read.go`, `flag.go`, `unfl
 - In `RunE`, after authentication and mailbox resolution (where applicable) but *before* the mutation call, check the flag and early-return with `dryRunPreview()`
 
 This means dry-run still validates credentials and target mailbox. It only skips the `Email/set` mutation.
+
+For `move`, keep the existing `ValidateTargetMailbox` safety check before the dry-run branch so `--dry-run` cannot bypass trash/deletion protection.
 
 For commands with a destination (archive, spam, move): pass `&types.DestinationInfo{...}`.
 For commands without (mark-read, flag, unflag): pass `nil`.
@@ -86,16 +94,22 @@ JSON output requires no changes -- `JSONFormatter` handles any struct via `encod
 - Text formatting without destination (mark-read/flag/unflag)
 - Text formatting with not-found IDs
 
+**`cmd/dryrun_test.go`** (new) or command-level tests:
+- `archive --dry-run`, `move --dry-run`, etc. take the dry-run branch and do not call mutating client methods (`MoveEmails`, `MarkAsSpam`, `MarkAsRead`, `SetFlagged`, `SetUnflagged`)
+- `move --dry-run` still enforces `ValidateTargetMailbox` (trash target rejected)
+- Non-empty `NotFound` in dry-run returns `partial_failure` after preview output
+
 **`tests/help.md`**:
-- Update help expectations for each mutating command to include `--dry-run`
+- Update help expectations for each mutating command to include explicit `--dry-run` and `-n` matches (not wildcard-only)
 
 **`tests/flags.md`**:
 - Verify `--dry-run` is accepted on each mutating command (gets auth error, not flag error)
 
-### 7. Update documentation (`docs/CLI-REFERENCE.md`)
+### 7. Update documentation (`docs/CLI-REFERENCE.md`, `README.md`)
 
 - Add `--dry-run` / `-n` to the flags table for each mutating command
 - Add `DryRunResult` to the Output Schemas section
+- Add a short README usage example showing dry-run preview before mutation (e.g. `jm archive --dry-run M1 M2` followed by `jm archive M1 M2`)
 
 ## Files to modify
 
@@ -113,9 +127,11 @@ JSON output requires no changes -- `JSONFormatter` handles any struct via `encod
 | `internal/output/text.go` | Add `formatDryRunResult` method + type-switch case |
 | `internal/client/email_test.go` | Tests for `GetEmailSummaries` |
 | `internal/output/text_test.go` | Tests for `formatDryRunResult` |
+| `cmd/dryrun_test.go` | Tests that dry-run path skips mutation + preserves move safety checks |
 | `tests/help.md` | Update help expectations for mutating commands |
 | `tests/flags.md` | Add `--dry-run` flag acceptance tests |
 | `docs/CLI-REFERENCE.md` | Document `--dry-run` flag and `DryRunResult` schema |
+| `README.md` | Add short `--dry-run` usage example in command workflow section |
 
 ## Verification
 
@@ -127,3 +143,5 @@ JSON output requires no changes -- `JSONFormatter` handles any struct via `encod
 6. `jm flag --dry-run M1` shows preview without mutating
 7. `jm archive --dry-run --format text M1` renders human-readable text
 8. `jm archive --help` shows `--dry-run` / `-n` flag
+9. `jm archive --dry-run M1 missing-id` prints preview + `Not found:` and exits with `partial_failure`
+10. README includes a short `--dry-run` example for safe preview workflows
