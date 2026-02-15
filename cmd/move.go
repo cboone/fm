@@ -35,6 +35,14 @@ Moving to Trash or Deleted Items is not permitted.`,
 				"Deletion is not permitted by this tool")
 		}
 
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, args, "move", &types.DestinationInfo{
+				ID:   string(targetMB.ID),
+				Name: targetMB.Name,
+			})
+		}
+
 		succeeded, errors := c.MoveEmails(args, targetMB.ID)
 
 		result := types.MoveResult{
@@ -63,5 +71,6 @@ func init() {
 	if err := moveCmd.MarkFlagRequired("to"); err != nil {
 		panic(err)
 	}
+	moveCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	rootCmd.AddCommand(moveCmd)
 }

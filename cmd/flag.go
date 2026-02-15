@@ -19,6 +19,11 @@ var flagCmd = &cobra.Command{
 				"Check your token in JMAP_TOKEN or config file")
 		}
 
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, args, "flag", nil)
+		}
+
 		succeeded, errors := c.SetFlagged(args)
 
 		result := types.MoveResult{
@@ -39,5 +44,6 @@ var flagCmd = &cobra.Command{
 }
 
 func init() {
+	flagCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	rootCmd.AddCommand(flagCmd)
 }

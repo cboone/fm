@@ -35,6 +35,8 @@ func (f *TextFormatter) Format(w io.Writer, v any) error {
 		return f.formatThreadView(w, val)
 	case types.MoveResult:
 		return f.formatMoveResult(w, val)
+	case types.DryRunResult:
+		return f.formatDryRunResult(w, val)
 	default:
 		// Fall back to JSON formatter for unknown types.
 		return (&JSONFormatter{}).Format(w, v)
@@ -200,6 +202,62 @@ func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error 
 			fmt.Fprintf(w, "  - %s\n", e)
 		}
 	}
+	return nil
+}
+
+func (f *TextFormatter) formatDryRunResult(w io.Writer, r types.DryRunResult) error {
+	fmt.Fprintf(w, "Dry run: would %s %d email(s)\n", r.Operation, r.Count)
+
+	if len(r.Emails) > 0 {
+		fmt.Fprintln(w)
+
+		// Build display rows with truncation.
+		type displayRow struct {
+			id      string
+			from    string
+			subject string
+			date    string
+		}
+
+		rows := make([]displayRow, len(r.Emails))
+		maxID := 0
+		maxFrom := 0
+		maxSubject := 0
+
+		for i, e := range r.Emails {
+			from := ""
+			if len(e.From) > 0 {
+				from = truncate(formatAddr(e.From[0]), maxFromWidth)
+			}
+			subject := truncate(e.Subject, maxSubjectWidth)
+
+			rows[i] = displayRow{e.ID, from, subject, e.ReceivedAt.Format("2006-01-02 15:04")}
+
+			if idLen := utf8.RuneCountInString(e.ID); idLen > maxID {
+				maxID = idLen
+			}
+			if fromLen := utf8.RuneCountInString(from); fromLen > maxFrom {
+				maxFrom = fromLen
+			}
+			if subjLen := utf8.RuneCountInString(subject); subjLen > maxSubject {
+				maxSubject = subjLen
+			}
+		}
+
+		fmtStr := fmt.Sprintf("  %%-%ds  %%-%ds  %%-%ds  %%s\n", maxID, maxFrom, maxSubject)
+		for _, row := range rows {
+			fmt.Fprintf(w, fmtStr, row.id, row.from, row.subject, row.date)
+		}
+	}
+
+	if r.Destination != nil {
+		fmt.Fprintf(w, "\nDestination: %s (%s)\n", r.Destination.Name, r.Destination.ID)
+	}
+
+	if len(r.NotFound) > 0 {
+		fmt.Fprintf(w, "\nNot found: %s\n", strings.Join(r.NotFound, ", "))
+	}
+
 	return nil
 }
 

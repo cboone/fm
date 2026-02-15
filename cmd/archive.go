@@ -25,6 +25,14 @@ var archiveCmd = &cobra.Command{
 			return exitError("not_found", "archive mailbox not found: "+err.Error(), "")
 		}
 
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, args, "archive", &types.DestinationInfo{
+				ID:   string(archiveMB.ID),
+				Name: archiveMB.Name,
+			})
+		}
+
 		succeeded, errors := c.MoveEmails(args, archiveMB.ID)
 
 		result := types.MoveResult{
@@ -49,5 +57,6 @@ var archiveCmd = &cobra.Command{
 }
 
 func init() {
+	archiveCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	rootCmd.AddCommand(archiveCmd)
 }

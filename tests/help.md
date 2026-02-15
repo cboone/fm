@@ -137,7 +137,11 @@ Move emails to the Archive mailbox (glob)
  (regex)
 Usage: (glob)
   jm archive <email-id> [email-id...] [flags] (glob)
-* (glob+)
+ (regex)
+Flags: (glob)
+*--dry-run* (glob)
+*--help* (glob)
+* (glob*)
 ```
 
 ## Spam command help
@@ -148,7 +152,11 @@ Move emails to the Junk/Spam mailbox (glob)
  (regex)
 Usage: (glob)
   jm spam <email-id> [email-id...] [flags] (glob)
-* (glob+)
+ (regex)
+Flags: (glob)
+*--dry-run* (glob)
+*--help* (glob)
+* (glob*)
 ```
 
 ## Mark-read command help
@@ -159,7 +167,11 @@ Mark emails as read (set the $seen keyword) (glob)
  (regex)
 Usage: (glob)
   jm mark-read <email-id> [email-id...] [flags] (glob)
-* (glob+)
+ (regex)
+Flags: (glob)
+*--dry-run* (glob)
+*--help* (glob)
+* (glob*)
 ```
 
 ## Flag command help
@@ -170,7 +182,11 @@ Flag emails (set the $flagged keyword) (glob)
  (regex)
 Usage: (glob)
   jm flag <email-id> [email-id...] [flags] (glob)
-* (glob+)
+ (regex)
+Flags: (glob)
+*--dry-run* (glob)
+*--help* (glob)
+* (glob*)
 ```
 
 ## Unflag command help
@@ -181,7 +197,11 @@ Unflag emails (remove the $flagged keyword) (glob)
  (regex)
 Usage: (glob)
   jm unflag <email-id> [email-id...] [flags] (glob)
-* (glob+)
+ (regex)
+Flags: (glob)
+*--dry-run* (glob)
+*--help* (glob)
+* (glob*)
 ```
 
 ## Move command help
@@ -195,6 +215,7 @@ Usage: (glob)
   jm move <email-id> [email-id...] --to <mailbox> [flags] (glob)
  (regex)
 Flags: (glob)
+*--dry-run* (glob)
 *--help* (glob)
 *--to* (glob)
 * (glob*)

@@ -97,12 +97,17 @@ jm mark-read <email-id>
 jm flag <email-id>
 jm unflag <email-id>
 
-# Archive emails
-jm archive <email-id>
+# Preview what archive would do (dry run)
+jm archive --dry-run <email-id-1> <email-id-2>
+
+# Then actually archive
+jm archive <email-id-1> <email-id-2>
 
 # Move emails to a named mailbox
 jm move <email-id-1> <email-id-2> --to Receipts
 ```
+
+All triage commands support `--dry-run` (`-n`) to preview affected emails without making changes.
 
 ## Commands
 

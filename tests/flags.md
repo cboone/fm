@@ -179,6 +179,76 @@ $ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/
 [1]
 ```
 
+## Dry-run flag on archive
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm archive --dry-run M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run short flag on archive
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm archive -n M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run flag on spam
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm spam --dry-run M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run flag on mark-read
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm mark-read --dry-run M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run flag on flag
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm flag --dry-run M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run flag on unflag
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm unflag --dry-run M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Dry-run flag on move
+
+```scrut
+$ env -u JMAP_TOKEN -u JMAP_SESSION_URL -u JMAP_FORMAT -u JMAP_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../jm move --dry-run M1 --to Receipts 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
 ## Archive with multiple IDs
 
 ```scrut

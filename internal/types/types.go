@@ -120,6 +120,15 @@ type DestinationInfo struct {
 	Name string `json:"name"`
 }
 
+// DryRunResult previews the emails that would be affected by a mutating command.
+type DryRunResult struct {
+	Operation   string           `json:"operation"`
+	Count       int              `json:"count"`
+	Emails      []EmailSummary   `json:"emails"`
+	NotFound    []string         `json:"not_found,omitempty"`
+	Destination *DestinationInfo `json:"destination,omitempty"`
+}
+
 // AppError is a structured error for JSON output.
 type AppError struct {
 	Error   string `json:"error"`

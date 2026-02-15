@@ -385,7 +385,11 @@ Move one or more emails to the Archive mailbox.
 jm archive <email-id> [email-id...]
 ```
 
-1 or more arguments required. No command-specific flags.
+1 or more arguments required.
+
+| Flag                | Short | Default | Description                                    |
+| ------------------- | ----- | ------- | ---------------------------------------------- |
+| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
 
 **JSON output:**
 
@@ -419,7 +423,11 @@ Move one or more emails to the Junk/Spam mailbox.
 jm spam <email-id> [email-id...]
 ```
 
-1 or more arguments required. No command-specific flags.
+1 or more arguments required.
+
+| Flag                | Short | Default | Description                                    |
+| ------------------- | ----- | ------- | ---------------------------------------------- |
+| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
 
 **JSON output:**
 
@@ -453,7 +461,11 @@ Mark one or more emails as read by setting the `$seen` keyword.
 jm mark-read <email-id> [email-id...]
 ```
 
-1 or more arguments required. No command-specific flags.
+1 or more arguments required.
+
+| Flag                | Short | Default | Description                                    |
+| ------------------- | ----- | ------- | ---------------------------------------------- |
+| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
 
 **JSON output:**
 
@@ -482,7 +494,11 @@ Flag one or more emails by setting the `$flagged` keyword.
 jm flag <email-id> [email-id...]
 ```
 
-1 or more arguments required. No command-specific flags.
+1 or more arguments required.
+
+| Flag                | Short | Default | Description                                    |
+| ------------------- | ----- | ------- | ---------------------------------------------- |
+| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
 
 **JSON output:**
 
@@ -511,7 +527,11 @@ Unflag one or more emails by removing the `$flagged` keyword.
 jm unflag <email-id> [email-id...]
 ```
 
-1 or more arguments required. No command-specific flags.
+1 or more arguments required.
+
+| Flag                | Short | Default | Description                                    |
+| ------------------- | ----- | ------- | ---------------------------------------------- |
+| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
 
 **JSON output:**
 
@@ -542,9 +562,10 @@ jm move <email-id> [email-id...] --to <mailbox>
 
 1 or more arguments required.
 
-| Flag   | Required | Default | Description               |
-| ------ | -------- | ------- | ------------------------- |
-| `--to` | yes      | (none)  | Target mailbox name or ID |
+| Flag        | Short | Required | Default | Description                                    |
+| ----------- | ----- | -------- | ------- | ---------------------------------------------- |
+| `--to`      |       | yes      | (none)  | Target mailbox name or ID                      |
+| `--dry-run` | `-n`  | no       | false   | Preview affected emails without making changes |
 
 **Safety:** The `move` command refuses to target Trash, Deleted Items, or Deleted Messages (by role or name, case-insensitive). Attempting this returns a `forbidden_operation` error.
 
@@ -728,6 +749,56 @@ Returned by `archive`, `spam`, `mark-read`, `flag`, `unflag`, and `move` command
 | ------ | ------ | ------------ |
 | `id`   | string | Mailbox ID   |
 | `name` | string | Mailbox name |
+
+### DryRunResult
+
+Returned by any mutating command when `--dry-run` / `-n` is passed. Previews the emails that would be affected without making changes.
+
+| Field         | Type            | Notes                                             |
+| ------------- | --------------- | ------------------------------------------------- |
+| `operation`   | string          | One of: `archive`, `move`, `spam`, `mark_read`, `flag`, `unflag` |
+| `count`       | number          | Number of emails that would be mutated            |
+| `emails`      | EmailSummary[]  | Summaries of found emails                         |
+| `not_found`   | string[]        | Omitted if empty; IDs that failed `Email/get`     |
+| `destination` | DestinationInfo | Omitted for mark-read/flag/unflag                 |
+
+**JSON example:**
+
+```json
+{
+  "operation": "archive",
+  "count": 2,
+  "emails": [
+    {
+      "id": "M-email-id-1",
+      "thread_id": "T-thread-id",
+      "from": [{ "name": "Alice", "email": "alice@example.com" }],
+      "to": [{ "name": "Me", "email": "me@fastmail.com" }],
+      "subject": "Meeting tomorrow",
+      "received_at": "2026-02-14T10:30:00Z",
+      "size": 4521,
+      "is_unread": true,
+      "is_flagged": false,
+      "preview": "Hi, just wanted to confirm..."
+    }
+  ],
+  "destination": {
+    "id": "mb-archive-id",
+    "name": "Archive"
+  }
+}
+```
+
+**Text example:**
+
+```text
+Dry run: would archive 2 email(s)
+
+  M-email-id-1  Alice <alice@example.com>  Meeting tomorrow  2026-02-14 10:30
+  M-email-id-2  Bob <bob@example.com>      Invoice #1234     2026-02-13 09:15
+
+Destination: Archive (mb-archive-id)
+```
 
 ---
 

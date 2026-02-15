@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -1127,6 +1128,180 @@ func TestListEmails_UnflaggedAndUnread(t *testing.T) {
 	}
 	if second.NotKeyword != "$flagged" {
 		t.Errorf("expected second condition NotKeyword=$flagged, got %q", second.NotKeyword)
+	}
+}
+
+// --- GetEmailSummaries tests ---
+
+func TestGetEmailSummaries_ReturnsSummaries(t *testing.T) {
+	now := time.Date(2026, 2, 14, 10, 30, 0, 0, time.UTC)
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/get",
+					CallID: "0",
+					Args: &email.GetResponse{
+						List: []*email.Email{
+							{
+								ID:         "M1",
+								ThreadID:   "T1",
+								From:       []*mail.Address{{Name: "Alice", Email: "alice@example.com"}},
+								To:         []*mail.Address{{Name: "Bob", Email: "bob@example.com"}},
+								Subject:    "Meeting tomorrow",
+								ReceivedAt: &now,
+								Size:       4521,
+								Keywords:   map[string]bool{"$seen": true},
+								Preview:    "Hi, just wanted to confirm...",
+							},
+							{
+								ID:         "M2",
+								ThreadID:   "T2",
+								From:       []*mail.Address{{Name: "Bob", Email: "bob@example.com"}},
+								To:         []*mail.Address{{Name: "Alice", Email: "alice@example.com"}},
+								Subject:    "Invoice #1234",
+								ReceivedAt: &now,
+								Size:       2000,
+								Keywords:   map[string]bool{},
+								Preview:    "Please find attached...",
+							},
+						},
+						NotFound: []jmap.ID{},
+					},
+				},
+			}}, nil
+		},
+	}
+
+	summaries, notFound, err := c.GetEmailSummaries([]string{"M1", "M2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(summaries) != 2 {
+		t.Fatalf("expected 2 summaries, got %d", len(summaries))
+	}
+	if summaries[0].ID != "M1" {
+		t.Errorf("expected first summary ID=M1, got %s", summaries[0].ID)
+	}
+	if summaries[1].ID != "M2" {
+		t.Errorf("expected second summary ID=M2, got %s", summaries[1].ID)
+	}
+	if len(notFound) != 0 {
+		t.Errorf("expected 0 not-found IDs, got %d", len(notFound))
+	}
+}
+
+func TestGetEmailSummaries_NotFoundIDs(t *testing.T) {
+	now := time.Date(2026, 2, 14, 10, 30, 0, 0, time.UTC)
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/get",
+					CallID: "0",
+					Args: &email.GetResponse{
+						List: []*email.Email{
+							{
+								ID:         "M1",
+								ThreadID:   "T1",
+								From:       []*mail.Address{{Email: "alice@example.com"}},
+								To:         []*mail.Address{{Email: "bob@example.com"}},
+								Subject:    "Test",
+								ReceivedAt: &now,
+								Keywords:   map[string]bool{},
+							},
+						},
+						NotFound: []jmap.ID{"M-gone", "M-deleted"},
+					},
+				},
+			}}, nil
+		},
+	}
+
+	summaries, notFound, err := c.GetEmailSummaries([]string{"M1", "M-gone", "M-deleted"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(summaries) != 1 {
+		t.Fatalf("expected 1 summary, got %d", len(summaries))
+	}
+	if len(notFound) != 2 {
+		t.Fatalf("expected 2 not-found IDs, got %d", len(notFound))
+	}
+	if notFound[0] != "M-gone" || notFound[1] != "M-deleted" {
+		t.Errorf("unexpected not-found IDs: %v", notFound)
+	}
+}
+
+func TestGetEmailSummaries_MethodError(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "0", Args: &jmap.MethodError{Type: "invalidArguments"}},
+			}}, nil
+		},
+	}
+
+	_, _, err := c.GetEmailSummaries([]string{"M1"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "email/get") {
+		t.Errorf("expected error to mention email/get, got: %s", err.Error())
+	}
+}
+
+func TestGetEmailSummaries_Batching(t *testing.T) {
+	callCount := 0
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			callCount++
+			getReq, ok := req.Calls[0].Args.(*email.Get)
+			if !ok {
+				t.Fatalf("expected *email.Get, got %T", req.Calls[0].Args)
+			}
+			var list []*email.Email
+			for _, id := range getReq.IDs {
+				list = append(list, &email.Email{
+					ID:       id,
+					Keywords: map[string]bool{},
+				})
+			}
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/get",
+					CallID: "0",
+					Args:   &email.GetResponse{List: list},
+				},
+			}}, nil
+		},
+	}
+
+	// 51 IDs should result in 2 Do calls (50 + 1)
+	ids := make([]string, 51)
+	for i := range ids {
+		ids[i] = fmt.Sprintf("M%d", i)
+	}
+
+	summaries, notFound, err := c.GetEmailSummaries(ids)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if callCount != 2 {
+		t.Errorf("expected 2 Do calls for 51 IDs, got %d", callCount)
+	}
+	if len(summaries) != 51 {
+		t.Errorf("expected 51 summaries, got %d", len(summaries))
+	}
+	if len(notFound) != 0 {
+		t.Errorf("expected 0 not-found IDs, got %d", len(notFound))
 	}
 }
 

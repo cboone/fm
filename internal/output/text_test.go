@@ -395,6 +395,117 @@ func TestTextFormatter_MoveResultUnflagged(t *testing.T) {
 	}
 }
 
+func TestTextFormatter_DryRunResult_WithDestination(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 14, 10, 30, 0, 0, time.UTC)
+	result := types.DryRunResult{
+		Operation: "archive",
+		Count:     2,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Name: "Alice", Email: "alice@example.com"}},
+				Subject:    "Meeting tomorrow",
+				ReceivedAt: now,
+			},
+			{
+				ID:         "M2",
+				From:       []types.Address{{Name: "Bob", Email: "bob@example.com"}},
+				Subject:    "Invoice #1234",
+				ReceivedAt: now,
+			},
+		},
+		Destination: &types.DestinationInfo{
+			ID:   "mb-archive-id",
+			Name: "Archive",
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Dry run: would archive 2 email(s)") {
+		t.Errorf("expected header line, got: %s", out)
+	}
+	if !strings.Contains(out, "M1") {
+		t.Errorf("expected M1 in output, got: %s", out)
+	}
+	if !strings.Contains(out, "M2") {
+		t.Errorf("expected M2 in output, got: %s", out)
+	}
+	if !strings.Contains(out, "Alice") {
+		t.Errorf("expected sender name in output, got: %s", out)
+	}
+	if !strings.Contains(out, "Meeting tomorrow") {
+		t.Errorf("expected subject in output, got: %s", out)
+	}
+	if !strings.Contains(out, "Destination: Archive (mb-archive-id)") {
+		t.Errorf("expected destination line, got: %s", out)
+	}
+	if strings.Contains(out, "Not found:") {
+		t.Errorf("expected no Not found line, got: %s", out)
+	}
+}
+
+func TestTextFormatter_DryRunResult_NoDestination(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 14, 10, 30, 0, 0, time.UTC)
+	result := types.DryRunResult{
+		Operation: "mark_read",
+		Count:     1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Email: "alice@example.com"}},
+				Subject:    "Test",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Dry run: would mark_read 1 email(s)") {
+		t.Errorf("expected header line, got: %s", out)
+	}
+	if strings.Contains(out, "Destination:") {
+		t.Errorf("expected no destination line for mark-read, got: %s", out)
+	}
+}
+
+func TestTextFormatter_DryRunResult_WithNotFound(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.DryRunResult{
+		Operation: "flag",
+		Count:     0,
+		Emails:    []types.EmailSummary{},
+		NotFound:  []string{"M4", "M5"},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Dry run: would flag 0 email(s)") {
+		t.Errorf("expected header line, got: %s", out)
+	}
+	if !strings.Contains(out, "Not found: M4, M5") {
+		t.Errorf("expected not-found line, got: %s", out)
+	}
+}
+
 func TestTextFormatter_ErrorWithHint(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer

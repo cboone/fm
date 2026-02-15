@@ -25,6 +25,14 @@ var spamCmd = &cobra.Command{
 			return exitError("not_found", "junk mailbox not found: "+err.Error(), "")
 		}
 
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, args, "spam", &types.DestinationInfo{
+				ID:   string(junkMB.ID),
+				Name: junkMB.Name,
+			})
+		}
+
 		succeeded, errors := c.MarkAsSpam(args, junkMB.ID)
 
 		result := types.MoveResult{
@@ -49,5 +57,6 @@ var spamCmd = &cobra.Command{
 }
 
 func init() {
+	spamCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	rootCmd.AddCommand(spamCmd)
 }

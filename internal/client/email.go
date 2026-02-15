@@ -726,6 +726,52 @@ func (c *Client) SetUnflagged(emailIDs []string) (succeeded []string, errors []s
 	return succeeded, errors
 }
 
+// GetEmailSummaries fetches summaries for the given IDs using read-only Email/get.
+// Returns found summaries, not-found IDs, and any error.
+func (c *Client) GetEmailSummaries(ids []string) ([]types.EmailSummary, []string, error) {
+	var allSummaries []types.EmailSummary
+	var allNotFound []string
+
+	for start := 0; start < len(ids); start += batchSize {
+		end := start + batchSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		batch := ids[start:end]
+
+		jmapIDs := make([]jmap.ID, len(batch))
+		for i, id := range batch {
+			jmapIDs[i] = jmap.ID(id)
+		}
+
+		req := &jmap.Request{}
+		req.Invoke(&email.Get{
+			Account:    c.accountID,
+			IDs:        jmapIDs,
+			Properties: summaryProperties,
+		})
+
+		resp, err := c.Do(req)
+		if err != nil {
+			return nil, nil, fmt.Errorf("email/get: %w", err)
+		}
+
+		for _, inv := range resp.Responses {
+			switch r := inv.Args.(type) {
+			case *email.GetResponse:
+				allSummaries = append(allSummaries, convertSummaries(r.List)...)
+				for _, nf := range r.NotFound {
+					allNotFound = append(allNotFound, string(nf))
+				}
+			case *jmap.MethodError:
+				return nil, nil, fmt.Errorf("email/get: %s", r.Error())
+			}
+		}
+	}
+
+	return allSummaries, allNotFound, nil
+}
+
 // --- Conversion helpers ---
 
 func convertAddresses(addrs []*mail.Address) []types.Address {
