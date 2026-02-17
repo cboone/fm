@@ -69,13 +69,19 @@ func TestHelpTestCoverage(t *testing.T) {
 	}
 
 	for name, cmd := range commands {
+		section := extractHelpCommandSection(content, name)
+		if section == "" {
+			t.Errorf("tests/help.md has no help block for %q", name)
+			continue
+		}
+
 		cmd.Flags().VisitAll(func(f *pflag.Flag) {
 			if f.Name == "help" {
 				return
 			}
 
 			flagRef := fmt.Sprintf("--%s", f.Name)
-			if !strings.Contains(content, flagRef) {
+			if !strings.Contains(section, flagRef) {
 				t.Errorf("command %q: flag --%s is registered in code but missing from tests/help.md", name, f.Name)
 			}
 		})
@@ -99,5 +105,23 @@ func extractCommandSection(doc, name string) string {
 			end = idx
 		}
 	}
+	return rest[:end]
+}
+
+// extractHelpCommandSection returns the output block for a command in tests/help.md,
+// starting from "$ $TESTDIR/../fm <name> --help" until the closing code fence.
+func extractHelpCommandSection(doc, name string) string {
+	command := "$ $TESTDIR/../fm " + name + " --help"
+	start := strings.Index(doc, command)
+	if start == -1 {
+		return ""
+	}
+
+	rest := doc[start+len(command):]
+	end := strings.Index(rest, "\n```")
+	if end == -1 {
+		return rest
+	}
+
 	return rest[:end]
 }
