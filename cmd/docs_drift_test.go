@@ -21,6 +21,7 @@ func TestCLIReferenceCoverage(t *testing.T) {
 	content := string(doc)
 
 	commands := map[string]*cobra.Command{
+		"session":   sessionCmd,
 		"list":      listCmd,
 		"search":    searchCmd,
 		"read":      readCmd,
@@ -72,6 +73,7 @@ func TestHelpTestCoverage(t *testing.T) {
 	content := string(doc)
 
 	commands := map[string]*cobra.Command{
+		"session":   sessionCmd,
 		"list":      listCmd,
 		"search":    searchCmd,
 		"read":      readCmd,
