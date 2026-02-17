@@ -235,8 +235,10 @@ func TestTextFormatter_EmailDetailNoListUnsubscribe(t *testing.T) {
 	}
 
 	out := buf.String()
-	if strings.Contains(out, "List-Unsubscribe") {
-		t.Errorf("expected no List-Unsubscribe line when empty, got: %s", out)
+	for _, line := range strings.Split(out, "\n") {
+		if strings.HasPrefix(line, "List-Unsubscribe:") || strings.HasPrefix(line, "List-Unsubscribe-Post:") {
+			t.Errorf("expected no List-Unsubscribe headers when empty, got line: %s", line)
+		}
 	}
 }
 
