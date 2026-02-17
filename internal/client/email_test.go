@@ -1228,6 +1228,154 @@ func TestUnflagPatchStructure(t *testing.T) {
 	}
 }
 
+// --- SearchEmails filter condition tests ---
+
+// TestSearchEmails_FilterConditions verifies that each SearchOptions filter
+// field is correctly encoded into the outbound Email/query FilterCondition.
+func TestSearchEmails_FilterConditions(t *testing.T) {
+	before := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
+	after := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name    string
+		opts    SearchOptions
+		assert  func(t *testing.T, fc *email.FilterCondition)
+		hasText bool // true if opts.Text is set (needs SearchSnippet/get in response)
+	}{
+		{
+			name: "Text",
+			opts: SearchOptions{Text: "meeting notes"},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.Text != "meeting notes" {
+					t.Errorf("expected Text=%q, got %q", "meeting notes", fc.Text)
+				}
+			},
+			hasText: true,
+		},
+		{
+			name: "From",
+			opts: SearchOptions{From: "alice@example.com"},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.From != "alice@example.com" {
+					t.Errorf("expected From=%q, got %q", "alice@example.com", fc.From)
+				}
+			},
+		},
+		{
+			name: "To",
+			opts: SearchOptions{To: "bob@example.com"},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.To != "bob@example.com" {
+					t.Errorf("expected To=%q, got %q", "bob@example.com", fc.To)
+				}
+			},
+		},
+		{
+			name: "Subject",
+			opts: SearchOptions{Subject: "quarterly report"},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.Subject != "quarterly report" {
+					t.Errorf("expected Subject=%q, got %q", "quarterly report", fc.Subject)
+				}
+			},
+		},
+		{
+			name: "Before",
+			opts: SearchOptions{Before: &before},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.Before == nil {
+					t.Fatal("expected Before to be set")
+				}
+				if !fc.Before.Equal(before) {
+					t.Errorf("expected Before=%v, got %v", before, *fc.Before)
+				}
+			},
+		},
+		{
+			name: "After",
+			opts: SearchOptions{After: &after},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.After == nil {
+					t.Fatal("expected After to be set")
+				}
+				if !fc.After.Equal(after) {
+					t.Errorf("expected After=%v, got %v", after, *fc.After)
+				}
+			},
+		},
+		{
+			name: "HasAttachment",
+			opts: SearchOptions{HasAttachment: true},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if !fc.HasAttachment {
+					t.Error("expected HasAttachment=true")
+				}
+			},
+		},
+		{
+			name: "MailboxID",
+			opts: SearchOptions{MailboxID: "mb-inbox-1"},
+			assert: func(t *testing.T, fc *email.FilterCondition) {
+				if fc.InMailbox != "mb-inbox-1" {
+					t.Errorf("expected InMailbox=%q, got %q", "mb-inbox-1", fc.InMailbox)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var captured *jmap.Request
+
+			// Build mock response: always include Email/query + Email/get,
+			// and add SearchSnippet/get when the subtest uses Text search.
+			invocations := []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}
+			if tt.hasText {
+				invocations = append(invocations, &jmap.Invocation{
+					Name: "SearchSnippet/get", CallID: "2",
+					Args: &searchsnippet.GetResponse{List: []*searchsnippet.SearchSnippet{}},
+				})
+			}
+
+			c := &Client{
+				accountID: "test-account",
+				doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+					captured = req
+					return &jmap.Response{Responses: invocations}, nil
+				},
+			}
+
+			// Fill in required defaults so the query is valid.
+			opts := tt.opts
+			if opts.Limit == 0 {
+				opts.Limit = 25
+			}
+			if opts.SortField == "" {
+				opts.SortField = "receivedAt"
+			}
+
+			_, err := c.SearchEmails(opts)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			query, ok := captured.Calls[0].Args.(*email.Query)
+			if !ok {
+				t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+			}
+			fc, ok := query.Filter.(*email.FilterCondition)
+			if !ok {
+				t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+			}
+
+			tt.assert(t, fc)
+		})
+	}
+}
+
 // --- Flagged/unflagged filter tests ---
 
 // TestSearchEmails_FlaggedOnly verifies that FlaggedOnly sets HasKeyword on the filter.
