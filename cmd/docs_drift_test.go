@@ -20,10 +20,7 @@ func TestCLIReferenceCoverage(t *testing.T) {
 	}
 	content := string(doc)
 
-	commands := map[string]*cobra.Command{
-		"list":   listCmd,
-		"search": searchCmd,
-	}
+	commands := coveredRootCommands(t)
 
 	for name, cmd := range commands {
 		// Extract the section for this command from the docs.
@@ -63,10 +60,7 @@ func TestHelpTestCoverage(t *testing.T) {
 	}
 	content := string(doc)
 
-	commands := map[string]*cobra.Command{
-		"list":   listCmd,
-		"search": searchCmd,
-	}
+	commands := coveredRootCommands(t)
 
 	for name, cmd := range commands {
 		section := extractHelpCommandSection(content, name)
@@ -84,7 +78,91 @@ func TestHelpTestCoverage(t *testing.T) {
 			if !strings.Contains(section, flagRef) {
 				t.Errorf("command %q: flag --%s is registered in code but missing from tests/help.md", name, f.Name)
 			}
+
+			if f.Shorthand != "" {
+				shortRef := fmt.Sprintf("-%s,", f.Shorthand)
+				if !strings.Contains(section, shortRef) {
+					t.Errorf("command %q: short flag -%s (for --%s) is registered in code but missing from tests/help.md", name, f.Shorthand, f.Name)
+				}
+			}
 		})
+	}
+}
+
+// TestGlobalFlagsCoverage verifies that every persistent flag registered on
+// rootCmd appears in the Global Flags table of docs/CLI-REFERENCE.md.
+func TestGlobalFlagsCoverage(t *testing.T) {
+	doc, err := os.ReadFile("../docs/CLI-REFERENCE.md")
+	if err != nil {
+		t.Fatalf("failed to read CLI-REFERENCE.md: %v", err)
+	}
+	content := string(doc)
+
+	// Extract the Global Flags section (between "## Global Flags" and the next
+	// horizontal rule or heading).
+	const heading = "## Global Flags"
+	start := strings.Index(content, heading)
+	if start == -1 {
+		t.Fatal("docs/CLI-REFERENCE.md has no Global Flags section")
+	}
+	rest := content[start+len(heading):]
+	end := len(rest)
+	for _, sep := range []string{"\n---", "\n## "} {
+		if idx := strings.Index(rest, sep); idx != -1 && idx < end {
+			end = idx
+		}
+	}
+	section := rest[:end]
+
+	rootCmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+		if f.Name == "help" {
+			return
+		}
+
+		flagRef := fmt.Sprintf("`--%s`", f.Name)
+		if !strings.Contains(section, flagRef) {
+			t.Errorf("global flag --%s is registered on rootCmd but missing from the Global Flags table in docs/CLI-REFERENCE.md", f.Name)
+		}
+	})
+
+	// Cobra adds --version automatically when rootCmd.Version is set.
+	if rootCmd.Version != "" {
+		if !strings.Contains(section, "`--version`") {
+			t.Errorf("global flag --version is registered on rootCmd but missing from the Global Flags table in docs/CLI-REFERENCE.md")
+		}
+	}
+}
+
+// coveredRootCommands returns all root-level commands that should be covered by
+// docs/help drift-prevention tests.
+func coveredRootCommands(t *testing.T) map[string]*cobra.Command {
+	t.Helper()
+
+	commands := make(map[string]*cobra.Command)
+	for _, cmd := range rootCmd.Commands() {
+		if shouldSkipCoverageCommand(cmd) {
+			continue
+		}
+		commands[cmd.Name()] = cmd
+	}
+
+	if len(commands) == 0 {
+		t.Fatal("no commands selected for docs/help drift coverage")
+	}
+
+	return commands
+}
+
+func shouldSkipCoverageCommand(cmd *cobra.Command) bool {
+	if cmd.Hidden {
+		return true
+	}
+
+	switch cmd.Name() {
+	case "help", "completion", "__complete", "__completeNoDesc":
+		return true
+	default:
+		return false
 	}
 }
 
