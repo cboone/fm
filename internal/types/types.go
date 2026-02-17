@@ -49,21 +49,23 @@ type EmailListResult struct {
 
 // EmailDetail is a full view of a single email.
 type EmailDetail struct {
-	ID          string       `json:"id"`
-	ThreadID    string       `json:"thread_id"`
-	From        []Address    `json:"from"`
-	To          []Address    `json:"to"`
-	CC          []Address    `json:"cc"`
-	BCC         []Address    `json:"bcc,omitempty"`
-	ReplyTo     []Address    `json:"reply_to,omitempty"`
-	Subject     string       `json:"subject"`
-	SentAt      *time.Time   `json:"sent_at,omitempty"`
-	ReceivedAt  time.Time    `json:"received_at"`
-	IsUnread    bool         `json:"is_unread"`
-	IsFlagged   bool         `json:"is_flagged"`
-	Body        string       `json:"body"`
-	Attachments []Attachment `json:"attachments"`
-	Headers     []Header     `json:"headers,omitempty"`
+	ID                  string       `json:"id"`
+	ThreadID            string       `json:"thread_id"`
+	From                []Address    `json:"from"`
+	To                  []Address    `json:"to"`
+	CC                  []Address    `json:"cc"`
+	BCC                 []Address    `json:"bcc,omitempty"`
+	ReplyTo             []Address    `json:"reply_to,omitempty"`
+	Subject             string       `json:"subject"`
+	SentAt              *time.Time   `json:"sent_at,omitempty"`
+	ReceivedAt          time.Time    `json:"received_at"`
+	IsUnread            bool         `json:"is_unread"`
+	IsFlagged           bool         `json:"is_flagged"`
+	Body                string       `json:"body"`
+	ListUnsubscribe     string       `json:"list_unsubscribe,omitempty"`
+	ListUnsubscribePost string       `json:"list_unsubscribe_post,omitempty"`
+	Attachments         []Attachment `json:"attachments"`
+	Headers             []Header     `json:"headers,omitempty"`
 }
 
 // Header is a raw email header.

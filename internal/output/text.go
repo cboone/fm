@@ -141,6 +141,12 @@ func (f *TextFormatter) formatEmailDetail(w io.Writer, e types.EmailDetail) erro
 		fmt.Fprintf(w, "CC: %s\n", formatAddrs(e.CC))
 	}
 	fmt.Fprintf(w, "Date: %s\n", e.ReceivedAt.Format("2006-01-02 15:04:05 -0700"))
+	if e.ListUnsubscribe != "" {
+		fmt.Fprintf(w, "List-Unsubscribe: %s\n", e.ListUnsubscribe)
+	}
+	if e.ListUnsubscribePost != "" {
+		fmt.Fprintf(w, "List-Unsubscribe-Post: %s\n", e.ListUnsubscribePost)
+	}
 	fmt.Fprintf(w, "ID: %s\n", e.ID)
 	fmt.Fprintln(w, strings.Repeat("-", 72))
 	fmt.Fprintln(w, e.Body)

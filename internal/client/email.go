@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"git.sr.ht/~rockorager/go-jmap"
@@ -174,16 +175,6 @@ func (c *Client) ListEmails(mailboxNameOrID string, limit uint64, offset int64, 
 func (c *Client) ReadEmail(emailID string, preferHTML bool, rawHeaders bool) (types.EmailDetail, error) {
 	props := make([]string, len(detailProperties))
 	copy(props, detailProperties)
-	if !rawHeaders {
-		// Remove "headers" from properties.
-		filtered := props[:0]
-		for _, p := range props {
-			if p != "headers" {
-				filtered = append(filtered, p)
-			}
-		}
-		props = filtered
-	}
 
 	req := &jmap.Request{}
 	get := &email.Get{
@@ -647,8 +638,13 @@ func convertDetail(e *email.Email, preferHTML bool, rawHeaders bool) types.Email
 		Attachments: attachments,
 	}
 
-	if rawHeaders {
-		for _, h := range e.Headers {
+	for _, h := range e.Headers {
+		if strings.EqualFold(h.Name, "List-Unsubscribe") {
+			detail.ListUnsubscribe = strings.TrimSpace(h.Value)
+		} else if strings.EqualFold(h.Name, "List-Unsubscribe-Post") {
+			detail.ListUnsubscribePost = strings.TrimSpace(h.Value)
+		}
+		if rawHeaders {
 			detail.Headers = append(detail.Headers, types.Header{
 				Name:  h.Name,
 				Value: h.Value,

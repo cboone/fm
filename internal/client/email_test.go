@@ -314,6 +314,86 @@ func TestConvertDetail_NoHeaders(t *testing.T) {
 	}
 }
 
+func TestConvertDetail_ListUnsubscribe(t *testing.T) {
+	e := &email.Email{
+		ID:         "M1",
+		BodyValues: map[string]*email.BodyValue{},
+		Headers: []*email.Header{
+			{Name: "List-Unsubscribe", Value: " <mailto:unsub@example.com>"},
+			{Name: "List-Unsubscribe-Post", Value: " List-Unsubscribe=One-Click"},
+			{Name: "X-Custom", Value: "other"},
+		},
+	}
+
+	// List-Unsubscribe fields should be populated even without rawHeaders.
+	detail := convertDetail(e, false, false)
+	if detail.ListUnsubscribe != "<mailto:unsub@example.com>" {
+		t.Errorf("expected ListUnsubscribe='<mailto:unsub@example.com>', got %q", detail.ListUnsubscribe)
+	}
+	if detail.ListUnsubscribePost != "List-Unsubscribe=One-Click" {
+		t.Errorf("expected ListUnsubscribePost='List-Unsubscribe=One-Click', got %q", detail.ListUnsubscribePost)
+	}
+	if detail.Headers != nil {
+		t.Errorf("expected nil Headers when rawHeaders=false, got %v", detail.Headers)
+	}
+}
+
+func TestConvertDetail_ListUnsubscribeCaseInsensitive(t *testing.T) {
+	e := &email.Email{
+		ID:         "M1",
+		BodyValues: map[string]*email.BodyValue{},
+		Headers: []*email.Header{
+			{Name: "list-unsubscribe", Value: " <mailto:lower@example.com>"},
+			{Name: "LiSt-UnSuBsCrIbE-PoSt", Value: " List-Unsubscribe=One-Click"},
+		},
+	}
+
+	detail := convertDetail(e, false, false)
+	if detail.ListUnsubscribe != "<mailto:lower@example.com>" {
+		t.Errorf("expected case-insensitive ListUnsubscribe match, got %q", detail.ListUnsubscribe)
+	}
+	if detail.ListUnsubscribePost != "List-Unsubscribe=One-Click" {
+		t.Errorf("expected case-insensitive ListUnsubscribePost match, got %q", detail.ListUnsubscribePost)
+	}
+}
+
+func TestConvertDetail_ListUnsubscribeWithRawHeaders(t *testing.T) {
+	e := &email.Email{
+		ID:         "M1",
+		BodyValues: map[string]*email.BodyValue{},
+		Headers: []*email.Header{
+			{Name: "List-Unsubscribe", Value: " <mailto:unsub@example.com>"},
+			{Name: "X-Custom", Value: "test"},
+		},
+	}
+
+	detail := convertDetail(e, false, true)
+	if detail.ListUnsubscribe != "<mailto:unsub@example.com>" {
+		t.Errorf("expected ListUnsubscribe populated with rawHeaders=true, got %q", detail.ListUnsubscribe)
+	}
+	if len(detail.Headers) != 2 {
+		t.Fatalf("expected 2 raw headers, got %d", len(detail.Headers))
+	}
+}
+
+func TestConvertDetail_NoListUnsubscribe(t *testing.T) {
+	e := &email.Email{
+		ID:         "M1",
+		BodyValues: map[string]*email.BodyValue{},
+		Headers: []*email.Header{
+			{Name: "X-Custom", Value: "test"},
+		},
+	}
+
+	detail := convertDetail(e, false, false)
+	if detail.ListUnsubscribe != "" {
+		t.Errorf("expected empty ListUnsubscribe, got %q", detail.ListUnsubscribe)
+	}
+	if detail.ListUnsubscribePost != "" {
+		t.Errorf("expected empty ListUnsubscribePost, got %q", detail.ListUnsubscribePost)
+	}
+}
+
 func TestConvertDetail_NoAttachments(t *testing.T) {
 	e := &email.Email{
 		ID:          "M1",

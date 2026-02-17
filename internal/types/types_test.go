@@ -163,6 +163,56 @@ func TestEmailDetail_JSON(t *testing.T) {
 	}
 }
 
+func TestEmailDetail_JSON_ListUnsubscribe(t *testing.T) {
+	detail := EmailDetail{
+		ID:                  "M1",
+		ListUnsubscribe:     "<https://example.com/unsubscribe>",
+		ListUnsubscribePost: "List-Unsubscribe=One-Click",
+		Attachments:         []Attachment{},
+	}
+
+	data, err := json.Marshal(detail)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result["list_unsubscribe"] != "<https://example.com/unsubscribe>" {
+		t.Errorf("expected list_unsubscribe, got %v", result["list_unsubscribe"])
+	}
+	if result["list_unsubscribe_post"] != "List-Unsubscribe=One-Click" {
+		t.Errorf("expected list_unsubscribe_post, got %v", result["list_unsubscribe_post"])
+	}
+}
+
+func TestEmailDetail_JSON_ListUnsubscribeOmitEmpty(t *testing.T) {
+	detail := EmailDetail{
+		ID:          "M1",
+		Attachments: []Attachment{},
+	}
+
+	data, err := json.Marshal(detail)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := result["list_unsubscribe"]; ok {
+		t.Error("expected list_unsubscribe to be omitted when empty")
+	}
+	if _, ok := result["list_unsubscribe_post"]; ok {
+		t.Error("expected list_unsubscribe_post to be omitted when empty")
+	}
+}
+
 func TestEmailDetail_JSON_NullSentAt(t *testing.T) {
 	detail := EmailDetail{
 		ID:          "M1",
