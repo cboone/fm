@@ -338,6 +338,25 @@ func TestConvertDetail_ListUnsubscribe(t *testing.T) {
 	}
 }
 
+func TestConvertDetail_ListUnsubscribeCaseInsensitive(t *testing.T) {
+	e := &email.Email{
+		ID:         "M1",
+		BodyValues: map[string]*email.BodyValue{},
+		Headers: []*email.Header{
+			{Name: "list-unsubscribe", Value: " <mailto:lower@example.com>"},
+			{Name: "LiSt-UnSuBsCrIbE-PoSt", Value: " List-Unsubscribe=One-Click"},
+		},
+	}
+
+	detail := convertDetail(e, false, false)
+	if detail.ListUnsubscribe != "<mailto:lower@example.com>" {
+		t.Errorf("expected case-insensitive ListUnsubscribe match, got %q", detail.ListUnsubscribe)
+	}
+	if detail.ListUnsubscribePost != "List-Unsubscribe=One-Click" {
+		t.Errorf("expected case-insensitive ListUnsubscribePost match, got %q", detail.ListUnsubscribePost)
+	}
+}
+
 func TestConvertDetail_ListUnsubscribeWithRawHeaders(t *testing.T) {
 	e := &email.Email{
 		ID:         "M1",

@@ -639,10 +639,10 @@ func convertDetail(e *email.Email, preferHTML bool, rawHeaders bool) types.Email
 	}
 
 	for _, h := range e.Headers {
-		switch h.Name {
-		case "List-Unsubscribe":
+		switch strings.ToLower(h.Name) {
+		case "list-unsubscribe":
 			detail.ListUnsubscribe = strings.TrimSpace(h.Value)
-		case "List-Unsubscribe-Post":
+		case "list-unsubscribe-post":
 			detail.ListUnsubscribePost = strings.TrimSpace(h.Value)
 		}
 		if rawHeaders {
