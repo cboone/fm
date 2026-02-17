@@ -20,19 +20,7 @@ func TestCLIReferenceCoverage(t *testing.T) {
 	}
 	content := string(doc)
 
-	commands := map[string]*cobra.Command{
-		"session":   sessionCmd,
-		"list":      listCmd,
-		"search":    searchCmd,
-		"read":      readCmd,
-		"mailboxes": mailboxesCmd,
-		"move":      moveCmd,
-		"archive":   archiveCmd,
-		"spam":      spamCmd,
-		"mark-read": markReadCmd,
-		"flag":      flagCmd,
-		"unflag":    unflagCmd,
-	}
+	commands := coveredRootCommands(t)
 
 	for name, cmd := range commands {
 		// Extract the section for this command from the docs.
@@ -72,19 +60,7 @@ func TestHelpTestCoverage(t *testing.T) {
 	}
 	content := string(doc)
 
-	commands := map[string]*cobra.Command{
-		"session":   sessionCmd,
-		"list":      listCmd,
-		"search":    searchCmd,
-		"read":      readCmd,
-		"mailboxes": mailboxesCmd,
-		"move":      moveCmd,
-		"archive":   archiveCmd,
-		"spam":      spamCmd,
-		"mark-read": markReadCmd,
-		"flag":      flagCmd,
-		"unflag":    unflagCmd,
-	}
+	commands := coveredRootCommands(t)
 
 	for name, cmd := range commands {
 		section := extractHelpCommandSection(content, name)
@@ -151,6 +127,39 @@ func TestGlobalFlagsCoverage(t *testing.T) {
 		if !strings.Contains(section, "`--version`") {
 			t.Errorf("global flag --version is registered on rootCmd but missing from the Global Flags table in docs/CLI-REFERENCE.md")
 		}
+	}
+}
+
+// coveredRootCommands returns all root-level commands that should be covered by
+// docs/help drift-prevention tests.
+func coveredRootCommands(t *testing.T) map[string]*cobra.Command {
+	t.Helper()
+
+	commands := make(map[string]*cobra.Command)
+	for _, cmd := range rootCmd.Commands() {
+		if shouldSkipCoverageCommand(cmd) {
+			continue
+		}
+		commands[cmd.Name()] = cmd
+	}
+
+	if len(commands) == 0 {
+		t.Fatal("no commands selected for docs/help drift coverage")
+	}
+
+	return commands
+}
+
+func shouldSkipCoverageCommand(cmd *cobra.Command) bool {
+	if cmd.Hidden {
+		return true
+	}
+
+	switch cmd.Name() {
+	case "help", "completion", "__complete", "__completeNoDesc":
+		return true
+	default:
+		return false
 	}
 }
 
