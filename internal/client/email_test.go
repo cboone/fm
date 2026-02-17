@@ -788,6 +788,11 @@ func TestSearchEmails_QueryOptions(t *testing.T) {
 		t.Errorf("expected Position=42, got %d", query.Position)
 	}
 
+	// Verify Limit is encoded on the query.
+	if query.Limit != 10 {
+		t.Errorf("expected Limit=10, got %d", query.Limit)
+	}
+
 	// Verify custom sort field and direction.
 	if len(query.Sort) != 1 {
 		t.Fatalf("expected 1 SortComparator, got %d", len(query.Sort))
