@@ -738,7 +738,7 @@ func TestSearchSnippetReference(t *testing.T) {
 	}
 }
 
-// TestSearchEmails_QueryOptions verifies that UnreadOnly, Offset, and custom
+// TestSearchEmails_QueryOptions verifies that UnreadOnly, Offset, Limit, and custom
 // sort field/direction are correctly encoded into the outbound Email/query call.
 func TestSearchEmails_QueryOptions(t *testing.T) {
 	var captured *jmap.Request
