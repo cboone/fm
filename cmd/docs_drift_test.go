@@ -98,16 +98,19 @@ func TestGlobalFlagsCoverage(t *testing.T) {
 	}
 	content := string(doc)
 
-	// Extract the Global Flags section (between "## Global Flags" and the next "---").
+	// Extract the Global Flags section (between "## Global Flags" and the next
+	// horizontal rule or heading).
 	const heading = "## Global Flags"
 	start := strings.Index(content, heading)
 	if start == -1 {
 		t.Fatal("docs/CLI-REFERENCE.md has no Global Flags section")
 	}
 	rest := content[start+len(heading):]
-	end := strings.Index(rest, "\n---")
-	if end == -1 {
-		end = len(rest)
+	end := len(rest)
+	for _, sep := range []string{"\n---", "\n## "} {
+		if idx := strings.Index(rest, sep); idx != -1 && idx < end {
+			end = idx
+		}
 	}
 	section := rest[:end]
 
