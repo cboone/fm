@@ -40,7 +40,7 @@ Identify promotional emails and other low-value mail that is not technically spa
   - Unsubscribe link (preferred; `fm read <id>` exposes List-Unsubscribe when present).
   - Draft an unsubscribe request when no link is available: `fm draft --reply-to <id> --body "Please remove me from this mailing list."`.
   - Fastmail-side filter or rule if unsubscribe is unavailable or unreliable.
-- Flag unsubscribe links for the user to handle from their client, then archive the messages.
+- Handle unsubscribe links or draft requests as appropriate, then archive the messages.
 
 ```bash
 fm read <id>
@@ -61,6 +61,7 @@ Process receipts, payment confirmations, security alerts, and other automated ac
 fm flag --color green <id>
 fm flag --color yellow <id>
 fm mark-read --from <sender>
+fm unflag --from <sender>
 fm archive --from <sender>
 ```
 
@@ -79,7 +80,7 @@ Handle emails from groups, communities, and organizations the user participates 
 - Surface anything with action items; archive the rest.
 
 ```bash
-fm list --unread --from <group-address> --format text
+fm search --from <group-address> --unread --format text
 fm mark-read --from <group-address>
 fm archive --from <group-address>
 ```

@@ -102,6 +102,7 @@ fm archive --from <sender> --dry-run
 
 ```bash
 fm mark-read --from <sender>
+fm unflag --from <sender>
 fm archive --from <sender>
 ```
 

@@ -17,11 +17,11 @@ Detailed operational procedures for email triage sessions.
 
 For each sender cohort, follow this sequence:
 
-1. `mark-read --from <sender>` to mark read
-1. `unflag --from <sender>` to remove flags (if applicable)
-1. `archive --from <sender>` to archive
+1. `fm mark-read --from <sender>` to mark read
+1. `fm unflag --from <sender>` to remove flags (if applicable)
+1. `fm archive --from <sender>` to archive
 
-Use `--dry-run` on any command to preview before committing.
+For action commands (`archive`, `spam`, `mark-read`, `flag`, `unflag`, `move`), use `--dry-run` to preview changes before committing.
 
 ### Filter-Based Operations
 
