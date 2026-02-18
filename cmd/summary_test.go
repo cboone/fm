@@ -17,3 +17,11 @@ func TestSummaryCmd_LimitMustBePositive(t *testing.T) {
 		t.Fatal("expected error when --limit is 0")
 	}
 }
+
+func TestSummaryCmd_NoPositionalArgs(t *testing.T) {
+	rootCmd.SetArgs([]string{"summary", "extra"})
+	err := rootCmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when positional args are provided")
+	}
+}

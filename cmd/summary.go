@@ -11,6 +11,7 @@ import (
 var summaryCmd = &cobra.Command{
 	Use:   "summary",
 	Short: "Show inbox triage summary with sender and domain aggregation",
+	Args:  cobra.NoArgs,
 	Long: `Aggregate emails by sender and domain, count unread messages, and optionally
 detect newsletters. Provides a single-pass triage overview of a mailbox.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
