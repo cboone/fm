@@ -1,28 +1,49 @@
 # fm
 
-`fm` is a safety-first email CLI for LLM agents.
+`fm` is a safety-first Fastmail CLI built for LLM agents. Use `fm` as the execution layer for inbox analysis and triage. It is machine-first by design: JSON output by default, structured errors, and strict guardrails around risky operations.
 
-It gives agents a reliable way to read, search, triage, and draft Fastmail email via JMAP, with structured output and hard limits on risky actions.
+## Human Instructions (tl;dr)
 
-This tool is primarily designed for agent-driven workflows, not manual mailbox management.
+Paste into your agent chat:
 
-## What Agents Can Do
+```text
+Use `fm` for Fastmail triage. Read and follow the runbooks in `README.md` (section "Agent Runbook (Read First)") and `skills/review-email/references/runbook.md`.
+```
 
-- Read mailbox and message data (`session`, `mailboxes`, `list`, `read`, `search`)
-- Build inbox intelligence (`stats`, `summary`)
-- Run controlled triage actions (`archive`, `spam`, `mark-read`, `flag`, `unflag`, `move`)
-- Create drafts for human review (`draft`)
+## Agent Mission
 
-## Hard Safety Model
+Use `fm` to:
 
-`fm` enforces safety constraints in code:
+- Inspect mailbox state and message content
+- Classify and batch-triage email safely
+- Create drafts for human review
 
-- **No sending email:** `EmailSubmission` is never called
-- **No deletion API calls:** `Email/set` destroy is never used
-- **No move-to-trash loophole:** `move` refuses Trash, Deleted Items, and Deleted Messages targets
-- **Draft-only composition:** `draft` creates in Drafts with `$draft`; it cannot send
+Do not use `fm` to send or delete email. Those operations are intentionally unavailable.
 
-## Install
+## Hard Safety Boundaries
+
+`fm` enforces these guarantees in code:
+
+- **No send path:** `EmailSubmission` is never called
+- **No delete path:** `Email/set` destroy is never used
+- **No trash-target moves:** `move` refuses Trash, Deleted Items, and Deleted Messages
+- **Draft-only composition:** `draft` creates messages in Drafts with `$draft` and cannot send
+
+Treat these as platform invariants, not optional settings.
+
+## Agent Runbook (Read First)
+
+If you are an LLM agent, follow this sequence on every run:
+
+1. Prefer `json` output (`--format json` or default).
+2. Start with read-only commands (`session`, `mailboxes`, `summary`, `list`, `search`, `read`).
+3. Before any mutation, run the same command with `--dry-run`.
+4. Do not mix explicit email IDs and filter flags in a single bulk command.
+5. Apply mutations only after preview results look correct.
+6. Verify post-state with follow-up reads (`summary`, `list`, `search`).
+7. If the user asks to reply, create a draft and clearly state it was not sent.
+
+## Quick Install
 
 ### Homebrew
 
@@ -36,70 +57,127 @@ brew install cboone/tap/fm
 go install github.com/cboone/fm@latest
 ```
 
-## Agent Setup
+## Runtime Setup For Agents
 
 1. Create a Fastmail API token at **Settings > Privacy & Security > Integrations > API tokens**.
-2. Grant only:
+2. Grant only these scopes:
    - `urn:ietf:params:jmap:core`
    - `urn:ietf:params:jmap:mail`
-3. Set credentials in environment variables:
+3. Configure runtime secrets using environment variables:
 
 ```bash
 export FM_TOKEN="fmu1-..."
+export FM_FORMAT="json"
 ```
 
-4. Validate connectivity:
+4. Validate auth and endpoint:
 
 ```bash
-fm session --format json
+fm session
 ```
 
 `urn:ietf:params:jmap:submission` is intentionally not required.
 
-## Recommended Agent Workflow
+## Canonical Agent Loop
 
-If you are an LLM agent, use this loop:
+Use this loop for consistent, auditable behavior.
 
-1. **Discover context**: `fm session`, `fm mailboxes`, `fm summary --unread`
-2. **Inspect candidates**: `fm list` and `fm read` (or `fm search` with filters)
-3. **Preview bulk actions**: run triage commands with `--dry-run` first
-4. **Apply changes**: execute the same command without `--dry-run`
-5. **Verify state**: re-check with `fm summary`, `fm list`, or targeted `fm search`
-6. **Draft replies only when needed**: create with `fm draft`; do not attempt to send
-
-For bulk triage commands, provide either explicit email IDs or filter flags in a given call, not both.
-
-## Agent-Friendly Command Patterns
+### 1) Discover
 
 ```bash
-# Baseline mailbox state
-fm summary --unread --newsletters --format json
-
-# Filter-first discovery
-fm search --from billing@example.com --after 2026-01-01 --format json
-
-# Preview then apply a safe bulk action
-fm archive --from updates@example.com --dry-run --format json
-fm archive --from updates@example.com --format json
-
-# Flag color workflow
-fm flag --color orange <email-id> --format json
-fm unflag --color <email-id> --format json
-
-# Draft creation (saved only)
-fm draft --reply-to <email-id> --body "Thanks, will review today." --format json
+fm session
+fm mailboxes
+fm summary --unread --newsletters
 ```
 
-All triage commands support `--dry-run` (`archive`, `spam`, `mark-read`, `flag`, `unflag`, `move`).
+### 2) Inspect
 
-## Output Contract for Agents
+```bash
+fm list --mailbox inbox --limit 50
+fm search --from billing@example.com --after 2026-01-01
+fm read <email-id>
+```
 
-- Default output is structured `json`
-- `text` output exists for human readability (`--format text`)
-- Runtime errors are structured on stderr (`json` or `text`) and return exit code `1`
-- `partial_failure` means some IDs succeeded and some failed, parse stdout result and stderr error together
+### 3) Preview Mutations
 
-For full output schemas and error references, see [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md).
+```bash
+fm archive --from updates@example.com --dry-run
+fm mark-read --from updates@example.com --dry-run
+fm move --from receipts@example.com --to Receipts --dry-run
+```
+
+### 4) Apply Mutations
+
+```bash
+fm archive --from updates@example.com
+fm mark-read --from updates@example.com
+fm move --from receipts@example.com --to Receipts
+```
+
+### 5) Verify
+
+```bash
+fm summary --unread
+fm search --from updates@example.com --mailbox inbox
+```
+
+### 6) Draft If Needed
+
+```bash
+fm draft --reply-to <email-id> --body "Thanks, reviewed."
+```
+
+## Command Roles For Agents
+
+| Role              | Commands                                                 |
+| ----------------- | -------------------------------------------------------- |
+| Auth and topology | `session`, `mailboxes`                                   |
+| Discovery         | `list`, `search`                                         |
+| Deep inspection   | `read`                                                   |
+| Analytics         | `stats`, `summary`                                       |
+| Triage mutations  | `archive`, `spam`, `mark-read`, `flag`, `unflag`, `move` |
+| Draft composition | `draft`                                                  |
+| Shell integration | `completion`                                             |
+
+All triage mutations support `--dry-run`: `archive`, `spam`, `mark-read`, `flag`, `unflag`, `move`.
+
+## Drafting Protocol
+
+`draft` supports four modes: new, reply, reply-all, and forward.
+
+```bash
+fm draft --to alice@example.com --subject "Hello" --body "Hi Alice"
+fm draft --reply-to <email-id> --body "Thanks!"
+fm draft --reply-all <email-id> --body "Noted, thanks."
+fm draft --forward <email-id> --to bob@example.com --body "FYI"
+echo "Body text" | fm draft --to alice@example.com --subject "Hello" --body-stdin
+```
+
+Agent guidance:
+
+- Draft when user intent is to respond or prepare a response
+- Never claim the email was sent
+- Remind the user draft review and send happen in Fastmail
+
+## Output And Error Contract
+
+- Default stdout format is structured `json`
+- `--format text` is for human-readable output
+- Runtime errors are structured on stderr and return exit code `1`
+- `partial_failure` means mixed success. Parse both stdout and stderr.
+
+Common error codes:
+
+- `authentication_failed`
+- `not_found`
+- `forbidden_operation`
+- `jmap_error`
+- `network_error`
+- `general_error`
+- `config_error`
+- `partial_failure`
+
+For complete schemas and examples, see [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md).
 
 ## Configuration
 
@@ -127,23 +205,27 @@ format: "json"
 account_id: ""
 ```
 
-Security recommendation: keep tokens in environment variables, not in committed files.
+Security note: keep tokens in environment variables, never in committed files.
 
-## Claude Code Notes
+## Claude Code Specific Notes
 
-`fm` works with any shell-capable agent runtime, including Claude Code.
+`fm` works with any shell-capable agent runtime.
 
-This repository ships a Claude Code plugin with a `review-email` skill for guided multi-phase inbox triage.
+For Claude Code, this repository includes a plugin with a `review-email` skill for guided, multi-phase triage.
 
-Install from inside `claude`:
+Install in `claude`:
 
 ```text
 /plugin marketplace add cboone/fm
 ```
 
-After installation, prompts like "review my email", "triage email", and "check my inbox" can activate the skill workflow.
+Common trigger prompts:
 
-For Claude-specific setup and examples, see [docs/CLAUDE-CODE-GUIDE.md](docs/CLAUDE-CODE-GUIDE.md).
+- "review my email"
+- "triage email"
+- "check my inbox"
+
+Claude-specific guide: [docs/CLAUDE-CODE-GUIDE.md](docs/CLAUDE-CODE-GUIDE.md)
 
 ## Reference Docs
 
@@ -152,4 +234,4 @@ For Claude-specific setup and examples, see [docs/CLAUDE-CODE-GUIDE.md](docs/CLA
 
 ## License
 
-[MIT License](./LICENSE). Use freely, keep the notice, no warranty.
+[MIT License](./LICENSE). TL;DR: Do whatever you want with this software, just keep the copyright notice included. The authors aren't liable if something goes wrong.
