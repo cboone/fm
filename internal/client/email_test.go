@@ -1847,8 +1847,8 @@ func TestAggregateEmailsBySender_SinglePage(t *testing.T) {
 				}},
 				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
 					List: []*email.Email{
-						{ID: "M1", From: []*mail.Address{{Name: "Alice", Email: "alice@example.com"}}, Subject: "Hello"},
-						{ID: "M2", From: []*mail.Address{{Name: "Alice Smith", Email: "Alice@Example.com"}}, Subject: "Follow-up"},
+						{ID: "M1", From: []*mail.Address{{Name: "Alice Smith", Email: "Alice@Example.com"}}, Subject: "Follow-up"},
+						{ID: "M2", From: []*mail.Address{{Name: "Alice", Email: "alice@example.com"}}, Subject: "Hello"},
 						{ID: "M3", From: []*mail.Address{{Name: "Bob", Email: "bob@example.com"}}, Subject: "Hi"},
 					},
 				}},
@@ -1873,7 +1873,7 @@ func TestAggregateEmailsBySender_SinglePage(t *testing.T) {
 	if result.Senders[0].Count != 2 {
 		t.Errorf("expected first sender count=2, got %d", result.Senders[0].Count)
 	}
-	// Most recent name: "Alice Smith" (last seen).
+	// Most recent name: "Alice Smith" (first seen due to descending receivedAt sort).
 	if result.Senders[0].Name != "Alice Smith" {
 		t.Errorf("expected name='Alice Smith', got %q", result.Senders[0].Name)
 	}

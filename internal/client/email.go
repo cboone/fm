@@ -586,7 +586,7 @@ func (c *Client) AggregateEmailsBySender(opts StatsOptions) (types.StatsResult, 
 				accum[key] = acc
 			}
 			acc.count++
-			if e.From[0].Name != "" {
+			if e.From[0].Name != "" && acc.name == "" {
 				acc.name = e.From[0].Name
 			}
 			if opts.Subjects && e.Subject != "" {
