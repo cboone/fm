@@ -391,3 +391,56 @@ $ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexist
 * (glob+)
 [1]
 ```
+
+## Archive with filter flags produces auth error (not flag error)
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive --mailbox inbox --unread 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Spam with filter flags produces auth error
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm spam --mailbox inbox --from notifications@github.com 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Mark-read with filter flags produces auth error
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm mark-read --mailbox inbox --unread 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## IDs and filter flags are mutually exclusive
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive M1 --from alice@test.com 2>&1
+{
+  "error": "general_error",
+  "message": "cannot combine email IDs with filter flags",
+  "hint": "Use either email IDs or filter flags, not both"
+}
+[1]
+```
+
+## Flagged and unflagged are mutually exclusive on action commands
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive --flagged --unflagged 2>&1
+{
+  "error": "general_error",
+  "message": "--flagged and --unflagged are mutually exclusive"
+}
+[1]
+```

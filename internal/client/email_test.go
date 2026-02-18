@@ -2234,3 +2234,319 @@ func TestSpamPatchStructure(t *testing.T) {
 		t.Error("expected keywords/$junk in patch")
 	}
 }
+
+// --- buildSearchFilter tests ---
+
+func TestBuildSearchFilter_Basic(t *testing.T) {
+	before := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
+	after := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	opts := SearchOptions{
+		Text:          "hello",
+		MailboxID:     "mb-inbox",
+		From:          "alice@test.com",
+		To:            "bob@test.com",
+		Subject:       "meeting",
+		Before:        &before,
+		After:         &after,
+		HasAttachment: true,
+		FlaggedOnly:   true,
+	}
+
+	filter := buildSearchFilter(opts)
+	fc, ok := filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", filter)
+	}
+
+	if fc.Text != "hello" {
+		t.Errorf("expected Text=hello, got %q", fc.Text)
+	}
+	if fc.InMailbox != "mb-inbox" {
+		t.Errorf("expected InMailbox=mb-inbox, got %q", fc.InMailbox)
+	}
+	if fc.From != "alice@test.com" {
+		t.Errorf("expected From=alice@test.com, got %q", fc.From)
+	}
+	if fc.To != "bob@test.com" {
+		t.Errorf("expected To=bob@test.com, got %q", fc.To)
+	}
+	if fc.Subject != "meeting" {
+		t.Errorf("expected Subject=meeting, got %q", fc.Subject)
+	}
+	if fc.Before == nil || !fc.Before.Equal(before) {
+		t.Errorf("expected Before=%v, got %v", before, fc.Before)
+	}
+	if fc.After == nil || !fc.After.Equal(after) {
+		t.Errorf("expected After=%v, got %v", after, fc.After)
+	}
+	if !fc.HasAttachment {
+		t.Error("expected HasAttachment=true")
+	}
+	if fc.HasKeyword != "$flagged" {
+		t.Errorf("expected HasKeyword=$flagged, got %q", fc.HasKeyword)
+	}
+}
+
+func TestBuildSearchFilter_UnflaggedAndUnread(t *testing.T) {
+	opts := SearchOptions{
+		UnreadOnly:    true,
+		UnflaggedOnly: true,
+	}
+
+	filter := buildSearchFilter(opts)
+	op, ok := filter.(*email.FilterOperator)
+	if !ok {
+		t.Fatalf("expected *email.FilterOperator, got %T", filter)
+	}
+	if op.Operator != jmap.OperatorAND {
+		t.Errorf("expected AND operator, got %q", op.Operator)
+	}
+	if len(op.Conditions) != 2 {
+		t.Fatalf("expected 2 conditions, got %d", len(op.Conditions))
+	}
+
+	first, ok := op.Conditions[0].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected first condition to be *email.FilterCondition, got %T", op.Conditions[0])
+	}
+	if first.NotKeyword != "$seen" {
+		t.Errorf("expected first NotKeyword=$seen, got %q", first.NotKeyword)
+	}
+
+	second, ok := op.Conditions[1].(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected second condition to be *email.FilterCondition, got %T", op.Conditions[1])
+	}
+	if second.NotKeyword != "$flagged" {
+		t.Errorf("expected second NotKeyword=$flagged, got %q", second.NotKeyword)
+	}
+}
+
+func TestBuildSearchFilter_Empty(t *testing.T) {
+	filter := buildSearchFilter(SearchOptions{})
+	fc, ok := filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", filter)
+	}
+	// All fields should be zero values.
+	if fc.Text != "" || fc.From != "" || fc.To != "" || fc.Subject != "" {
+		t.Error("expected empty string fields on empty options")
+	}
+	if fc.InMailbox != "" {
+		t.Error("expected empty InMailbox on empty options")
+	}
+}
+
+// --- QueryEmailIDs tests ---
+
+func TestQueryEmailIDs_SinglePage(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args: &email.QueryResponse{
+						Total: 3,
+						IDs:   []jmap.ID{"M1", "M2", "M3"},
+					},
+				},
+			}}, nil
+		},
+	}
+
+	ids, err := c.QueryEmailIDs(SearchOptions{From: "alice@test.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ids) != 3 {
+		t.Fatalf("expected 3 IDs, got %d", len(ids))
+	}
+	if ids[0] != "M1" || ids[1] != "M2" || ids[2] != "M3" {
+		t.Errorf("unexpected IDs: %v", ids)
+	}
+}
+
+func TestQueryEmailIDs_MultiplePages(t *testing.T) {
+	callCount := 0
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			callCount++
+			query := req.Calls[0].Args.(*email.Query)
+
+			var pageIDs []jmap.ID
+			switch query.Position {
+			case 0:
+				for i := 0; i < 250; i++ {
+					pageIDs = append(pageIDs, jmap.ID(fmt.Sprintf("M%d", i)))
+				}
+			case 250:
+				for i := 250; i < 400; i++ {
+					pageIDs = append(pageIDs, jmap.ID(fmt.Sprintf("M%d", i)))
+				}
+			}
+
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args: &email.QueryResponse{
+						Total: 400,
+						IDs:   pageIDs,
+					},
+				},
+			}}, nil
+		},
+	}
+
+	ids, err := c.QueryEmailIDs(SearchOptions{UnreadOnly: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ids) != 400 {
+		t.Fatalf("expected 400 IDs, got %d", len(ids))
+	}
+	if callCount != 2 {
+		t.Fatalf("expected 2 pagination calls, got %d", callCount)
+	}
+	if ids[0] != "M0" || ids[399] != "M399" {
+		t.Errorf("unexpected first/last IDs: %s, %s", ids[0], ids[399])
+	}
+}
+
+func TestQueryEmailIDs_EmptyResult(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args: &email.QueryResponse{
+						Total: 0,
+						IDs:   []jmap.ID{},
+					},
+				},
+			}}, nil
+		},
+	}
+
+	ids, err := c.QueryEmailIDs(SearchOptions{From: "nobody@test.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ids) != 0 {
+		t.Fatalf("expected 0 IDs, got %d", len(ids))
+	}
+}
+
+func TestQueryEmailIDs_MethodError(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "0", Args: &jmap.MethodError{Type: "invalidArguments"}},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryEmailIDs(SearchOptions{From: "alice@test.com"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "email/query") {
+		t.Errorf("expected error to mention email/query, got: %s", err.Error())
+	}
+}
+
+func TestQueryEmailIDs_UsesFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args:   &email.QueryResponse{Total: 0, IDs: []jmap.ID{}},
+				},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryEmailIDs(SearchOptions{
+		From:       "alice@test.com",
+		UnreadOnly: true,
+		MailboxID:  "mb-inbox",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.From != "alice@test.com" {
+		t.Errorf("expected From=alice@test.com, got %q", fc.From)
+	}
+	if fc.NotKeyword != "$seen" {
+		t.Errorf("expected NotKeyword=$seen, got %q", fc.NotKeyword)
+	}
+	if fc.InMailbox != "mb-inbox" {
+		t.Errorf("expected InMailbox=mb-inbox, got %q", fc.InMailbox)
+	}
+}
+
+func TestQueryEmailIDs_IgnoresLimitAndSort(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args:   &email.QueryResponse{Total: 0, IDs: []jmap.ID{}},
+				},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryEmailIDs(SearchOptions{
+		From:      "alice@test.com",
+		Limit:     10,
+		Offset:    5,
+		SortField: "sentAt",
+		SortAsc:   true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query := captured.Calls[0].Args.(*email.Query)
+	// QueryEmailIDs should use its own page size, not opts.Limit.
+	if query.Limit != defaultQueryPageSize {
+		t.Errorf("expected Limit=%d (page size), got %d", defaultQueryPageSize, query.Limit)
+	}
+	// Position should start at 0, not opts.Offset.
+	if query.Position != 0 {
+		t.Errorf("expected Position=0, got %d", query.Position)
+	}
+	// Sort should not be set.
+	if len(query.Sort) != 0 {
+		t.Errorf("expected no sort comparators, got %d", len(query.Sort))
+	}
+}

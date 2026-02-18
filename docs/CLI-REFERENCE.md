@@ -447,17 +447,31 @@ Right-aligned counts, left-aligned emails, optional display name, indented subje
 
 ### archive
 
-Move one or more emails to the Archive mailbox.
+Move emails to the Archive mailbox. Specify emails by ID or by filter flags.
 
 ```bash
-fm archive <email-id> [email-id...]
+fm archive [email-id...]
+fm archive --mailbox inbox --unread
+fm archive --mailbox inbox --from notifications@github.com
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive.
 
-| Flag                | Short | Default | Description                                    |
-| ------------------- | ----- | ------- | ---------------------------------------------- |
-| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
+| Flag               | Short | Default         | Description                                                |
+| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | (none)          | Filter by sender address or name                           |
+| `--to`             |       | (none)          | Filter by recipient address or name                        |
+| `--subject`        |       | (none)          | Filter by subject text                                     |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
+| `--unflagged`      |       | false           | Only unflagged messages                                    |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 **JSON output:**
 
@@ -489,17 +503,30 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### spam
 
-Move one or more emails to the Junk/Spam mailbox.
+Move emails to the Junk/Spam mailbox. Specify emails by ID or by filter flags.
 
 ```bash
-fm spam <email-id> [email-id...]
+fm spam [email-id...]
+fm spam --mailbox inbox --from spammer@example.com
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive.
 
-| Flag                | Short | Default | Description                                    |
-| ------------------- | ----- | ------- | ---------------------------------------------- |
-| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
+| Flag               | Short | Default         | Description                                                |
+| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | (none)          | Filter by sender address or name                           |
+| `--to`             |       | (none)          | Filter by recipient address or name                        |
+| `--subject`        |       | (none)          | Filter by subject text                                     |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
+| `--unflagged`      |       | false           | Only unflagged messages                                    |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 **JSON output:**
 
@@ -531,17 +558,31 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### mark-read
 
-Mark one or more emails as read by setting the `$seen` keyword.
+Mark emails as read by setting the `$seen` keyword. Specify emails by ID or by filter flags.
 
 ```bash
-fm mark-read <email-id> [email-id...]
+fm mark-read [email-id...]
+fm mark-read --mailbox inbox --unread
+fm mark-read --mailbox inbox --from notifications@github.com --unread
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive.
 
-| Flag                | Short | Default | Description                                    |
-| ------------------- | ----- | ------- | ---------------------------------------------- |
-| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
+| Flag               | Short | Default         | Description                                                |
+| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | (none)          | Filter by sender address or name                           |
+| `--to`             |       | (none)          | Filter by recipient address or name                        |
+| `--subject`        |       | (none)          | Filter by subject text                                     |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
+| `--unflagged`      |       | false           | Only unflagged messages                                    |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 **JSON output:**
 
@@ -568,19 +609,32 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### flag
 
-Flag one or more emails by setting the `$flagged` keyword. Optionally set a flag color.
+Flag emails by setting the `$flagged` keyword. Optionally set a flag color. Specify emails by ID or by filter flags.
 
 ```bash
-fm flag <email-id> [email-id...]
-fm flag --color orange <email-id> [email-id...]
+fm flag [email-id...]
+fm flag --color orange [email-id...]
+fm flag --mailbox inbox --from boss@company.com --unread
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive.
 
-| Flag                | Short | Default | Description                                                      |
-| ------------------- | ----- | ------- | ---------------------------------------------------------------- |
-| `--color`           | `-c`  | (none)  | Flag color: `red`, `orange`, `yellow`, `green`, `blue`, `purple`, `gray` |
-| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes                   |
+| Flag               | Short | Default         | Description                                                              |
+| ------------------ | ----- | --------------- | ------------------------------------------------------------------------ |
+| `--color`          | `-c`  | (none)          | Flag color: `red`, `orange`, `yellow`, `green`, `blue`, `purple`, `gray` |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes                           |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                                           |
+| `--from`           |       | (none)          | Filter by sender address or name                                         |
+| `--to`             |       | (none)          | Filter by recipient address or name                                      |
+| `--subject`        |       | (none)          | Filter by subject text                                                   |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)                |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)                 |
+| `--has-attachment`  |       | false           | Only emails with attachments                                             |
+| `--unread`         | `-u`  | false           | Only unread messages                                                     |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                                    |
+| `--unflagged`      |       | false           | Only unflagged messages                                                  |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 When `--color` is provided, the command sets both `$flagged` and the appropriate `$MailFlagBit` keywords per the [IETF MailFlagBit spec](https://www.ietf.org/archive/id/draft-eggert-mailflagcolors-00.html). These colors are displayed in Apple Mail and Fastmail. Without `--color`, only `$flagged` is set (backward compatible).
 
@@ -617,19 +671,32 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### unflag
 
-Unflag one or more emails by removing the `$flagged` keyword and clearing all color bits. With `--color`, only the color bits are removed (the email stays flagged).
+Unflag emails by removing the `$flagged` keyword and clearing all color bits. With `--color`, only the color bits are removed (the email stays flagged). Specify emails by ID or by filter flags.
 
 ```bash
-fm unflag <email-id> [email-id...]
+fm unflag [email-id...]
 fm unflag --color <email-id> [email-id...]
+fm unflag --mailbox inbox --flagged --before 2025-01-01
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive.
 
-| Flag                | Short | Default | Description                                    |
-| ------------------- | ----- | ------- | ---------------------------------------------- |
-| `--color`           | `-c`  | (none)  | Remove only the flag color (keep the email flagged) |
-| `--dry-run`         | `-n`  | false   | Preview affected emails without making changes |
+| Flag               | Short | Default         | Description                                                |
+| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--color`          | `-c`  | false           | Remove only the flag color (keep the email flagged)        |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | (none)          | Filter by sender address or name                           |
+| `--to`             |       | (none)          | Filter by recipient address or name                        |
+| `--subject`        |       | (none)          | Filter by subject text                                     |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
+| `--unflagged`      |       | false           | Only unflagged messages                                    |
+
+`--flagged` and `--unflagged` are mutually exclusive.
 
 Without `--color`, the command removes `$flagged` and clears all `$MailFlagBit` color keywords (per the [IETF MailFlagBit spec](https://www.ietf.org/archive/id/draft-eggert-mailflagcolors-00.html) recommendation). With `--color`, only the color bits are cleared, leaving the email flagged with the default red color.
 
@@ -665,18 +732,32 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### move
 
-Move one or more emails to a specified mailbox by name or ID.
+Move emails to a specified mailbox by name or ID. Specify emails by ID or by filter flags.
 
 ```bash
-fm move <email-id> [email-id...] --to <mailbox>
+fm move [email-id...] --to <mailbox>
+fm move --mailbox inbox --from notifications@github.com --to Archive
 ```
 
-1 or more arguments required.
+Email IDs and filter flags are mutually exclusive. The `--to` flag is always required as the destination mailbox.
 
-| Flag        | Short | Required | Default | Description                                    |
-| ----------- | ----- | -------- | ------- | ---------------------------------------------- |
-| `--to`      |       | yes      | (none)  | Target mailbox name or ID                      |
-| `--dry-run` | `-n`  | no       | false   | Preview affected emails without making changes |
+| Flag               | Short | Required | Default         | Description                                                |
+| ------------------ | ----- | -------- | --------------- | ---------------------------------------------------------- |
+| `--to`             |       | yes      | (none)          | Target mailbox name or ID                                  |
+| `--dry-run`        | `-n`  | no       | false           | Preview affected emails without making changes             |
+| `--mailbox`        | `-m`  | no       | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | no       | (none)          | Filter by sender address or name                           |
+| `--subject`        |       | no       | (none)          | Filter by subject text                                     |
+| `--before`         |       | no       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | no       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | no       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | no       | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | no       | false           | Only flagged messages                                      |
+| `--unflagged`      |       | no       | false           | Only unflagged messages                                    |
+
+`--flagged` and `--unflagged` are mutually exclusive.
+
+The `--to` flag on `move` is the destination mailbox, not a recipient filter. To filter by recipient, use the `search` command first and pass the resulting IDs.
 
 **Safety:** The `move` command refuses to target Trash, Deleted Items, or Deleted Messages (by role or name, case-insensitive). Attempting this returns a `forbidden_operation` error.
 

@@ -12,6 +12,9 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type jmapMockServer struct {
@@ -117,10 +120,38 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 						args["notFound"] = m.notFound
 					}
 					resp.MethodResponses = append(resp.MethodResponses, []any{"Email/get", args, callID})
+				case "Email/query":
+					ids := make([]string, len(m.emails))
+					for i, e := range m.emails {
+						ids[i] = e["id"].(string)
+					}
+					resp.MethodResponses = append(resp.MethodResponses, []any{
+						"Email/query",
+						map[string]any{
+							"accountId":  "A1",
+							"queryState": "q-1",
+							"total":      uint64(len(m.emails)),
+							"ids":        ids,
+							"position":   0,
+						},
+						callID,
+					})
 				case "Email/set":
+					// Parse the request to extract IDs and mark them all as updated.
+					var setArgs map[string]json.RawMessage
+					_ = json.Unmarshal(call[1], &setArgs)
+					updated := map[string]any{}
+					if raw, ok := setArgs["update"]; ok {
+						var updateMap map[string]json.RawMessage
+						if json.Unmarshal(raw, &updateMap) == nil {
+							for id := range updateMap {
+								updated[id] = nil
+							}
+						}
+					}
 					resp.MethodResponses = append(resp.MethodResponses, []any{
 						"Email/set",
-						map[string]any{"accountId": "A1", "updated": map[string]any{}},
+						map[string]any{"accountId": "A1", "updated": updated},
 						callID,
 					})
 				default:
@@ -159,8 +190,27 @@ func writeJSON(w http.ResponseWriter, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
+// resetCommandFlags resets the Changed state and value for all flags
+// (local and persistent) on a command and its subcommands so that
+// consecutive test runs don't leak flag state.
+func resetCommandFlags(cmd *cobra.Command) {
+	resetFlagSet := func(fs *pflag.FlagSet) {
+		fs.VisitAll(func(f *pflag.Flag) {
+			f.Changed = false
+			_ = f.Value.Set(f.DefValue)
+		})
+	}
+	resetFlagSet(cmd.Flags())
+	resetFlagSet(cmd.PersistentFlags())
+	for _, sub := range cmd.Commands() {
+		resetCommandFlags(sub)
+	}
+}
+
 func runCLICommand(t *testing.T, args []string) (stdout string, stderr string, err error) {
 	t.Helper()
+
+	resetCommandFlags(rootCmd)
 
 	oldStdout := os.Stdout
 	oldStderr := os.Stderr
@@ -351,5 +401,127 @@ func TestFlagDryRunShortFlag_DoesNotCallMutation(t *testing.T) {
 	}
 	if server.count("Email/set") != 0 {
 		t.Fatalf("expected Email/set not to be called, got %d", server.count("Email/set"))
+	}
+}
+
+// --- Filter-based action tests ---
+
+func TestArchiveWithFilters_QueriesAndMutates(t *testing.T) {
+	server := newJMAPMockServer(t,
+		[]map[string]any{
+			{"id": "mb-inbox", "name": "Inbox", "role": "inbox"},
+			{"id": "mb-archive", "name": "Archive", "role": "archive"},
+		},
+		[]map[string]any{{
+			"id":         "M1",
+			"threadId":   "T1",
+			"from":       []map[string]any{{"name": "Alice", "email": "alice@example.com"}},
+			"to":         []map[string]any{{"email": "me@example.com"}},
+			"subject":    "Filter test",
+			"receivedAt": "2026-02-14T10:30:00Z",
+			"keywords":   map[string]bool{},
+		}},
+		nil,
+	)
+
+	args := commandArgsForServer(t, server.server.URL, "archive", "--mailbox", "inbox", "--unread")
+	stdout, _, err := runCLICommand(t, args)
+	if err != nil {
+		t.Fatalf("expected success, got: %v", err)
+	}
+	if !strings.Contains(stdout, `"matched": 1`) {
+		t.Fatalf("expected matched=1 in output, got: %s", stdout)
+	}
+	if server.count("Email/query") != 1 {
+		t.Fatalf("expected Email/query once, got %d", server.count("Email/query"))
+	}
+	if server.count("Email/set") != 1 {
+		t.Fatalf("expected Email/set once, got %d", server.count("Email/set"))
+	}
+}
+
+func TestMarkReadWithFilters_DryRun(t *testing.T) {
+	server := newJMAPMockServer(t,
+		[]map[string]any{
+			{"id": "mb-inbox", "name": "Inbox", "role": "inbox"},
+		},
+		[]map[string]any{{
+			"id":         "M1",
+			"threadId":   "T1",
+			"subject":    "Dry run filter",
+			"receivedAt": "2026-02-14T10:30:00Z",
+			"keywords":   map[string]bool{},
+		}},
+		nil,
+	)
+
+	args := commandArgsForServer(t, server.server.URL, "mark-read", "--mailbox", "inbox", "--unread", "--dry-run")
+	stdout, _, err := runCLICommand(t, args)
+	if err != nil {
+		t.Fatalf("expected success, got: %v", err)
+	}
+	if !strings.Contains(stdout, `"operation": "mark-read"`) {
+		t.Fatalf("expected dry-run operation in stdout, got: %s", stdout)
+	}
+	if server.count("Email/query") != 1 {
+		t.Fatalf("expected Email/query once, got %d", server.count("Email/query"))
+	}
+	if server.count("Email/get") != 1 {
+		t.Fatalf("expected Email/get once (for summaries), got %d", server.count("Email/get"))
+	}
+	if server.count("Email/set") != 0 {
+		t.Fatalf("expected Email/set not to be called, got %d", server.count("Email/set"))
+	}
+}
+
+func TestArchive_IDsAndFiltersMutuallyExclusive(t *testing.T) {
+	server := newJMAPMockServer(t, nil, nil, nil)
+
+	args := commandArgsForServer(t, server.server.URL, "archive", "M1", "--from", "alice@test.com")
+	_, stderr, err := runCLICommand(t, args)
+	if !errors.Is(err, ErrSilent) {
+		t.Fatalf("expected ErrSilent, got: %v", err)
+	}
+	if !strings.Contains(stderr, `"error": "general_error"`) {
+		t.Fatalf("expected general_error, got: %s", stderr)
+	}
+	if !strings.Contains(stderr, "cannot combine email IDs with filter flags") {
+		t.Fatalf("expected mutual exclusivity message, got: %s", stderr)
+	}
+}
+
+func TestArchive_NoIDsNoFilters(t *testing.T) {
+	server := newJMAPMockServer(t, nil, nil, nil)
+
+	args := commandArgsForServer(t, server.server.URL, "archive")
+	_, stderr, err := runCLICommand(t, args)
+	if !errors.Is(err, ErrSilent) {
+		t.Fatalf("expected ErrSilent, got: %v", err)
+	}
+	if !strings.Contains(stderr, `"error": "general_error"`) {
+		t.Fatalf("expected general_error, got: %s", stderr)
+	}
+	if !strings.Contains(stderr, "no emails specified") {
+		t.Fatalf("expected 'no emails specified' message, got: %s", stderr)
+	}
+}
+
+func TestMoveWithFilters_StillRequiresToFlag(t *testing.T) {
+	server := newJMAPMockServer(t,
+		[]map[string]any{{"id": "mb-inbox", "name": "Inbox", "role": "inbox"}},
+		nil,
+		nil,
+	)
+
+	args := commandArgsForServer(t, server.server.URL, "move", "--mailbox", "inbox", "--unread")
+	_, stderr, err := runCLICommand(t, args)
+	if !errors.Is(err, ErrSilent) {
+		t.Fatalf("expected ErrSilent, got: %v", err)
+	}
+	if !strings.Contains(stderr, `"error": "general_error"`) {
+		t.Fatalf("expected general_error for missing --to, got: %s", stderr)
+	}
+	if !strings.Contains(stderr, "required flag") {
+		t.Fatalf("expected 'required flag' message, got: %s", stderr)
 	}
 }

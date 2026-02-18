@@ -319,8 +319,8 @@ func singleThreadEntry(d types.EmailDetail) types.ThreadEmail {
 	}
 }
 
-// SearchEmails performs a filtered search across emails.
-func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error) {
+// buildSearchFilter constructs an email.Filter from SearchOptions.
+func buildSearchFilter(opts SearchOptions) email.Filter {
 	fc := &email.FilterCondition{}
 	if opts.Text != "" {
 		fc.Text = opts.Text
@@ -353,9 +353,9 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		fc.HasKeyword = "$flagged"
 	}
 
-	// Build the final filter. When both UnflaggedOnly and UnreadOnly are set,
-	// they each need a separate NotKeyword field, so we must use a compound
-	// FilterOperator with AND.
+	// When both UnflaggedOnly and UnreadOnly are set, they each need a
+	// separate NotKeyword field, so we must use a compound FilterOperator
+	// with AND.
 	var filter email.Filter = fc
 	if opts.UnflaggedOnly {
 		if opts.UnreadOnly {
@@ -367,6 +367,13 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 			fc.NotKeyword = "$flagged"
 		}
 	}
+
+	return filter
+}
+
+// SearchEmails performs a filtered search across emails.
+func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error) {
+	filter := buildSearchFilter(opts)
 
 	sortField := opts.SortField
 	if sortField == "" {
@@ -486,6 +493,54 @@ type SearchOptions struct {
 	Offset        int64
 	SortField     string
 	SortAsc       bool
+}
+
+const defaultQueryPageSize = 250
+
+// QueryEmailIDs runs Email/query with the given filter options and paginates
+// through the full result set, returning all matching email IDs.
+// It ignores Limit, Offset, SortField, and SortAsc from opts.
+func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
+	filter := buildSearchFilter(opts)
+
+	var collected []string
+	for {
+		req := &jmap.Request{}
+		req.Invoke(&email.Query{
+			Account:        c.accountID,
+			Filter:         filter,
+			Position:       int64(len(collected)),
+			Limit:          defaultQueryPageSize,
+			CalculateTotal: true,
+		})
+
+		resp, err := c.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("email/query: %w", err)
+		}
+
+		var pageIDs []jmap.ID
+		var total uint64
+		for _, inv := range resp.Responses {
+			switch r := inv.Args.(type) {
+			case *email.QueryResponse:
+				pageIDs = r.IDs
+				total = r.Total
+			case *jmap.MethodError:
+				return nil, fmt.Errorf("email/query: %s", r.Error())
+			}
+		}
+
+		for _, id := range pageIDs {
+			collected = append(collected, string(id))
+		}
+
+		if uint64(len(collected)) >= total || len(pageIDs) == 0 {
+			break
+		}
+	}
+
+	return collected, nil
 }
 
 // StatsOptions holds parameters for sender aggregation.

@@ -18,59 +18,87 @@ Error: accepts 1 arg(s), received 2
 [1]
 ```
 
-## Archive requires at least one argument
+## Archive requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm archive 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
-## Spam requires at least one argument
+## Spam requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm spam 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm spam 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
-## Mark-read requires at least one argument
+## Mark-read requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm mark-read 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm mark-read 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
-## Flag requires at least one argument
+## Flag requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm flag 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm flag 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
-## Unflag requires at least one argument
+## Unflag requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm unflag 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unflag 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
-## Move requires at least one argument
+## Move requires email IDs or filter flags
 
 ```scrut
-$ $TESTDIR/../fm move 2>&1
-Error: requires at least 1 arg(s), only received 0
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
 [1]
 ```
 
 ## Move requires --to flag
 
 ```scrut
-$ $TESTDIR/../fm move M123 2>&1
-Error: required flag(s) "to" not set
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move M123 2>&1
+{
+  "error": "general_error",
+  "message": "required flag \"to\" not set",
+  "hint": "Specify the destination mailbox with --to <mailbox>"
+}
 [1]
 ```
 

@@ -63,20 +63,23 @@ Add this to your project's `CLAUDE.md` to give Claude Code context about `fm`:
 - `fm search [query]` -- search by text and/or filters (flags: `--mailbox`, `--limit`, `--from`, `--to`, `--subject`, `--before`, `--after`, `--has-attachment`)
 - `fm stats` -- aggregate emails by sender (flags: `--mailbox`, `--unread`, `--flagged`, `--unflagged`, `--subjects`)
 
-**Triage commands:**
+**Triage commands (by ID or filter flags):**
 
-- `fm archive <id> [id...]` -- move to Archive
-- `fm spam <id> [id...]` -- move to Junk
-- `fm mark-read <id> [id...]` -- mark as read
-- `fm move <id> [id...] --to <mailbox>` -- move to a named mailbox
+- `fm archive [id...] [--mailbox inbox --unread]` -- move to Archive
+- `fm spam [id...] [--mailbox inbox --from spammer]` -- move to Junk
+- `fm mark-read [id...] [--mailbox inbox --unread]` -- mark as read
+- `fm flag [id...] [--mailbox inbox --from boss]` -- flag emails
+- `fm unflag [id...] [--flagged --before 2025-01-01]` -- unflag emails
+- `fm move [id...] --to <mailbox> [--mailbox inbox --from sender]` -- move to a named mailbox
 
 ### Notes
 
 - Output is JSON by default; errors are JSON on stderr with exit code 1
-- Email IDs from `list` and `search` chain directly into `read`, `archive`, `spam`, `mark-read`, and `move`
+- Email IDs from `list` and `search` chain directly into `read`, `archive`, `spam`, `mark-read`, `flag`, `unflag`, and `move`
+- Triage commands accept email IDs or filter flags (not both): `fm archive M1 M2` or `fm archive --mailbox inbox --unread`
 - Sending and deleting email are structurally disallowed
 - Date filters accept RFC 3339 (e.g., `2026-01-15T00:00:00Z`) or bare dates (e.g., `2026-01-15`)
-- Batch operations (`archive`, `spam`, `mark-read`, `move`) accept multiple IDs
+- The `move` command's `--to` flag is the destination, not a recipient filter
 ```
 
 ## Workflows
@@ -108,6 +111,30 @@ fm read <email-id>
 fm archive <id-1> <id-2> <id-3>
 ```
 
+### Bulk Inbox Cleanup with Filters
+
+**Prompt:** "Archive all GitHub notifications in my inbox"
+
+```bash
+# Preview what would be affected
+fm archive --mailbox inbox --from notifications@github.com --unread --dry-run
+
+# Execute the archive
+fm archive --mailbox inbox --from notifications@github.com --unread
+```
+
+**Prompt:** "Mark all unread emails in inbox as read"
+
+```bash
+fm mark-read --mailbox inbox --unread
+```
+
+**Prompt:** "Unflag old flagged emails"
+
+```bash
+fm unflag --mailbox inbox --flagged --before 2025-01-01
+```
+
 ### Conversation Context
 
 **Prompt:** "Read the latest email from Bob with full thread"
@@ -125,11 +152,12 @@ fm read <email-id> --thread
 **Prompt:** "Move receipt emails from inbox to Receipts"
 
 ```bash
-# Search for receipts in inbox
+# Option 1: Search then move by ID
 fm search "receipt" --mailbox inbox
-
-# Move matching emails
 fm move <id-1> <id-2> --to Receipts
+
+# Option 2: Move with filter flags (matches all emails with "receipt" in subject)
+fm move --mailbox inbox --subject receipt --to Receipts
 ```
 
 ### Filter-Only Search
@@ -161,9 +189,10 @@ fm archive <id-1> <id-2> <id-3>
 
 ## Tips
 
-- **Chaining IDs:** Email IDs from `list` and `search` results chain directly into `read`, `archive`, `spam`, `mark-read`, and `move`.
-- **Batch operations:** `archive`, `spam`, `mark-read`, and `move` accept multiple email IDs in a single call.
+- **Chaining IDs:** Email IDs from `list` and `search` results chain directly into `read`, `archive`, `spam`, `mark-read`, `flag`, `unflag`, and `move`.
+- **Batch operations:** Triage commands accept multiple email IDs or filter flags (e.g. `--mailbox inbox --unread`) for bulk operations.
 - **Filter-only search:** Omit the query argument and use only flags to search by sender, date range, attachments, etc.
+- **Dry-run preview:** All triage commands support `--dry-run` / `-n` to preview affected emails before mutating.
 - **Date format:** All date flags (`--before`, `--after`) accept RFC 3339 format (e.g. `2026-01-15T00:00:00Z`) or bare dates (e.g. `2026-01-15`).
 - **Thread view:** Use `fm read <id> --thread` to see the full conversation context for a single email.
 - **Mailbox names:** Both `--mailbox` and `--to` accept mailbox names (e.g., "Inbox", "Receipts") or mailbox IDs.
