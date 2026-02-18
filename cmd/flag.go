@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/cboone/fm/internal/client"
 	"github.com/cboone/fm/internal/types"
 )
 
@@ -15,6 +18,18 @@ var flagCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := validateIDsOrFilters(cmd, args); err != nil {
 			return err
+		}
+
+		colorStr, _ := cmd.Flags().GetString("color")
+
+		var color *client.FlagColor
+		if colorStr != "" {
+			parsedColor, err := client.ParseFlagColor(colorStr)
+			if err != nil {
+				return exitError("general_error", err.Error(),
+					fmt.Sprintf("Valid colors: %s", strings.Join(client.ValidColorNames(), ", ")))
+			}
+			color = &parsedColor
 		}
 
 		c, err := newClient()
@@ -33,7 +48,12 @@ var flagCmd = &cobra.Command{
 			return dryRunPreview(c, ids, "flag", nil)
 		}
 
-		succeeded, errors := c.SetFlagged(ids)
+		var succeeded, errors []string
+		if color != nil {
+			succeeded, errors = c.SetFlaggedWithColor(ids, *color)
+		} else {
+			succeeded, errors = c.SetFlagged(ids)
+		}
 
 		result := types.MoveResult{
 			Matched:   len(ids),
@@ -56,6 +76,7 @@ var flagCmd = &cobra.Command{
 }
 
 func init() {
+	flagCmd.Flags().StringP("color", "c", "", "flag color: red, orange, yellow, green, blue, purple, gray")
 	flagCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	addFilterFlags(flagCmd)
 	rootCmd.AddCommand(flagCmd)

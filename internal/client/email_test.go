@@ -1208,20 +1208,26 @@ func TestFlagPatchStructure(t *testing.T) {
 	}
 }
 
-// TestUnflagPatchStructure verifies the patch structure for unflag (remove $flagged).
+// TestUnflagPatchStructure verifies the patch structure for unflag.
+// Per the IETF MailFlagBit spec, unflagging clears $flagged and all color bits.
 func TestUnflagPatchStructure(t *testing.T) {
 	patch := jmap.Patch{
-		"keywords/$flagged": nil,
+		"keywords/$flagged":      nil,
+		"keywords/$MailFlagBit0": nil,
+		"keywords/$MailFlagBit1": nil,
+		"keywords/$MailFlagBit2": nil,
 	}
-	if len(patch) != 1 {
-		t.Errorf("expected 1 patch key, got %d", len(patch))
+	if len(patch) != 4 {
+		t.Errorf("expected 4 patch keys, got %d", len(patch))
 	}
-	val, ok := patch["keywords/$flagged"]
-	if !ok {
-		t.Error("expected keywords/$flagged in patch")
-	}
-	if val != nil {
-		t.Errorf("expected keywords/$flagged to be nil (remove), got %v", val)
+	for _, key := range []string{"keywords/$flagged", "keywords/$MailFlagBit0", "keywords/$MailFlagBit1", "keywords/$MailFlagBit2"} {
+		val, ok := patch[key]
+		if !ok {
+			t.Errorf("expected %s in patch", key)
+		}
+		if val != nil {
+			t.Errorf("expected %s to be nil (remove), got %v", key, val)
+		}
 	}
 	if _, ok := patch["mailboxIds"]; ok {
 		t.Error("unflag patch must not contain mailboxIds")

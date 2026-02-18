@@ -575,10 +575,33 @@ func (c *Client) SetFlagged(emailIDs []string) ([]string, []string) {
 	})
 }
 
-// SetUnflagged removes the $flagged keyword from emails.
+// SetFlaggedWithColor sets the $flagged keyword and the color bits on emails.
+func (c *Client) SetFlaggedWithColor(emailIDs []string, color FlagColor) ([]string, []string) {
+	return c.batchSetEmails(emailIDs, func(_ string) jmap.Patch {
+		p := jmap.Patch{"keywords/$flagged": true}
+		for k, v := range color.Patch() {
+			p[k] = v
+		}
+		return p
+	})
+}
+
+// SetUnflagged removes the $flagged keyword and clears all color bits from emails.
+// Per the IETF MailFlagBit spec, color bits should be cleared when unflagging.
 func (c *Client) SetUnflagged(emailIDs []string) ([]string, []string) {
 	return c.batchSetEmails(emailIDs, func(_ string) jmap.Patch {
-		return jmap.Patch{"keywords/$flagged": nil}
+		p := jmap.Patch{"keywords/$flagged": nil}
+		for k, v := range clearColorPatch() {
+			p[k] = v
+		}
+		return p
+	})
+}
+
+// ClearFlagColor removes the color bits from emails without changing the $flagged keyword.
+func (c *Client) ClearFlagColor(emailIDs []string) ([]string, []string) {
+	return c.batchSetEmails(emailIDs, func(_ string) jmap.Patch {
+		return clearColorPatch()
 	})
 }
 

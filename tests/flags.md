@@ -279,6 +279,59 @@ $ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexist
 [1]
 ```
 
+## Flag with --color accepts valid color
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm flag --color orange M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Flag with -c short flag
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm flag -c blue M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Flag with invalid color
+
+```scrut
+$ $TESTDIR/../fm flag --color magenta M1 2>&1
+{
+  "error": "general_error",
+  "message": "invalid color \"magenta\"; valid colors: red, orange, yellow, green, blue, purple, gray",
+  "hint": "Valid colors: red, orange, yellow, green, blue, purple, gray"
+}
+[1]
+```
+
+## Unflag with --color accepts valid color
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unflag --color M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+[1]
+```
+
+## Unflag with --color and extra argument
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unflag --color orange M1 2>&1
+{
+  "error": "authentication_failed",
+* (glob+)
+}
+[1]
+```
+
 ## Dry-run flag on move
 
 ```scrut

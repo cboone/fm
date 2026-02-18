@@ -542,30 +542,42 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### flag
 
-Flag emails by setting the `$flagged` keyword. Specify emails by ID or by filter flags.
+Flag emails by setting the `$flagged` keyword. Optionally set a flag color. Specify emails by ID or by filter flags.
 
 ```bash
 fm flag <email-id> [email-id...]
+fm flag --color orange <email-id> [email-id...]
 fm flag --mailbox inbox --from boss@company.com --unread
 ```
 
 Email IDs and filter flags are mutually exclusive.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+| Flag               | Short | Default         | Description                                                              |
+| ------------------ | ----- | --------------- | ------------------------------------------------------------------------ |
+| `--color`          | `-c`  | (none)          | Flag color: `red`, `orange`, `yellow`, `green`, `blue`, `purple`, `gray` |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes                           |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                                           |
+| `--from`           |       | (none)          | Filter by sender address or name                                         |
+| `--to`             |       | (none)          | Filter by recipient address or name                                      |
+| `--subject`        |       | (none)          | Filter by subject text                                                   |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)                |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)                 |
+| `--has-attachment`  |       | false           | Only emails with attachments                                             |
+| `--unread`         | `-u`  | false           | Only unread messages                                                     |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                                    |
+| `--unflagged`      |       | false           | Only unflagged messages                                                  |
 
 `--flagged` and `--unflagged` are mutually exclusive.
+
+When `--color` is provided, the command sets both `$flagged` and the appropriate `$MailFlagBit` keywords per the [IETF MailFlagBit spec](https://www.ietf.org/archive/id/draft-eggert-mailflagcolors-00.html). These colors are displayed in Apple Mail and Fastmail. Without `--color`, only `$flagged` is set (backward compatible).
+
+**Color examples:**
+
+```bash
+fm flag --color orange M-email-id   # flag with orange color
+fm flag --color red M-email-id      # flag with red (default color, clears other color bits)
+fm flag M-email-id                  # flag without color (existing behavior)
+```
 
 **JSON output:**
 
@@ -592,10 +604,11 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### unflag
 
-Unflag emails by removing the `$flagged` keyword. Specify emails by ID or by filter flags.
+Unflag emails by removing the `$flagged` keyword and clearing all color bits. With `--color`, only the color bits are removed (the email stays flagged). Specify emails by ID or by filter flags.
 
 ```bash
 fm unflag <email-id> [email-id...]
+fm unflag --color <email-id> [email-id...]
 fm unflag --mailbox inbox --flagged --before 2025-01-01
 ```
 
@@ -603,6 +616,7 @@ Email IDs and filter flags are mutually exclusive.
 
 | Flag               | Short | Default         | Description                                                |
 | ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--color`          | `-c`  | false           | Remove only the flag color (keep the email flagged)        |
 | `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
 | `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
 | `--from`           |       | (none)          | Filter by sender address or name                           |
@@ -616,6 +630,15 @@ Email IDs and filter flags are mutually exclusive.
 | `--unflagged`      |       | false           | Only unflagged messages                                    |
 
 `--flagged` and `--unflagged` are mutually exclusive.
+
+Without `--color`, the command removes `$flagged` and clears all `$MailFlagBit` color keywords (per the [IETF MailFlagBit spec](https://www.ietf.org/archive/id/draft-eggert-mailflagcolors-00.html) recommendation). With `--color`, only the color bits are cleared, leaving the email flagged with the default red color.
+
+**Examples:**
+
+```bash
+fm unflag M-email-id                 # fully unflag (remove flag + color)
+fm unflag --color M-email-id         # remove color only, keep flagged
+```
 
 **JSON output:**
 

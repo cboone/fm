@@ -17,6 +17,8 @@ var unflagCmd = &cobra.Command{
 			return err
 		}
 
+		colorOnly, _ := cmd.Flags().GetBool("color")
+
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
@@ -33,7 +35,12 @@ var unflagCmd = &cobra.Command{
 			return dryRunPreview(c, ids, "unflag", nil)
 		}
 
-		succeeded, errors := c.SetUnflagged(ids)
+		var succeeded, errors []string
+		if colorOnly {
+			succeeded, errors = c.ClearFlagColor(ids)
+		} else {
+			succeeded, errors = c.SetUnflagged(ids)
+		}
 
 		result := types.MoveResult{
 			Matched:   len(ids),
@@ -56,6 +63,7 @@ var unflagCmd = &cobra.Command{
 }
 
 func init() {
+	unflagCmd.Flags().BoolP("color", "c", false, "remove flag color only (keep the email flagged)")
 	unflagCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
 	addFilterFlags(unflagCmd)
 	rootCmd.AddCommand(unflagCmd)
