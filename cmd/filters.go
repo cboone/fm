@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cboone/fm/internal/client"
 )
+
+const recipientToUsage = "filter by recipient address/name"
 
 // filterFlagNames lists all flags that addFilterFlags may register.
 var filterFlagNames = []string{
@@ -21,7 +24,7 @@ func addFilterFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("mailbox", "m", "", "restrict to a specific mailbox")
 	cmd.Flags().String("from", "", "filter by sender address/name")
 	if cmd.Flags().Lookup("to") == nil {
-		cmd.Flags().String("to", "", "filter by recipient address/name")
+		cmd.Flags().String("to", "", recipientToUsage)
 	}
 	cmd.Flags().String("subject", "", "filter by subject text")
 	cmd.Flags().String("before", "", "emails received before this date (RFC 3339 or YYYY-MM-DD)")
@@ -32,33 +35,56 @@ func addFilterFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("unflagged", false, "only unflagged messages")
 }
 
-// hasFilterFlags returns true if any filter flag was explicitly set.
-// It skips --to on commands where addFilterFlags did not register it
-// (e.g. move, where --to is the destination flag, not a filter).
+// hasFilterFlags returns true if any filter flag has an effective value.
+// It ignores no-op values such as --unread=false and --subject "".
+// It also skips --to on commands where it is the destination flag
+// (e.g. move) instead of a recipient filter.
 func hasFilterFlags(cmd *cobra.Command) bool {
 	for _, name := range filterFlagNames {
 		f := cmd.Flags().Lookup(name)
 		if f == nil || !cmd.Flags().Changed(name) {
 			continue
 		}
-		// Skip --to when it's the destination flag (not registered by addFilterFlags).
-		if name == "to" && f.Usage != "filter by recipient address/name" {
-			continue
+
+		switch name {
+		case "mailbox", "from", "to", "subject", "before", "after":
+			if name == "to" && !isRecipientToFilterFlag(cmd) {
+				continue
+			}
+			value, _ := cmd.Flags().GetString(name)
+			if strings.TrimSpace(value) != "" {
+				return true
+			}
+		case "has-attachment", "unread", "flagged", "unflagged":
+			value, _ := cmd.Flags().GetBool(name)
+			if value {
+				return true
+			}
 		}
-		return true
 	}
 	return false
+}
+
+func isRecipientToFilterFlag(cmd *cobra.Command) bool {
+	f := cmd.Flags().Lookup("to")
+	return f != nil && f.Usage == recipientToUsage
 }
 
 // parseFilterOptions reads filter flags from the command and builds SearchOptions.
 func parseFilterOptions(cmd *cobra.Command, c *client.Client) (client.SearchOptions, error) {
 	opts := client.SearchOptions{}
 
-	opts.From, _ = cmd.Flags().GetString("from")
-	if cmd.Flags().Lookup("to") != nil && cmd.Flags().Changed("to") {
-		opts.To, _ = cmd.Flags().GetString("to")
+	if from, _ := cmd.Flags().GetString("from"); strings.TrimSpace(from) != "" {
+		opts.From = from
 	}
-	opts.Subject, _ = cmd.Flags().GetString("subject")
+	if isRecipientToFilterFlag(cmd) {
+		if to, _ := cmd.Flags().GetString("to"); strings.TrimSpace(to) != "" {
+			opts.To = to
+		}
+	}
+	if subject, _ := cmd.Flags().GetString("subject"); strings.TrimSpace(subject) != "" {
+		opts.Subject = subject
+	}
 	opts.HasAttachment, _ = cmd.Flags().GetBool("has-attachment")
 	opts.UnreadOnly, _ = cmd.Flags().GetBool("unread")
 	opts.FlaggedOnly, _ = cmd.Flags().GetBool("flagged")
@@ -68,7 +94,8 @@ func parseFilterOptions(cmd *cobra.Command, c *client.Client) (client.SearchOpti
 		return client.SearchOptions{}, exitError("general_error", "--flagged and --unflagged are mutually exclusive", "")
 	}
 
-	if beforeStr, _ := cmd.Flags().GetString("before"); beforeStr != "" {
+	if beforeStr, _ := cmd.Flags().GetString("before"); strings.TrimSpace(beforeStr) != "" {
+		beforeStr = strings.TrimSpace(beforeStr)
 		t, err := parseDate(beforeStr)
 		if err != nil {
 			return client.SearchOptions{}, exitError("general_error", "invalid --before date: "+err.Error(),
@@ -77,7 +104,8 @@ func parseFilterOptions(cmd *cobra.Command, c *client.Client) (client.SearchOpti
 		opts.Before = &t
 	}
 
-	if afterStr, _ := cmd.Flags().GetString("after"); afterStr != "" {
+	if afterStr, _ := cmd.Flags().GetString("after"); strings.TrimSpace(afterStr) != "" {
+		afterStr = strings.TrimSpace(afterStr)
 		t, err := parseDate(afterStr)
 		if err != nil {
 			return client.SearchOptions{}, exitError("general_error", "invalid --after date: "+err.Error(),
@@ -86,7 +114,8 @@ func parseFilterOptions(cmd *cobra.Command, c *client.Client) (client.SearchOpti
 		opts.After = &t
 	}
 
-	if mailboxName, _ := cmd.Flags().GetString("mailbox"); mailboxName != "" {
+	if mailboxName, _ := cmd.Flags().GetString("mailbox"); strings.TrimSpace(mailboxName) != "" {
+		mailboxName = strings.TrimSpace(mailboxName)
 		mailboxID, err := c.ResolveMailboxID(mailboxName)
 		if err != nil {
 			return client.SearchOptions{}, exitError("not_found", err.Error(), "")
