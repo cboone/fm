@@ -220,6 +220,18 @@ See [docs/CLI-REFERENCE.md#error-reference](docs/CLI-REFERENCE.md#error-referenc
 
 See [docs/CLAUDE-CODE-GUIDE.md](docs/CLAUDE-CODE-GUIDE.md) for setup instructions, a CLAUDE.md snippet, and example workflows.
 
+### Plugin
+
+This repository includes a Claude Code plugin with a `review-email` skill for guided inbox triage. To install it, from within `claude`, run:
+
+```text
+/plugin marketplace add cboone/fm
+```
+
+Or open the plugins manager via `/plugin`, tab to `Marketplace`, hit `enter` on `Add Marketplace`, and type `cboone/fm`.
+
+Once installed, Claude Code activates the `review-email` skill when you say "review my email", "triage email", "check my inbox", or similar phrases.
+
 ## License
 
 [MIT License](./LICENSE). TL;DR: Do whatever you want with this software, just keep the copyright notice included. The authors aren't liable if something goes wrong.

@@ -1,0 +1,11 @@
+{
+  "author": { "name": "Christopher Boone" },
+  "description": "Skills for the fm Fastmail CLI.",
+  "homepage": "https://github.com/cboone/fm",
+  "keywords": ["email", "fastmail", "jmap", "triage"],
+  "license": "MIT",
+  "name": "fm",
+  "repository": "https://github.com/cboone/fm",
+  "skills": "./skills",
+  "version": "1.0.0"
+}
