@@ -9,25 +9,34 @@ import (
 )
 
 var flagCmd = &cobra.Command{
-	Use:   "flag <email-id> [email-id...]",
+	Use:   "flag [email-id...]",
 	Short: "Flag emails (set the $flagged keyword)",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateIDsOrFilters(cmd, args); err != nil {
+			return err
+		}
+
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
 				"Check your token in FM_TOKEN or config file")
 		}
 
-		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		if dryRun {
-			return dryRunPreview(c, args, "flag", nil)
+		ids, err := resolveEmailIDs(cmd, args, c)
+		if err != nil {
+			return err
 		}
 
-		succeeded, errors := c.SetFlagged(args)
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, ids, "flag", nil)
+		}
+
+		succeeded, errors := c.SetFlagged(ids)
 
 		result := types.MoveResult{
-			Matched:   len(args),
+			Matched:   len(ids),
 			Processed: len(succeeded) + len(errors),
 			Failed:    len(errors),
 			Flagged:   succeeded,
@@ -48,5 +57,6 @@ var flagCmd = &cobra.Command{
 
 func init() {
 	flagCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
+	addFilterFlags(flagCmd)
 	rootCmd.AddCommand(flagCmd)
 }

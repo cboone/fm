@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -91,20 +90,6 @@ If omitted, only the provided flags/filters are used for matching.`,
 
 		return formatter().Format(os.Stdout, result)
 	},
-}
-
-// parseDate parses a date string in RFC 3339 format or as a bare date (YYYY-MM-DD).
-// Bare dates are treated as midnight UTC on that day.
-func parseDate(s string) (time.Time, error) {
-	t, err := time.Parse(time.RFC3339, s)
-	if err == nil {
-		return t, nil
-	}
-	t, err2 := time.Parse("2006-01-02", s)
-	if err2 == nil {
-		return t, nil
-	}
-	return time.Time{}, err
 }
 
 func init() {

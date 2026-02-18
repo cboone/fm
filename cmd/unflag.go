@@ -9,25 +9,34 @@ import (
 )
 
 var unflagCmd = &cobra.Command{
-	Use:   "unflag <email-id> [email-id...]",
+	Use:   "unflag [email-id...]",
 	Short: "Unflag emails (remove the $flagged keyword)",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateIDsOrFilters(cmd, args); err != nil {
+			return err
+		}
+
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
 				"Check your token in FM_TOKEN or config file")
 		}
 
-		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		if dryRun {
-			return dryRunPreview(c, args, "unflag", nil)
+		ids, err := resolveEmailIDs(cmd, args, c)
+		if err != nil {
+			return err
 		}
 
-		succeeded, errors := c.SetUnflagged(args)
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, ids, "unflag", nil)
+		}
+
+		succeeded, errors := c.SetUnflagged(ids)
 
 		result := types.MoveResult{
-			Matched:   len(args),
+			Matched:   len(ids),
 			Processed: len(succeeded) + len(errors),
 			Failed:    len(errors),
 			Unflagged: succeeded,
@@ -48,5 +57,6 @@ var unflagCmd = &cobra.Command{
 
 func init() {
 	unflagCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
+	addFilterFlags(unflagCmd)
 	rootCmd.AddCommand(unflagCmd)
 }

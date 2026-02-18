@@ -9,25 +9,34 @@ import (
 )
 
 var markReadCmd = &cobra.Command{
-	Use:   "mark-read <email-id> [email-id...]",
+	Use:   "mark-read [email-id...]",
 	Short: "Mark emails as read (set the $seen keyword)",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateIDsOrFilters(cmd, args); err != nil {
+			return err
+		}
+
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
 				"Check your token in FM_TOKEN or config file")
 		}
 
-		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		if dryRun {
-			return dryRunPreview(c, args, "mark-read", nil)
+		ids, err := resolveEmailIDs(cmd, args, c)
+		if err != nil {
+			return err
 		}
 
-		succeeded, errors := c.MarkAsRead(args)
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		if dryRun {
+			return dryRunPreview(c, ids, "mark-read", nil)
+		}
+
+		succeeded, errors := c.MarkAsRead(ids)
 
 		result := types.MoveResult{
-			Matched:      len(args),
+			Matched:      len(ids),
 			Processed:    len(succeeded) + len(errors),
 			Failed:       len(errors),
 			MarkedAsRead: succeeded,
@@ -48,5 +57,6 @@ var markReadCmd = &cobra.Command{
 
 func init() {
 	markReadCmd.Flags().BoolP("dry-run", "n", false, "preview affected emails without making changes")
+	addFilterFlags(markReadCmd)
 	rootCmd.AddCommand(markReadCmd)
 }
