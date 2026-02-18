@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cboone/fm/internal/types"
+	"github.com/mattn/go-runewidth"
 )
 
 func TestTextFormatter_Session(t *testing.T) {
@@ -729,22 +730,25 @@ func TestTextFormatter_StatsResult_CountAlignment(t *testing.T) {
 
 func TestTruncate(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		maxLen int
-		want   string
+		name     string
+		input    string
+		maxWidth int
+		want     string
 	}{
 		{"short string unchanged", "hello", 10, "hello"},
 		{"exact length unchanged", "hello", 5, "hello"},
 		{"truncated with ellipsis", "hello world", 8, "hello..."},
-		{"maxLen too small returns unchanged", "hello", 3, "hello"},
+		{"maxWidth too small returns unchanged", "hello", 3, "hello"},
 		{"empty string", "", 10, ""},
+		{"wide chars truncated by display width", strings.Repeat("界", 10), 10, strings.Repeat("界", 3) + "..."},
+		{"wide chars fitting exactly", "界界", 4, "界界"},
+		{"wide chars just over limit", "界界界", 5, "界..."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := truncate(tt.input, tt.maxLen)
+			got := truncate(tt.input, tt.maxWidth)
 			if got != tt.want {
-				t.Errorf("truncate(%q, %d) = %q, want %q", tt.input, tt.maxLen, got, tt.want)
+				t.Errorf("truncate(%q, %d) = %q, want %q", tt.input, tt.maxWidth, got, tt.want)
 			}
 		})
 	}
@@ -873,19 +877,26 @@ func TestTextFormatter_EmailListAlignment(t *testing.T) {
 	}
 }
 
-func TestTextFormatter_EmailListAlignmentMultiByteRunes(t *testing.T) {
+func TestTextFormatter_EmailListAlignmentWideCharacters(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer
 
 	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
 	result := types.EmailListResult{
-		Total: 1,
+		Total: 2,
 		Emails: []types.EmailSummary{
 			{
 				ID:         "M1",
 				From:       []types.Address{{Name: strings.Repeat("界", 50), Email: "wide@test.com"}},
 				To:         []types.Address{{Email: "b@test.com"}},
 				Subject:    "Subj",
+				ReceivedAt: now,
+			},
+			{
+				ID:         "M2",
+				From:       []types.Address{{Name: "Alice", Email: "alice@test.com"}},
+				To:         []types.Address{{Email: "b@test.com"}},
+				Subject:    "Normal subject",
 				ReceivedAt: now,
 			},
 		},
@@ -896,27 +907,28 @@ func TestTextFormatter_EmailListAlignmentMultiByteRunes(t *testing.T) {
 	}
 
 	lines := strings.Split(buf.String(), "\n")
-	var mainLine string
+	var mainLines []string
 	for _, line := range lines {
 		if strings.Contains(line, "2026-02-04 10:30") {
-			mainLine = line
-			break
+			mainLines = append(mainLines, line)
 		}
 	}
-	if mainLine == "" {
-		t.Fatalf("expected main email line with timestamp\nOutput:\n%s", buf.String())
+	if len(mainLines) != 2 {
+		t.Fatalf("expected 2 main email lines, got %d\nOutput:\n%s", len(mainLines), buf.String())
 	}
 
-	subjByteIdx := strings.Index(mainLine, "Subj")
-	if subjByteIdx == -1 {
-		t.Fatalf("expected subject in output line\nLine:\n%s", mainLine)
+	// The date column should start at the same display-column position in both lines,
+	// even though line 1 contains double-width CJK characters and line 2 does not.
+	idx1 := strings.Index(mainLines[0], "2026-02-04")
+	idx2 := strings.Index(mainLines[1], "2026-02-04")
+	if idx1 == -1 || idx2 == -1 {
+		t.Fatalf("expected '2026-02-04' in output for alignment check, got:\n%s\n%s", mainLines[0], mainLines[1])
 	}
-
-	// Unread marker + space (2 runes) + maxFromWidth (40 runes) + 2 spaces separator.
-	expectedSubjRuneIdx := 2 + maxFromWidth + 2
-	subjRuneIdx := len([]rune(mainLine[:subjByteIdx]))
-	if subjRuneIdx != expectedSubjRuneIdx {
-		t.Errorf("unexpected subject column start: got %d runes, want %d\nLine:\n%s", subjRuneIdx, expectedSubjRuneIdx, mainLine)
+	width1 := runewidth.StringWidth(mainLines[0][:idx1])
+	width2 := runewidth.StringWidth(mainLines[1][:idx2])
+	if width1 != width2 {
+		t.Errorf("date columns not visually aligned: line 1 at display col %d, line 2 at display col %d\nLine 1: %s\nLine 2: %s",
+			width1, width2, mainLines[0], mainLines[1])
 	}
 }
 
