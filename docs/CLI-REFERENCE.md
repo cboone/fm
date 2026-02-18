@@ -378,6 +378,73 @@ The `snippet` field contains HTML `<mark>` tags highlighting matched terms. It i
 
 ---
 
+### stats
+
+Aggregate emails by sender address and display per-sender counts. Queries all matching emails in the mailbox and groups them by sender, sorted by volume descending.
+
+```bash
+fm stats [flags]
+```
+
+No arguments.
+
+| Flag          | Short | Default | Description                      |
+| ------------- | ----- | ------- | -------------------------------- |
+| `--mailbox`   | `-m`  | `inbox` | Mailbox name or ID               |
+| `--unread`    | `-u`  | `false` | Only count unread messages       |
+| `--flagged`   | `-f`  | `false` | Only count flagged messages      |
+| `--unflagged` |       | `false` | Only count unflagged messages    |
+| `--subjects`  |       | `false` | Include subject lines per sender |
+
+`--flagged` and `--unflagged` are mutually exclusive.
+
+**Usage examples:**
+
+```bash
+fm stats --mailbox Inbox --unread          # unread sender distribution
+fm stats --unread --subjects               # with subject lines
+fm stats --flagged                         # flagged sender distribution
+```
+
+**JSON output:**
+
+```json
+{
+  "total": 142,
+  "senders": [
+    {
+      "email": "newsletter@example.com",
+      "name": "Example Newsletter",
+      "count": 15,
+      "subjects": ["Weekly Digest #42", "Weekly Digest #41"]
+    },
+    {
+      "email": "alice@example.com",
+      "name": "Alice Smith",
+      "count": 8
+    }
+  ]
+}
+```
+
+The `subjects` field is omitted when `--subjects` is not set.
+
+**Text output:**
+
+```text
+Total: 142 emails from 23 senders
+
+15  newsletter@example.com  Example Newsletter
+      Weekly Digest #42
+      Weekly Digest #41
+ 8  alice@example.com       Alice Smith
+ 3  bob@example.com         Bob Jones
+```
+
+Right-aligned counts, left-aligned emails, optional display name, indented subjects.
+
+---
+
 ### archive
 
 Move one or more emails to the Archive mailbox.
@@ -704,6 +771,26 @@ Top-level response from `list` and `search` commands.
 | `total`  | number         | Total matching emails     |
 | `offset` | number         | Current pagination offset |
 | `emails` | EmailSummary[] |                           |
+
+### SenderStat
+
+Aggregated count for a single sender address, returned within `StatsResult`.
+
+| Field      | Type     | Notes                                    |
+| ---------- | -------- | ---------------------------------------- |
+| `email`    | string   | Lowercased sender address (grouping key) |
+| `name`     | string   | Most recent display name for the address |
+| `count`    | number   | Number of matching emails from sender    |
+| `subjects` | string[] | Omitted unless `--subjects` is used      |
+
+### StatsResult
+
+Top-level response from the `stats` command.
+
+| Field     | Type         | Notes                             |
+| --------- | ------------ | --------------------------------- |
+| `total`   | number       | Total matching emails             |
+| `senders` | SenderStat[] | Sorted by count descending        |
 
 ### EmailDetail
 

@@ -488,6 +488,149 @@ type SearchOptions struct {
 	SortAsc       bool
 }
 
+// StatsOptions holds parameters for sender aggregation.
+type StatsOptions struct {
+	MailboxID     string
+	UnreadOnly    bool
+	FlaggedOnly   bool
+	UnflaggedOnly bool
+	Subjects      bool
+}
+
+// statsProperties are the minimal Email/get properties for aggregation.
+var statsProperties = []string{"id", "from", "subject"}
+
+// AggregateEmailsBySender queries all matching emails and returns per-sender counts.
+func (c *Client) AggregateEmailsBySender(opts StatsOptions) (types.StatsResult, error) {
+	fc := &email.FilterCondition{
+		InMailbox: jmap.ID(opts.MailboxID),
+	}
+	if opts.UnreadOnly {
+		fc.NotKeyword = "$seen"
+	}
+	if opts.FlaggedOnly {
+		fc.HasKeyword = "$flagged"
+	}
+
+	var filter email.Filter = fc
+	if opts.UnflaggedOnly {
+		if opts.UnreadOnly {
+			filter = &email.FilterOperator{
+				Operator:   jmap.OperatorAND,
+				Conditions: []email.Filter{fc, &email.FilterCondition{NotKeyword: "$flagged"}},
+			}
+		} else {
+			fc.NotKeyword = "$flagged"
+		}
+	}
+
+	type senderAcc struct {
+		count    int
+		name     string
+		subjects map[string]bool
+	}
+	accum := make(map[string]*senderAcc)
+	var total uint64
+	var position int64
+
+	for {
+		req := &jmap.Request{}
+		queryCallID := req.Invoke(&email.Query{
+			Account:        c.accountID,
+			Filter:         filter,
+			Sort:           []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
+			Position:       position,
+			Limit:          500,
+			CalculateTotal: true,
+		})
+
+		req.Invoke(&email.Get{
+			Account:    c.accountID,
+			Properties: statsProperties,
+			ReferenceIDs: &jmap.ResultReference{
+				ResultOf: queryCallID,
+				Name:     "Email/query",
+				Path:     "/ids",
+			},
+		})
+
+		resp, err := c.Do(req)
+		if err != nil {
+			return types.StatsResult{}, fmt.Errorf("stats query: %w", err)
+		}
+
+		var pageIDs []jmap.ID
+		var emails []*email.Email
+		for _, inv := range resp.Responses {
+			switch r := inv.Args.(type) {
+			case *email.QueryResponse:
+				if position == 0 {
+					total = r.Total
+				}
+				pageIDs = r.IDs
+			case *email.GetResponse:
+				emails = r.List
+			case *jmap.MethodError:
+				return types.StatsResult{}, fmt.Errorf("stats query: %s", r.Error())
+			}
+		}
+
+		for _, e := range emails {
+			if len(e.From) == 0 || e.From[0].Email == "" {
+				continue
+			}
+			key := strings.ToLower(e.From[0].Email)
+			acc, ok := accum[key]
+			if !ok {
+				acc = &senderAcc{subjects: make(map[string]bool)}
+				accum[key] = acc
+			}
+			acc.count++
+			if e.From[0].Name != "" && acc.name == "" {
+				acc.name = e.From[0].Name
+			}
+			if opts.Subjects && e.Subject != "" {
+				acc.subjects[e.Subject] = true
+			}
+		}
+
+		position += int64(len(pageIDs))
+		if uint64(position) >= total || len(pageIDs) == 0 {
+			break
+		}
+	}
+
+	senders := make([]types.SenderStat, 0, len(accum))
+	for addr, acc := range accum {
+		stat := types.SenderStat{
+			Email: addr,
+			Name:  acc.name,
+			Count: acc.count,
+		}
+		if opts.Subjects && len(acc.subjects) > 0 {
+			subjects := make([]string, 0, len(acc.subjects))
+			for s := range acc.subjects {
+				subjects = append(subjects, s)
+			}
+			sort.Strings(subjects)
+			stat.Subjects = subjects
+		}
+		senders = append(senders, stat)
+	}
+
+	sort.Slice(senders, func(i, j int) bool {
+		if senders[i].Count != senders[j].Count {
+			return senders[i].Count > senders[j].Count
+		}
+		return senders[i].Email < senders[j].Email
+	})
+
+	return types.StatsResult{
+		Total:   total,
+		Senders: senders,
+	}, nil
+}
+
 // MoveEmails moves emails to a target mailbox by updating their mailboxIds.
 // It structurally cannot destroy emails or create new ones.
 func (c *Client) MoveEmails(emailIDs []string, targetMailboxID jmap.ID) ([]string, []string) {

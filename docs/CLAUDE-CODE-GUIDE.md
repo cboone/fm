@@ -61,6 +61,7 @@ Add this to your project's `CLAUDE.md` to give Claude Code context about `fm`:
 - `fm list` -- list emails in inbox (flags: `--mailbox`, `--limit`, `--offset`, `--unread`, `--sort`)
 - `fm read <id>` -- read full email (flags: `--html`, `--raw-headers`, `--thread`)
 - `fm search [query]` -- search by text and/or filters (flags: `--mailbox`, `--limit`, `--from`, `--to`, `--subject`, `--before`, `--after`, `--has-attachment`)
+- `fm stats` -- aggregate emails by sender (flags: `--mailbox`, `--unread`, `--flagged`, `--unflagged`, `--subjects`)
 
 **Triage commands:**
 
@@ -138,6 +139,24 @@ fm move <id-1> <id-2> --to Receipts
 ```bash
 # No text query needed -- just use flags
 fm search --has-attachment --after 2026-01-01T00:00:00Z --before 2026-02-01T00:00:00Z
+```
+
+### Sender Triage
+
+**Prompt:** "Show me who's sending the most unread email and help me triage"
+
+```bash
+# Get sender distribution for unread inbox
+fm stats --mailbox Inbox --unread
+
+# Include subject lines to see what each sender is sending
+fm stats --mailbox Inbox --unread --subjects
+
+# Search for a high-volume sender to review
+fm search --from newsletter@example.com --mailbox Inbox --unread
+
+# Archive or mark-read in bulk
+fm archive <id-1> <id-2> <id-3>
 ```
 
 ## Tips

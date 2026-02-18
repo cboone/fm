@@ -603,6 +603,128 @@ func TestTextFormatter_ErrorWithoutHint(t *testing.T) {
 	}
 }
 
+// --- formatStats tests ---
+
+func TestTextFormatter_StatsResult_Basic(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.StatsResult{
+		Total: 25,
+		Senders: []types.SenderStat{
+			{Email: "newsletter@example.com", Name: "Example Newsletter", Count: 15},
+			{Email: "alice@example.com", Name: "Alice Smith", Count: 8},
+			{Email: "bob@example.com", Name: "", Count: 2},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Total: 25 emails from 3 senders") {
+		t.Errorf("expected header line, got: %s", out)
+	}
+	if !strings.Contains(out, "newsletter@example.com") {
+		t.Errorf("expected sender email, got: %s", out)
+	}
+	if !strings.Contains(out, "Example Newsletter") {
+		t.Errorf("expected sender name, got: %s", out)
+	}
+	if !strings.Contains(out, "Alice Smith") {
+		t.Errorf("expected sender name, got: %s", out)
+	}
+	// bob has no name, should just show email.
+	if !strings.Contains(out, "bob@example.com") {
+		t.Errorf("expected bob email, got: %s", out)
+	}
+}
+
+func TestTextFormatter_StatsResult_WithSubjects(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.StatsResult{
+		Total: 10,
+		Senders: []types.SenderStat{
+			{
+				Email:    "news@example.com",
+				Name:     "News",
+				Count:    5,
+				Subjects: []string{"Weekly Digest #42", "Weekly Digest #41"},
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Weekly Digest #42") {
+		t.Errorf("expected subject line, got: %s", out)
+	}
+	if !strings.Contains(out, "Weekly Digest #41") {
+		t.Errorf("expected subject line, got: %s", out)
+	}
+}
+
+func TestTextFormatter_StatsResult_Empty(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.StatsResult{
+		Total:   0,
+		Senders: []types.SenderStat{},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Total: 0 emails from 0 senders") {
+		t.Errorf("expected empty header line, got: %s", out)
+	}
+}
+
+func TestTextFormatter_StatsResult_CountAlignment(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.StatsResult{
+		Total: 115,
+		Senders: []types.SenderStat{
+			{Email: "bulk@example.com", Count: 100},
+			{Email: "rare@example.com", Count: 3},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	lines := strings.Split(out, "\n")
+	// Find the two sender lines (containing "@").
+	var senderLines []string
+	for _, line := range lines {
+		if strings.Contains(line, "@") {
+			senderLines = append(senderLines, line)
+		}
+	}
+	if len(senderLines) != 2 {
+		t.Fatalf("expected 2 sender lines, got %d\nOutput:\n%s", len(senderLines), out)
+	}
+	// The email column should start at the same position.
+	idx1 := strings.Index(senderLines[0], "bulk@")
+	idx2 := strings.Index(senderLines[1], "rare@")
+	if idx1 != idx2 {
+		t.Errorf("email columns not aligned: line 1 at %d, line 2 at %d\nOutput:\n%s", idx1, idx2, out)
+	}
+}
+
 // --- truncate tests ---
 
 func TestTruncate(t *testing.T) {

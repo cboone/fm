@@ -134,6 +134,20 @@ type DryRunResult struct {
 	Destination *DestinationInfo `json:"destination,omitempty"`
 }
 
+// SenderStat is an aggregated count for a single sender address.
+type SenderStat struct {
+	Email    string   `json:"email"`
+	Name     string   `json:"name"`
+	Count    int      `json:"count"`
+	Subjects []string `json:"subjects,omitempty"`
+}
+
+// StatsResult wraps an aggregated sender distribution.
+type StatsResult struct {
+	Total   uint64       `json:"total"`
+	Senders []SenderStat `json:"senders"`
+}
+
 // AppError is a structured error for JSON output.
 type AppError struct {
 	Error   string `json:"error"`

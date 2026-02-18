@@ -1840,6 +1840,383 @@ func TestGetEmailSummaries_Batching(t *testing.T) {
 	}
 }
 
+// --- AggregateEmailsBySender tests ---
+
+func TestAggregateEmailsBySender_SinglePage(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 3,
+					IDs:   []jmap.ID{"M1", "M2", "M3"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M1", From: []*mail.Address{{Name: "Alice Smith", Email: "Alice@Example.com"}}, Subject: "Follow-up"},
+						{ID: "M2", From: []*mail.Address{{Name: "Alice", Email: "alice@example.com"}}, Subject: "Hello"},
+						{ID: "M3", From: []*mail.Address{{Name: "Bob", Email: "bob@example.com"}}, Subject: "Hi"},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox", Subjects: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Total != 3 {
+		t.Errorf("expected Total=3, got %d", result.Total)
+	}
+	if len(result.Senders) != 2 {
+		t.Fatalf("expected 2 senders, got %d", len(result.Senders))
+	}
+	// Alice should be first (count 2), then Bob (count 1).
+	if result.Senders[0].Email != "alice@example.com" {
+		t.Errorf("expected first sender=alice@example.com, got %s", result.Senders[0].Email)
+	}
+	if result.Senders[0].Count != 2 {
+		t.Errorf("expected first sender count=2, got %d", result.Senders[0].Count)
+	}
+	// Most recent name: "Alice Smith" (first seen due to descending receivedAt sort).
+	if result.Senders[0].Name != "Alice Smith" {
+		t.Errorf("expected name='Alice Smith', got %q", result.Senders[0].Name)
+	}
+	if len(result.Senders[0].Subjects) != 2 {
+		t.Errorf("expected 2 subjects for alice, got %d", len(result.Senders[0].Subjects))
+	}
+	if result.Senders[1].Email != "bob@example.com" {
+		t.Errorf("expected second sender=bob@example.com, got %s", result.Senders[1].Email)
+	}
+}
+
+func TestAggregateEmailsBySender_MultiPage(t *testing.T) {
+	callCount := 0
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			callCount++
+			query := req.Calls[0].Args.(*email.Query)
+			if query.Position == 0 {
+				return &jmap.Response{Responses: []*jmap.Invocation{
+					{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+						Total: 3,
+						IDs:   []jmap.ID{"M1", "M2"},
+					}},
+					{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+						List: []*email.Email{
+							{ID: "M1", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "S1"},
+							{ID: "M2", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "S2"},
+						},
+					}},
+				}}, nil
+			}
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 3,
+					IDs:   []jmap.ID{"M3"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M3", From: []*mail.Address{{Email: "b@test.com"}}, Subject: "S3"},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if callCount != 2 {
+		t.Errorf("expected 2 Do calls for pagination, got %d", callCount)
+	}
+	if result.Total != 3 {
+		t.Errorf("expected Total=3, got %d", result.Total)
+	}
+	if len(result.Senders) != 2 {
+		t.Fatalf("expected 2 senders, got %d", len(result.Senders))
+	}
+	if result.Senders[0].Count != 2 {
+		t.Errorf("expected first sender count=2, got %d", result.Senders[0].Count)
+	}
+}
+
+func TestAggregateEmailsBySender_EmptyMailbox(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 0,
+					IDs:   []jmap.ID{},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Total != 0 {
+		t.Errorf("expected Total=0, got %d", result.Total)
+	}
+	if len(result.Senders) != 0 {
+		t.Errorf("expected 0 senders, got %d", len(result.Senders))
+	}
+}
+
+func TestAggregateEmailsBySender_NoFromSkipped(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 2,
+					IDs:   []jmap.ID{"M1", "M2"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M1", From: []*mail.Address{}, Subject: "No sender"},
+						{ID: "M2", From: []*mail.Address{{Email: "alice@test.com"}}, Subject: "Valid"},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Senders) != 1 {
+		t.Fatalf("expected 1 sender (no-from skipped), got %d", len(result.Senders))
+	}
+	if result.Senders[0].Email != "alice@test.com" {
+		t.Errorf("expected sender=alice@test.com, got %s", result.Senders[0].Email)
+	}
+}
+
+func TestAggregateEmailsBySender_Filters(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.AggregateEmailsBySender(StatsOptions{
+		MailboxID:   "mb-inbox",
+		UnreadOnly:  true,
+		FlaggedOnly: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.NotKeyword != "$seen" {
+		t.Errorf("expected NotKeyword=$seen, got %q", fc.NotKeyword)
+	}
+	if fc.HasKeyword != "$flagged" {
+		t.Errorf("expected HasKeyword=$flagged, got %q", fc.HasKeyword)
+	}
+	if fc.InMailbox != "mb-inbox" {
+		t.Errorf("expected InMailbox=mb-inbox, got %q", fc.InMailbox)
+	}
+}
+
+func TestAggregateEmailsBySender_UnflaggedAndUnreadCompoundFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+	}
+
+	_, err := c.AggregateEmailsBySender(StatsOptions{
+		MailboxID:     "mb-inbox",
+		UnreadOnly:    true,
+		UnflaggedOnly: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	op, ok := query.Filter.(*email.FilterOperator)
+	if !ok {
+		t.Fatalf("expected *email.FilterOperator, got %T", query.Filter)
+	}
+	if op.Operator != jmap.OperatorAND {
+		t.Errorf("expected AND operator, got %q", op.Operator)
+	}
+	if len(op.Conditions) != 2 {
+		t.Fatalf("expected 2 conditions, got %d", len(op.Conditions))
+	}
+}
+
+func TestAggregateEmailsBySender_MethodError(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "0", Args: &jmap.MethodError{Type: "serverFail"}},
+			}}, nil
+		},
+	}
+
+	_, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "stats query") {
+		t.Errorf("expected error to contain 'stats query', got: %s", err.Error())
+	}
+}
+
+func TestAggregateEmailsBySender_NetworkError(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return nil, fmt.Errorf("connection refused")
+		},
+	}
+
+	_, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "connection refused") {
+		t.Errorf("expected 'connection refused' in error, got: %s", err.Error())
+	}
+}
+
+func TestAggregateEmailsBySender_SubjectsNotIncludedByDefault(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 1,
+					IDs:   []jmap.ID{"M1"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M1", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "Test"},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox", Subjects: false})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Senders) != 1 {
+		t.Fatalf("expected 1 sender, got %d", len(result.Senders))
+	}
+	if result.Senders[0].Subjects != nil {
+		t.Errorf("expected nil subjects when Subjects=false, got %v", result.Senders[0].Subjects)
+	}
+}
+
+func TestAggregateEmailsBySender_SortTiesAlphabetically(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 2,
+					IDs:   []jmap.ID{"M1", "M2"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M1", From: []*mail.Address{{Email: "zoe@test.com"}}},
+						{ID: "M2", From: []*mail.Address{{Email: "alice@test.com"}}},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Senders) != 2 {
+		t.Fatalf("expected 2 senders, got %d", len(result.Senders))
+	}
+	// Same count (1 each), so should be alphabetical.
+	if result.Senders[0].Email != "alice@test.com" {
+		t.Errorf("expected alice first in tie-break, got %s", result.Senders[0].Email)
+	}
+	if result.Senders[1].Email != "zoe@test.com" {
+		t.Errorf("expected zoe second in tie-break, got %s", result.Senders[1].Email)
+	}
+}
+
+func TestAggregateEmailsBySender_DeduplicatesSubjects(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 3,
+					IDs:   []jmap.ID{"M1", "M2", "M3"},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{
+						{ID: "M1", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "Weekly Digest"},
+						{ID: "M2", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "Weekly Digest"},
+						{ID: "M3", From: []*mail.Address{{Email: "a@test.com"}}, Subject: "Special Update"},
+					},
+				}},
+			}}, nil
+		},
+	}
+
+	result, err := c.AggregateEmailsBySender(StatsOptions{MailboxID: "mb-inbox", Subjects: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Senders) != 1 {
+		t.Fatalf("expected 1 sender, got %d", len(result.Senders))
+	}
+	if len(result.Senders[0].Subjects) != 2 {
+		t.Errorf("expected 2 deduplicated subjects, got %d: %v", len(result.Senders[0].Subjects), result.Senders[0].Subjects)
+	}
+}
+
 func TestSpamPatchStructure(t *testing.T) {
 	targetID := jmap.ID("junk-mb")
 	patch := jmap.Patch{

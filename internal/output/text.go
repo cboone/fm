@@ -35,6 +35,8 @@ func (f *TextFormatter) Format(w io.Writer, v any) error {
 		return f.formatThreadView(w, val)
 	case types.MoveResult:
 		return f.formatMoveResult(w, val)
+	case types.StatsResult:
+		return f.formatStats(w, val)
 	case types.DryRunResult:
 		return f.formatDryRunResult(w, val)
 	default:
@@ -265,6 +267,37 @@ func (f *TextFormatter) formatDryRunResult(w io.Writer, r types.DryRunResult) er
 		fmt.Fprintf(w, "\nNot found: %s\n", strings.Join(r.NotFound, ", "))
 	}
 
+	return nil
+}
+
+func (f *TextFormatter) formatStats(w io.Writer, r types.StatsResult) error {
+	fmt.Fprintf(w, "Total: %d emails from %d senders\n", r.Total, len(r.Senders))
+
+	if len(r.Senders) == 0 {
+		return nil
+	}
+
+	fmt.Fprintln(w)
+
+	// Compute max count width for right-alignment.
+	maxCount := 0
+	for _, s := range r.Senders {
+		if s.Count > maxCount {
+			maxCount = s.Count
+		}
+	}
+	countWidth := len(fmt.Sprintf("%d", maxCount))
+
+	for _, s := range r.Senders {
+		if s.Name != "" {
+			fmt.Fprintf(w, "%*d  %s  %s\n", countWidth, s.Count, s.Email, s.Name)
+		} else {
+			fmt.Fprintf(w, "%*d  %s\n", countWidth, s.Count, s.Email)
+		}
+		for _, subj := range s.Subjects {
+			fmt.Fprintf(w, "%*s  %s\n", countWidth, "", "  "+subj)
+		}
+	}
 	return nil
 }
 

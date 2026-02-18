@@ -547,6 +547,123 @@ func TestEmailListResult_JSON(t *testing.T) {
 	}
 }
 
+func TestSenderStat_JSON_WithSubjects(t *testing.T) {
+	s := SenderStat{
+		Email:    "alice@test.com",
+		Name:     "Alice",
+		Count:    5,
+		Subjects: []string{"Hello", "Follow-up"},
+	}
+
+	data, err := json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result["email"] != "alice@test.com" {
+		t.Errorf("expected email=alice@test.com, got %v", result["email"])
+	}
+	if result["name"] != "Alice" {
+		t.Errorf("expected name=Alice, got %v", result["name"])
+	}
+	if result["count"] != float64(5) {
+		t.Errorf("expected count=5, got %v", result["count"])
+	}
+	subjects, ok := result["subjects"].([]interface{})
+	if !ok {
+		t.Fatal("expected subjects array")
+	}
+	if len(subjects) != 2 {
+		t.Errorf("expected 2 subjects, got %d", len(subjects))
+	}
+}
+
+func TestSenderStat_JSON_WithoutSubjects(t *testing.T) {
+	s := SenderStat{
+		Email: "bob@test.com",
+		Name:  "Bob",
+		Count: 3,
+	}
+
+	data, err := json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := result["subjects"]; ok {
+		t.Error("expected subjects to be omitted when empty (omitempty tag)")
+	}
+}
+
+func TestStatsResult_JSON(t *testing.T) {
+	r := StatsResult{
+		Total: 42,
+		Senders: []SenderStat{
+			{Email: "alice@test.com", Name: "Alice", Count: 10},
+			{Email: "bob@test.com", Name: "Bob", Count: 5, Subjects: []string{"Hi"}},
+		},
+	}
+
+	data, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result["total"] != float64(42) {
+		t.Errorf("expected total=42, got %v", result["total"])
+	}
+	senders, ok := result["senders"].([]interface{})
+	if !ok {
+		t.Fatal("expected senders array")
+	}
+	if len(senders) != 2 {
+		t.Errorf("expected 2 senders, got %d", len(senders))
+	}
+}
+
+func TestStatsResult_JSON_EmptySenders(t *testing.T) {
+	r := StatsResult{
+		Total:   0,
+		Senders: []SenderStat{},
+	}
+
+	data, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result["total"] != float64(0) {
+		t.Errorf("expected total=0, got %v", result["total"])
+	}
+	senders, ok := result["senders"].([]interface{})
+	if !ok {
+		t.Fatal("expected senders array")
+	}
+	if len(senders) != 0 {
+		t.Errorf("expected 0 senders, got %d", len(senders))
+	}
+}
+
 // Roundtrip test: marshal then unmarshal should produce equivalent data.
 func TestEmailSummary_Roundtrip(t *testing.T) {
 	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
