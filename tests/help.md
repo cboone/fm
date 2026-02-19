@@ -28,6 +28,7 @@ Available Commands: (glob)
   read * (glob)
   search * (glob)
   session * (glob)
+  sieve * (glob)
   spam * (glob)
   stats * (glob)
   summary * (glob)
@@ -326,6 +327,26 @@ Flags: (glob)
 *--unflagged* (glob)
 *-u, --unread* (glob)
 * (glob*)
+```
+
+## Sieve command help
+
+```scrut
+$ $TESTDIR/../fm sieve --help
+Manage sieve filtering scripts on the server. (glob)
+* (glob+)
+Usage: (glob)
+  fm sieve [command] (glob)
+ (regex)
+Available Commands: (glob)
+  activate * (glob)
+  create * (glob)
+  deactivate * (glob)
+  delete * (glob)
+  list * (glob)
+  show * (glob)
+  validate * (glob)
+* (glob+)
 ```
 
 ## Draft command help

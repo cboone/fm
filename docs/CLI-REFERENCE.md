@@ -964,6 +964,89 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ---
 
+### sieve
+
+Manage sieve filtering scripts on the server. This is a command group with subcommands.
+
+```bash
+fm sieve list                                                  # list all scripts
+fm sieve show <script-id>                                      # show script content
+fm sieve create --name "Block spam" --from "s@example.com" --action junk  # create from template
+fm sieve create --name "Custom" --script-stdin                 # create from stdin
+fm sieve validate --script "keep;"                             # validate syntax
+fm sieve activate <script-id>                                  # activate a script
+fm sieve deactivate                                            # deactivate active script
+fm sieve delete <script-id>                                    # delete a script
+```
+
+Only one sieve script can be active per account at a time. New scripts are created inactive by default.
+
+#### sieve list
+
+List all sieve scripts. No arguments or command-specific flags.
+
+#### sieve show
+
+Show a sieve script's metadata and content.
+
+**Arguments:** `<script-id>` (required)
+
+#### sieve create
+
+Create a new sieve script from template flags or raw stdin input.
+
+| Flag             | Short | Default | Description                                         |
+| ---------------- | ----- | ------- | --------------------------------------------------- |
+| `--name`         |       | (none)  | Name for the new script (required)                  |
+| `--from`         |       | (none)  | Match sender email address (template mode)          |
+| `--from-domain`  |       | (none)  | Match sender domain (template mode)                 |
+| `--action`       |       | (none)  | Action: `junk`, `discard`, `keep`, or `fileinto`    |
+| `--fileinto`     |       | (none)  | Target mailbox for `fileinto` action                |
+| `--script-stdin` |       | false   | Read raw sieve script from stdin                    |
+| `--activate`     |       | false   | Activate the script immediately after creation      |
+| `--dry-run`      | `-n`  | false   | Preview the generated script without creating it    |
+
+Template flags (`--from`/`--from-domain` + `--action`) and `--script-stdin` are mutually exclusive.
+
+#### sieve validate
+
+Validate sieve script syntax on the server without creating a script.
+
+| Flag             | Default | Description                            |
+| ---------------- | ------- | -------------------------------------- |
+| `--script`       | (none)  | Sieve script content as a string       |
+| `--script-stdin` | false   | Read sieve script from stdin           |
+
+#### sieve activate
+
+Activate a sieve script by ID. Activating a script deactivates any currently active one.
+
+**Arguments:** `<script-id>` (required)
+
+| Flag        | Short | Default | Description                         |
+| ----------- | ----- | ------- | ----------------------------------- |
+| `--dry-run` | `-n`  | false   | Preview without making changes      |
+
+#### sieve deactivate
+
+Deactivate the currently active sieve script.
+
+| Flag        | Short | Default | Description                         |
+| ----------- | ----- | ------- | ----------------------------------- |
+| `--dry-run` | `-n`  | false   | Preview without making changes      |
+
+#### sieve delete
+
+Delete a sieve script by ID. Active scripts cannot be deleted; deactivate first.
+
+**Arguments:** `<script-id>` (required)
+
+| Flag        | Short | Default | Description                         |
+| ----------- | ----- | ------- | ----------------------------------- |
+| `--dry-run` | `-n`  | false   | Preview without making changes      |
+
+---
+
 ## Output Schemas
 
 All JSON output is pretty-printed (2-space indent). These schemas are derived from the Go types in `internal/types/types.go`.
