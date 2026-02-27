@@ -6,7 +6,7 @@ Complete reference for all `fm` commands, flags, output schemas, and error codes
 
 | Flag            | Env Var            | Default                                 | Description                     |
 | --------------- | ------------------ | --------------------------------------- | ------------------------------- |
-| `--token`       | `FM_TOKEN`       | (none)                                  | Bearer token for authentication   |
+| `--credential-command` | `FM_CREDENTIAL_COMMAND` | OS keychain (macOS/Linux)      | Shell command that prints the API token to stdout |
 | `--session-url` | `FM_SESSION_URL` | `https://api.fastmail.com/jmap/session` | Fastmail session endpoint         |
 | `--format`      | `FM_FORMAT`      | `json`                                  | Output format: `json` or `text`   |
 | `--account-id`  | `FM_ACCOUNT_ID`  | (auto-detected)                         | Fastmail account ID override      |
@@ -1342,14 +1342,14 @@ When a hint is present:
 
 ```text
 Error [authentication_failed]: JMAP session request returned 401: invalid bearer token
-Hint: Check your token in FM_TOKEN or config file
+Hint: Check your credential command or the token it returns
 ```
 
 ### Error Codes
 
 | Code                    | Description                                         | Example hint                                               |
 | ----------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
-| `authentication_failed` | Token is missing, invalid, or expired               | Check your token in FM_TOKEN or config file                |
+| `authentication_failed` | Token is missing, invalid, or expired               | Check your credential command or the token it returns      |
 | `not_found`             | Email ID or mailbox not found                       | (varies)                                                   |
 | `forbidden_operation`   | Attempted a disallowed action (e.g., move to Trash) | Deletion is not permitted by this tool                     |
 | `jmap_error`            | Server-side JMAP method error                       | (varies)                                                   |

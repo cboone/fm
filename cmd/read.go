@@ -16,7 +16,7 @@ var readCmd = &cobra.Command{
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in FM_TOKEN or config file")
+				"Check your credential command or the token it returns")
 		}
 
 		emailID := args[0]

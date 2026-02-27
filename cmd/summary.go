@@ -33,7 +33,7 @@ detect newsletters. Provides a single-pass triage overview of a mailbox.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in FM_TOKEN or config file")
+				"Check your credential command or the token it returns")
 		}
 
 		mailboxID, err := c.ResolveMailboxID(mailboxName)

@@ -270,7 +270,7 @@ func commandArgsForServer(t *testing.T, serverURL string, commandArgs ...string)
 	base := []string{
 		"--config", configPath,
 		"--session-url", serverURL + "/session",
-		"--token", "test-token",
+		"--credential-command", "echo test-token",
 		"--account-id", "A1",
 		"--format", "json",
 	}
