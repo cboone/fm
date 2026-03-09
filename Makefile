@@ -1,6 +1,6 @@
 BINARY := fm
 
-.PHONY: all build binary test test-cli test-cli-live test-all test-ci cover vet fmt clean help
+.PHONY: all build binary test lint test-cli test-cli-live test-all test-ci cover vet fmt clean help
 
 all: build ## Build the binary (default)
 
@@ -12,6 +12,9 @@ binary: ## Build the binary
 test: ## Run unit tests
 	go test ./...
 
+lint: ## Run golangci-lint
+	golangci-lint run ./...
+
 test-cli: binary ## Run scrut CLI integration tests
 	scrut test tests/errors.md tests/flags.md tests/arguments.md tests/help.md tests/sieve.md
 
@@ -20,7 +23,7 @@ test-cli-live: binary ## Run opt-in live CLI integration tests (requires FM_TOKE
 
 test-all: test test-cli ## Run all tests (unit + CLI)
 
-test-ci: vet fmt test-all ## Run CI test suite
+test-ci: vet fmt lint test-all ## Run CI test suite
 
 cover: ## Run unit tests with coverage
 	go test -coverprofile=coverage.out ./...
