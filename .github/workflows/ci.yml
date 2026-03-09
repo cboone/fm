@@ -7,17 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: Install scrut
-        run: curl --proto '=https' --tlsv1.2 -sSf https://facebookincubator.github.io/scrut/install.sh | bash
-
-      - name: Run CI test suite
-        run: make test-ci
+  ci:
+    uses: cboone/gh-actions/.github/workflows/go-ci.yml@main
+    with:
+      run-scrut: true
