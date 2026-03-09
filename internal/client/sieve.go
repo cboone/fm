@@ -117,7 +117,7 @@ func (c *Client) getSieveScriptContent(blobID jmap.ID) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("downloading sieve script content: %w", err)
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	data, err := io.ReadAll(body)
 	if err != nil {
