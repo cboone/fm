@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,13 +47,13 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: ~/.config/fm/config.yaml)")
-	rootCmd.PersistentFlags().String("token", "", "Fastmail API token")
+	rootCmd.PersistentFlags().String("credential-command", "", "shell command that prints the API token to stdout")
 	rootCmd.PersistentFlags().String("session-url", "https://api.fastmail.com/jmap/session", "Fastmail session endpoint")
 	rootCmd.PersistentFlags().String("format", "json", "output format: json or text")
 	rootCmd.PersistentFlags().String("account-id", "", "Fastmail account ID (auto-detected if blank)")
 
 	for _, bind := range []struct{ key, flag string }{
-		{"token", "token"},
+		{"credential_command", "credential-command"},
 		{"session_url", "session-url"},
 		{"format", "format"},
 		{"account_id", "account-id"},
@@ -110,11 +114,53 @@ func configErrorHint() string {
 	return "Fix the syntax in ~/.config/fm/config.yaml or use --config"
 }
 
+// defaultCredentialCommand returns a platform-specific credential command
+// that retrieves the token from the OS keychain.
+func defaultCredentialCommand() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "security find-generic-password -s fm -a fastmail -w"
+	case "linux":
+		return "secret-tool lookup service fm"
+	default:
+		return ""
+	}
+}
+
+// resolveToken executes the configured credential command and returns the token.
+func resolveToken() (string, error) {
+	credCmd := viper.GetString("credential_command")
+	if credCmd == "" {
+		credCmd = defaultCredentialCommand()
+	}
+	if credCmd == "" {
+		return "", fmt.Errorf("no credential command configured; set FM_CREDENTIAL_COMMAND, --credential-command, or credential_command in config file")
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd := exec.Command("sh", "-c", credCmd)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		detail := strings.TrimSpace(stderr.String())
+		if detail != "" {
+			return "", fmt.Errorf("credential command failed: %w\n%s", err, detail)
+		}
+		return "", fmt.Errorf("credential command failed: %w", err)
+	}
+
+	token := strings.TrimSpace(stdout.String())
+	if token == "" {
+		return "", fmt.Errorf("credential command returned empty token")
+	}
+	return token, nil
+}
+
 // newClient creates an authenticated JMAP client from the current config.
 func newClient() (*client.Client, error) {
-	token := viper.GetString("token")
-	if token == "" {
-		return nil, fmt.Errorf("no token configured; set FM_TOKEN, --token, or token in config file")
+	token, err := resolveToken()
+	if err != nil {
+		return nil, err
 	}
 	sessionURL := viper.GetString("session_url")
 	accountID := viper.GetString("account_id")

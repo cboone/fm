@@ -127,26 +127,26 @@ Flags: (glob)
 * (glob*)
 ```
 
-## Sieve list without token
+## Sieve list without credential command
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve list 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve list 2>&1
 {
   "error": "authentication_failed",
-  "message": "no token configured; set FM_TOKEN, --token, or token in config file",
-  "hint": "Check your token in FM_TOKEN or config file"
+  "message": "credential command failed: *", (glob)
+  "hint": "Check your credential command or the token it returns"
 }
 [1]
 ```
 
-## Sieve show without token
+## Sieve show without credential command
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve show S1 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve show S1 2>&1
 {
   "error": "authentication_failed",
-  "message": "no token configured; set FM_TOKEN, --token, or token in config file",
-  "hint": "Check your token in FM_TOKEN or config file"
+  "message": "credential command failed: *", (glob)
+  "hint": "Check your credential command or the token it returns"
 }
 [1]
 ```
@@ -162,7 +162,7 @@ Error: accepts 1 arg(s), received 0
 ## Sieve create requires name
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --from "a@b.com" --action junk 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --from "a@b.com" --action junk 2>&1
 {
   "error": "general_error",
   "message": "required flag \"name\" not set",
@@ -174,7 +174,7 @@ $ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexist
 ## Sieve create requires template flags or stdin
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --name "test" 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --name "test" 2>&1
 {
   "error": "general_error",
   "message": "provide either template flags (--from/--from-domain + --action) or --script-stdin"
@@ -201,7 +201,7 @@ Error: accepts 1 arg(s), received 0
 ## Sieve validate requires script input
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve validate 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve validate 2>&1
 {
   "error": "general_error",
   "message": "either --script or --script-stdin is required"
@@ -212,7 +212,7 @@ $ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexist
 ## Sieve create dry-run shows generated script
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --name "Block spam" --from "spam@example.com" --action junk --dry-run 2>&1
+$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm sieve create --name "Block spam" --from "spam@example.com" --action junk --dry-run 2>&1
 {
   "operation": "create",
   "script": "Block spam",
