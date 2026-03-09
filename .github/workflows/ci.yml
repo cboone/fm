@@ -11,3 +11,4 @@ jobs:
     uses: cboone/gh-actions/.github/workflows/go-ci.yml@main
     with:
       run-scrut: true
+      scrut-build-cmd: "go build ."
