@@ -9,6 +9,6 @@ on:
 
 jobs:
   gitleaks:
-    uses: cboone/gh-actions/.github/workflows/secret-scan.yml@main
+    uses: cboone/gh-actions/.github/workflows/secret-scan.yml@v1
     with:
       tool: gitleaks

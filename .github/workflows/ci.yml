@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    uses: cboone/gh-actions/.github/workflows/go-ci.yml@main
+    uses: cboone/gh-actions/.github/workflows/go-ci.yml@v1
     with:
       run-scrut: true
       scrut-build-cmd: "go build ."
