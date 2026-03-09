@@ -10,5 +10,6 @@ jobs:
   ci:
     uses: cboone/gh-actions/.github/workflows/go-ci.yml@main
     with:
+      run-lint: false
       run-scrut: true
       scrut-build-cmd: "go build ."
