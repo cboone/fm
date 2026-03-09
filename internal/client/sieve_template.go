@@ -27,8 +27,8 @@ func GenerateSieveScript(opts SieveTemplateOptions) (string, error) {
 	}
 
 	condition := sieveCondition(opts)
-	b.WriteString(fmt.Sprintf("if %s {\n", condition))
-	b.WriteString(fmt.Sprintf("    %s\n", action))
+	fmt.Fprintf(&b, "if %s {\n", condition)
+	fmt.Fprintf(&b, "    %s\n", action)
 	b.WriteString("    stop;\n")
 	b.WriteString("}\n")
 

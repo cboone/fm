@@ -53,7 +53,7 @@ func TestRetryTransport_RetriesWithFreshRequestBody(t *testing.T) {
 	if err != nil {
 		t.Fatalf("roundtrip failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if calls != 2 {
 		t.Fatalf("expected 2 transport calls, got %d", calls)

@@ -162,14 +162,14 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			return resp, nil
 		}
 		if attempt == maxRetries {
-			io.Copy(io.Discard, resp.Body)
-			resp.Body.Close()
+			_, _ = io.Copy(io.Discard, resp.Body)
+			_ = resp.Body.Close()
 			return nil, fmt.Errorf("max retries exceeded: received status %d", resp.StatusCode)
 		}
 
 		wait := retryDelay(resp, attempt)
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 
 		timer := time.NewTimer(wait)
 		select {
