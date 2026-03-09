@@ -11,5 +11,4 @@ jobs:
   release:
     uses: cboone/gh-actions/.github/workflows/go-release.yml@main
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
