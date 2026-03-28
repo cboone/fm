@@ -568,7 +568,7 @@ func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
 
 // QueryFirstEmailID runs Email/query with Limit 1 and returns the most recent
 // matching email ID, sorted by receivedAt descending. If no emails match, it
-// returns ("", nil).
+// returns ("", nil). It ignores Limit, Offset, SortField, and SortAsc from opts.
 func (c *Client) QueryFirstEmailID(opts SearchOptions) (string, error) {
 	filter := buildSearchFilter(opts)
 
@@ -597,7 +597,7 @@ func (c *Client) QueryFirstEmailID(opts SearchOptions) (string, error) {
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("email/query: unexpected or empty response")
 }
 
 // StatsOptions holds parameters for sender aggregation.
