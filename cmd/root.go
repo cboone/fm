@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,7 +49,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: ~/.config/fm/config.yaml)")
-	rootCmd.PersistentFlags().String("credential-command", "", "shell command that prints the API token to stdout")
+	rootCmd.PersistentFlags().String("credential-command", "", "shell command that prints the API token to stdout (default: OS keychain on macOS/Linux)")
 	rootCmd.PersistentFlags().String("session-url", "https://api.fastmail.com/jmap/session", "Fastmail session endpoint")
 	rootCmd.PersistentFlags().String("format", "json", "output format: json or text")
 	rootCmd.PersistentFlags().String("account-id", "", "Fastmail account ID (auto-detected if blank)")
@@ -127,6 +129,9 @@ func defaultCredentialCommand() string {
 	}
 }
 
+// credentialTimeout is the maximum time allowed for a credential command to complete.
+const credentialTimeout = 10 * time.Second
+
 // resolveToken executes the configured credential command and returns the token.
 func resolveToken() (string, error) {
 	credCmd := viper.GetString("credential_command")
@@ -137,11 +142,17 @@ func resolveToken() (string, error) {
 		return "", fmt.Errorf("no credential command configured; set FM_CREDENTIAL_COMMAND, --credential-command, or credential_command in config file")
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), credentialTimeout)
+	defer cancel()
+
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command("sh", "-c", credCmd)
+	cmd := exec.CommandContext(ctx, "sh", "-c", credCmd)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("credential command timed out after %s", credentialTimeout)
+		}
 		detail := strings.TrimSpace(stderr.String())
 		if detail != "" {
 			return "", fmt.Errorf("credential command failed: %w\n%s", err, detail)
