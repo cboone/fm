@@ -8,6 +8,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/mail"
 	"git.sr.ht/~rockorager/go-jmap/mail/email"
+	"git.sr.ht/~rockorager/go-jmap/mail/identity"
 	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 
 	"github.com/cboone/fm/internal/types"
@@ -709,6 +710,171 @@ func TestCreateDraft_NoFromWhenUsernameNotEmail(t *testing.T) {
 		if len(draft.From) != 0 {
 			t.Errorf("expected no From when username is not an email, got: %v", draft.From)
 		}
+	}
+}
+
+func TestCreateDraft_FromFlag_ResolvesIdentity(t *testing.T) {
+	var capturedSet *email.Set
+	c := testClientForDraft(func(req *jmap.Request) (*jmap.Response, error) {
+		capturedSet = req.Calls[0].Args.(*email.Set)
+		return mockDraftCreateSuccess("M-fromflag")(req)
+	})
+	c.identityCache = []*identity.Identity{
+		{ID: "id-primary", Name: "Chris", Email: "chris@fastmail.com"},
+		{ID: "id-alias", Name: "Chris B", Email: "chris@sent.com"},
+	}
+
+	result, err := c.CreateDraft(DraftOptions{
+		Mode:    DraftModeNew,
+		From:    "chris@sent.com",
+		To:      []types.Address{{Email: "alice@example.com"}},
+		Subject: "From flag test",
+		Body:    "Body",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, draft := range capturedSet.Create {
+		if len(draft.From) != 1 {
+			t.Fatalf("expected 1 From address, got %d", len(draft.From))
+		}
+		if draft.From[0].Email != "chris@sent.com" {
+			t.Errorf("From email = %q, want %q", draft.From[0].Email, "chris@sent.com")
+		}
+		if draft.From[0].Name != "Chris B" {
+			t.Errorf("From name = %q, want %q", draft.From[0].Name, "Chris B")
+		}
+	}
+	if len(result.From) != 1 || result.From[0].Email != "chris@sent.com" {
+		t.Errorf("result.From = %v, want chris@sent.com", result.From)
+	}
+}
+
+func TestCreateDraft_FromFlag_CaseInsensitive(t *testing.T) {
+	c := testClientForDraft(mockDraftCreateSuccess("M-fromcase"))
+	c.identityCache = []*identity.Identity{
+		{ID: "id-alias", Name: "Chris B", Email: "chris@sent.com"},
+	}
+
+	result, err := c.CreateDraft(DraftOptions{
+		Mode:    DraftModeNew,
+		From:    "Chris@Sent.COM",
+		To:      []types.Address{{Email: "alice@example.com"}},
+		Subject: "Case test",
+		Body:    "Body",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.From) != 1 || result.From[0].Email != "chris@sent.com" {
+		t.Errorf("result.From = %v, want chris@sent.com", result.From)
+	}
+}
+
+func TestCreateDraft_FromFlag_NoMatch(t *testing.T) {
+	c := testClientForDraft(mockDraftCreateSuccess("M-nomatch"))
+	c.identityCache = []*identity.Identity{
+		{ID: "id-primary", Email: "chris@fastmail.com"},
+		{ID: "id-alias", Email: "chris@sent.com"},
+	}
+
+	_, err := c.CreateDraft(DraftOptions{
+		Mode:    DraftModeNew,
+		From:    "unknown@example.com",
+		To:      []types.Address{{Email: "alice@example.com"}},
+		Subject: "No match",
+		Body:    "Body",
+	})
+	if err == nil {
+		t.Fatal("expected error for unmatched --from")
+	}
+	if !strings.Contains(err.Error(), "no identity found") {
+		t.Errorf("error = %q, want it to contain %q", err.Error(), "no identity found")
+	}
+	if !strings.Contains(err.Error(), "chris@fastmail.com") {
+		t.Errorf("error = %q, want it to list available identities", err.Error())
+	}
+}
+
+func TestCreateDraft_FromFlag_Empty_FallsBackToSession(t *testing.T) {
+	var capturedSet *email.Set
+	c := testClientForDraft(func(req *jmap.Request) (*jmap.Response, error) {
+		capturedSet = req.Calls[0].Args.(*email.Set)
+		return mockDraftCreateSuccess("M-fallback")(req)
+	})
+
+	_, err := c.CreateDraft(DraftOptions{
+		Mode:    DraftModeNew,
+		From:    "",
+		To:      []types.Address{{Email: "alice@example.com"}},
+		Subject: "Fallback test",
+		Body:    "Body",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, draft := range capturedSet.Create {
+		if len(draft.From) != 1 || draft.From[0].Email != "user@fastmail.com" {
+			t.Errorf("expected session fallback From=user@fastmail.com, got: %v", draft.From)
+		}
+	}
+}
+
+func TestCreateDraft_FromFlag_ReplyAllSelfExclusion(t *testing.T) {
+	callCount := 0
+	c := testClientForDraft(func(req *jmap.Request) (*jmap.Response, error) {
+		callCount++
+		if callCount == 1 {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/get", CallID: "0", Args: &email.GetResponse{
+					List: []*email.Email{{
+						ID:   "M-orig",
+						From: []*mail.Address{{Email: "sender@example.com"}},
+						To: []*mail.Address{
+							{Email: "chris@sent.com"},
+							{Email: "charlie@example.com"},
+						},
+						CC:      []*mail.Address{{Email: "dave@example.com"}},
+						Subject: "Group thread",
+					}},
+				}},
+			}}, nil
+		}
+		return mockDraftCreateSuccess("M-replyall-from")(req)
+	})
+	c.identityCache = []*identity.Identity{
+		{ID: "id-primary", Name: "Chris", Email: "chris@fastmail.com"},
+		{ID: "id-alias", Name: "Chris B", Email: "chris@sent.com"},
+	}
+
+	result, err := c.CreateDraft(DraftOptions{
+		Mode:       DraftModeReplyAll,
+		From:       "chris@sent.com",
+		OriginalID: "M-orig",
+		Body:       "Reply from alias",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// chris@sent.com (the --from identity) should be excluded from CC.
+	for _, a := range result.CC {
+		if a.Email == "chris@sent.com" {
+			t.Error("expected --from identity chris@sent.com to be excluded from CC")
+		}
+	}
+	// charlie and dave should be in CC.
+	ccEmails := make(map[string]bool)
+	for _, a := range result.CC {
+		ccEmails[a.Email] = true
+	}
+	if !ccEmails["charlie@example.com"] {
+		t.Error("expected charlie@example.com in CC")
+	}
+	if !ccEmails["dave@example.com"] {
+		t.Error("expected dave@example.com in CC")
 	}
 }
 

@@ -38,6 +38,7 @@ It is NOT sent. Review and send from Fastmail.`,
 			return exitError("general_error", err.Error(), "")
 		}
 
+		fromAddr, _ := cmd.Flags().GetString("from")
 		subject, _ := cmd.Flags().GetString("subject")
 		html, _ := cmd.Flags().GetBool("html")
 
@@ -76,6 +77,7 @@ It is NOT sent. Review and send from Fastmail.`,
 
 		result, err := c.CreateDraft(client.DraftOptions{
 			Mode:       mode,
+			From:       fromAddr,
 			To:         to,
 			CC:         cc,
 			BCC:        bcc,
@@ -99,6 +101,7 @@ It is NOT sent. Review and send from Fastmail.`,
 }
 
 func init() {
+	draftCmd.Flags().String("from", "", "sender identity email address")
 	draftCmd.Flags().StringSlice("to", nil, "recipient addresses (RFC 5322)")
 	draftCmd.Flags().StringSlice("cc", nil, "CC addresses (RFC 5322)")
 	draftCmd.Flags().StringSlice("bcc", nil, "BCC addresses (RFC 5322)")

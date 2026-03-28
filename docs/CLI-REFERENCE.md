@@ -454,6 +454,7 @@ Create a draft email in the Drafts mailbox. Supports four composition modes: new
 
 ```bash
 fm draft --to alice@example.com --subject "Hello" --body "Hi Alice"
+fm draft --from alias@fastmail.com --to alice@example.com --subject "Hello" --body "Hi"
 fm draft --reply-to <email-id> --body "Thanks!"
 fm draft --reply-all <email-id> --body "Noted, thanks."
 fm draft --forward <email-id> --to bob@example.com --body "FYI"
@@ -462,18 +463,19 @@ echo "Body text" | fm draft --to alice@example.com --subject "Test" --body-stdin
 
 No positional arguments.
 
-| Flag           | Default | Description                                          |
-| -------------- | ------- | ---------------------------------------------------- |
-| `--to`         | (none)  | Recipient addresses (RFC 5322); required for new/fwd |
-| `--cc`         | (none)  | CC addresses (RFC 5322)                              |
-| `--bcc`        | (none)  | BCC addresses (RFC 5322)                             |
-| `--subject`    | (none)  | Subject line; required for new                       |
-| `--body`       | (none)  | Message body (mutually exclusive with `--body-stdin`) |
-| `--body-stdin` | `false` | Read body from stdin                                 |
-| `--reply-to`   | (none)  | Email ID to reply to                                 |
-| `--reply-all`  | (none)  | Email ID to reply-all to                             |
-| `--forward`    | (none)  | Email ID to forward                                  |
-| `--html`       | `false` | Treat body as HTML                                   |
+| Flag           | Default | Description                                                          |
+| -------------- | ------- | -------------------------------------------------------------------- |
+| `--from`       | (none)  | Sender identity email address (must match a configured JMAP identity) |
+| `--to`         | (none)  | Recipient addresses (RFC 5322); required for new/fwd                 |
+| `--cc`         | (none)  | CC addresses (RFC 5322)                                              |
+| `--bcc`        | (none)  | BCC addresses (RFC 5322)                                             |
+| `--subject`    | (none)  | Subject line; required for new                                       |
+| `--body`       | (none)  | Message body (mutually exclusive with `--body-stdin`)                 |
+| `--body-stdin` | `false` | Read body from stdin                                                 |
+| `--reply-to`   | (none)  | Email ID to reply to                                                 |
+| `--reply-all`  | (none)  | Email ID to reply-all to                                             |
+| `--forward`    | (none)  | Email ID to forward                                                  |
+| `--html`       | `false` | Treat body as HTML                                                   |
 
 **Mode determination:** If none of `--reply-to`, `--reply-all`, or `--forward` is set, mode is "new". Exactly one mode flag may be provided; they are mutually exclusive.
 
@@ -484,6 +486,8 @@ No positional arguments.
 - Exactly one of `--body` or `--body-stdin` must be provided
 
 **Address format:** RFC 5322 format is supported: `"Name <email>"` or bare `email@example.com`.
+
+**From identity:** When `--from` is provided, it must match the email address of a configured JMAP identity (case-insensitive). If no match is found, the error message lists all available identity emails. When omitted, the From address is derived from the session username.
 
 **Reply behavior:**
 - To: original `Reply-To` header (or `From` if absent); user `--to` appended
