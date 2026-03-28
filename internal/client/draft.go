@@ -25,6 +25,7 @@ const (
 // DraftOptions holds parameters for creating a draft email.
 type DraftOptions struct {
 	Mode       DraftMode
+	From       string // identity email address for the sender
 	To         []types.Address
 	CC         []types.Address
 	BCC        []types.Address
@@ -50,9 +51,15 @@ func (c *Client) CreateDraft(opts DraftOptions) (types.DraftResult, error) {
 
 	draftsID := draftsMB.ID
 
-	// Derive From from the session username.
+	// Resolve From: use --from identity if provided, else session username.
 	var fromAddrs []*mail.Address
-	if c.jmap != nil && c.jmap.Session != nil && c.jmap.Session.Username != "" {
+	if opts.From != "" {
+		ident, err := c.ResolveIdentityByEmail(opts.From)
+		if err != nil {
+			return types.DraftResult{}, err
+		}
+		fromAddrs = []*mail.Address{{Name: ident.Name, Email: ident.Email}}
+	} else if c.jmap != nil && c.jmap.Session != nil && c.jmap.Session.Username != "" {
 		username := c.jmap.Session.Username
 		if strings.Contains(username, "@") {
 			fromAddrs = []*mail.Address{{Email: username}}
