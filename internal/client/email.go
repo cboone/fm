@@ -101,6 +101,7 @@ var detailProperties = []string{
 // ListOptions holds parameters for listing emails in a mailbox.
 type ListOptions struct {
 	MailboxNameOrID string
+	Subject         string
 	Limit           uint64
 	Offset          int64
 	UnreadOnly      bool
@@ -126,6 +127,9 @@ func (c *Client) ListEmails(opts ListOptions) (types.EmailListResult, error) {
 
 	fc := &email.FilterCondition{
 		InMailbox: mailboxID,
+	}
+	if opts.Subject != "" {
+		fc.Subject = opts.Subject
 	}
 	if opts.UnreadOnly {
 		fc.NotKeyword = "$seen"
@@ -708,6 +712,7 @@ func (c *Client) AggregateEmailsBySender(opts StatsOptions) (types.StatsResult, 
 // SummaryOptions holds parameters for the inbox summary aggregation.
 type SummaryOptions struct {
 	MailboxID     string
+	Subject       string
 	UnreadOnly    bool
 	FlaggedOnly   bool
 	UnflaggedOnly bool
@@ -724,6 +729,9 @@ var summaryBaseProperties = []string{"id", "from", "subject", "keywords"}
 func (c *Client) AggregateSummary(opts SummaryOptions) (types.SummaryResult, error) {
 	fc := &email.FilterCondition{
 		InMailbox: jmap.ID(opts.MailboxID),
+	}
+	if opts.Subject != "" {
+		fc.Subject = opts.Subject
 	}
 	if opts.UnreadOnly {
 		fc.NotKeyword = "$seen"

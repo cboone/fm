@@ -36,6 +36,8 @@ var listCmd = &cobra.Command{
 			return exitError("general_error", err.Error(), "Supported sort fields: receivedAt, sentAt, from, subject")
 		}
 
+		subject, _ := cmd.Flags().GetString("subject")
+
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
@@ -44,6 +46,7 @@ var listCmd = &cobra.Command{
 
 		result, err := c.ListEmails(client.ListOptions{
 			MailboxNameOrID: mailboxName,
+			Subject:         subject,
 			Limit:           limit,
 			Offset:          offset,
 			UnreadOnly:      unread,
@@ -67,6 +70,7 @@ func init() {
 	listCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
 	listCmd.Flags().BoolP("flagged", "f", false, "only show flagged messages")
 	listCmd.Flags().Bool("unflagged", false, "only show unflagged messages")
+	listCmd.Flags().String("subject", "", "filter by subject text")
 	listCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	rootCmd.AddCommand(listCmd)
 }
