@@ -907,7 +907,7 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ### unsubscribe
 
-Show or act on the `List-Unsubscribe` header of an email. Extracts and decodes the header (handling MIME encoded-words and quoted-printable encoding), then displays the unsubscribe mechanism. With `--draft`, creates a draft email for mailto-based unsubscribe.
+Show or act on the `List-Unsubscribe` header of an email. Extracts and decodes the header (handling MIME encoded-words such as RFC 2047 Q/B encodings), then displays the unsubscribe mechanism. With `--draft`, creates a draft email for mailto-based unsubscribe.
 
 ```bash
 fm unsubscribe <email-id>

@@ -75,6 +75,9 @@ an email (e.g. --from sender@example.com).`,
 				subject = "Unsubscribe"
 			}
 
+			result.Subject = subject
+			result.Body = parsed.Mailto.Body
+
 			draftResult, draftErr := c.CreateDraft(client.DraftOptions{
 				Mode:    client.DraftModeNew,
 				To:      []types.Address{{Email: parsed.Mailto.Address}},
