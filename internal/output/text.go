@@ -208,29 +208,36 @@ func (f *TextFormatter) formatThreadView(w io.Writer, tv types.ThreadView) error
 	return f.formatEmailDetail(w, tv.Email)
 }
 
+func actionVerb(r types.MoveResult) (string, int) {
+	switch {
+	case len(r.Archived) > 0:
+		return "Archived", len(r.Archived)
+	case len(r.MarkedSpam) > 0:
+		return "Marked as spam", len(r.MarkedSpam)
+	case len(r.MarkedAsRead) > 0:
+		return "Marked as read", len(r.MarkedAsRead)
+	case len(r.Flagged) > 0:
+		return "Flagged", len(r.Flagged)
+	case len(r.Unflagged) > 0:
+		return "Unflagged", len(r.Unflagged)
+	case len(r.Moved) > 0:
+		return "Moved", len(r.Moved)
+	default:
+		return "Processed", r.Processed - r.Failed
+	}
+}
+
 func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error {
-	_, _ = fmt.Fprintf(w, "Matched: %d, Processed: %d, Failed: %d\n", r.Matched, r.Processed, r.Failed)
-	if len(r.Archived) > 0 {
-		_, _ = fmt.Fprintf(w, "Archived: %s\n", strings.Join(r.Archived, ", "))
+	verb, count := actionVerb(r)
+
+	if verb == "Moved" && r.Destination != nil {
+		_, _ = fmt.Fprintf(w, "%s %d of %d matched emails to %s (%d failed)\n",
+			verb, count, r.Matched, r.Destination.Name, r.Failed)
+	} else {
+		_, _ = fmt.Fprintf(w, "%s %d of %d matched emails (%d failed)\n",
+			verb, count, r.Matched, r.Failed)
 	}
-	if len(r.MarkedSpam) > 0 {
-		_, _ = fmt.Fprintf(w, "Marked as spam: %s\n", strings.Join(r.MarkedSpam, ", "))
-	}
-	if len(r.MarkedAsRead) > 0 {
-		_, _ = fmt.Fprintf(w, "Marked as read: %s\n", strings.Join(r.MarkedAsRead, ", "))
-	}
-	if len(r.Flagged) > 0 {
-		_, _ = fmt.Fprintf(w, "Flagged: %s\n", strings.Join(r.Flagged, ", "))
-	}
-	if len(r.Unflagged) > 0 {
-		_, _ = fmt.Fprintf(w, "Unflagged: %s\n", strings.Join(r.Unflagged, ", "))
-	}
-	if len(r.Moved) > 0 {
-		_, _ = fmt.Fprintf(w, "Moved: %s\n", strings.Join(r.Moved, ", "))
-	}
-	if r.Destination != nil {
-		_, _ = fmt.Fprintf(w, "Destination: %s (%s)\n", r.Destination.Name, r.Destination.ID)
-	}
+
 	if len(r.Errors) > 0 {
 		_, _ = fmt.Fprintf(w, "Errors:\n")
 		for _, e := range r.Errors {

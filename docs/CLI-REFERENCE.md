@@ -676,12 +676,10 @@ Email IDs and filter flags are mutually exclusive.
 **Text output:**
 
 ```text
-Matched: 2, Processed: 2, Failed: 0
-Archived: M-email-id-1, M-email-id-2
-Destination: Archive (mb-archive-id)
+Archived 2 of 2 matched emails (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 
@@ -731,12 +729,10 @@ Email IDs and filter flags are mutually exclusive.
 **Text output:**
 
 ```text
-Matched: 1, Processed: 1, Failed: 0
-Marked as spam: M-email-id-1
-Destination: Junk Mail (mb-junk-id)
+Marked as spam 1 of 1 matched emails (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 
@@ -783,11 +779,10 @@ Email IDs and filter flags are mutually exclusive.
 **Text output:**
 
 ```text
-Matched: 2, Processed: 2, Failed: 0
-Marked as read: M-email-id-1, M-email-id-2
+Marked as read 2 of 2 matched emails (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 
@@ -845,11 +840,10 @@ fm flag M-email-id                  # flag without color (existing behavior)
 **Text output:**
 
 ```text
-Matched: 2, Processed: 2, Failed: 0
-Flagged: M-email-id-1, M-email-id-2
+Flagged 2 of 2 matched emails (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 
@@ -906,11 +900,10 @@ fm unflag --color M-email-id         # remove color only, keep flagged
 **Text output:**
 
 ```text
-Matched: 2, Processed: 2, Failed: 0
-Unflagged: M-email-id-1, M-email-id-2
+Unflagged 2 of 2 matched emails (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 
@@ -964,12 +957,10 @@ The `--to` flag on `move` is the destination mailbox, not a recipient filter. To
 **Text output:**
 
 ```text
-Matched: 1, Processed: 1, Failed: 0
-Moved: M-email-id-1
-Destination: Receipts (mb-receipts-id)
+Moved 1 of 1 matched emails to Receipts (0 failed)
 ```
 
-If some emails fail, the successful ones are still listed and errors appear in the `errors` array. A `partial_failure` error is also written to stderr.
+If some emails fail, the error count is shown and individual errors are listed. A `partial_failure` error is also written to stderr.
 
 ---
 

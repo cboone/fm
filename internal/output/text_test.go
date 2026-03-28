@@ -440,14 +440,11 @@ func TestTextFormatter_MoveResult(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Matched: 2, Processed: 2, Failed: 0") {
-		t.Errorf("expected summary line, got: %s", out)
+	if !strings.Contains(out, "Archived 2 of 2 matched emails (0 failed)") {
+		t.Errorf("expected compact summary, got: %s", out)
 	}
-	if !strings.Contains(out, "Archived: M1, M2") {
-		t.Errorf("expected archived IDs, got: %s", out)
-	}
-	if !strings.Contains(out, "Archive") {
-		t.Errorf("expected destination name, got: %s", out)
+	if strings.Contains(out, "M1") || strings.Contains(out, "M2") {
+		t.Errorf("should not list individual IDs, got: %s", out)
 	}
 }
 
@@ -471,11 +468,8 @@ func TestTextFormatter_MoveResultWithErrors(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Matched: 2, Processed: 2, Failed: 1") {
-		t.Errorf("expected summary line, got: %s", out)
-	}
-	if !strings.Contains(out, "Moved: M1") {
-		t.Errorf("expected moved IDs, got: %s", out)
+	if !strings.Contains(out, "Moved 1 of 2 matched emails to Receipts (1 failed)") {
+		t.Errorf("expected compact summary with destination, got: %s", out)
 	}
 	if !strings.Contains(out, "M2: not found") {
 		t.Errorf("expected error detail, got: %s", out)
@@ -487,6 +481,9 @@ func TestTextFormatter_MoveResultSpam(t *testing.T) {
 	var buf bytes.Buffer
 
 	result := types.MoveResult{
+		Matched:    1,
+		Processed:  1,
+		Failed:     0,
 		MarkedSpam: []string{"M1"},
 		Errors:     []string{},
 	}
@@ -496,8 +493,8 @@ func TestTextFormatter_MoveResultSpam(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Marked as spam: M1") {
-		t.Errorf("expected spam IDs, got: %s", out)
+	if !strings.Contains(out, "Marked as spam 1 of 1 matched emails (0 failed)") {
+		t.Errorf("expected compact summary, got: %s", out)
 	}
 }
 
@@ -506,6 +503,9 @@ func TestTextFormatter_MoveResultMarkedAsRead(t *testing.T) {
 	var buf bytes.Buffer
 
 	result := types.MoveResult{
+		Matched:      2,
+		Processed:    2,
+		Failed:       0,
 		MarkedAsRead: []string{"M1", "M2"},
 		Errors:       []string{},
 	}
@@ -515,8 +515,8 @@ func TestTextFormatter_MoveResultMarkedAsRead(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Marked as read: M1, M2") {
-		t.Errorf("expected marked-as-read IDs, got: %s", out)
+	if !strings.Contains(out, "Marked as read 2 of 2 matched emails (0 failed)") {
+		t.Errorf("expected compact summary, got: %s", out)
 	}
 }
 
@@ -525,8 +525,11 @@ func TestTextFormatter_MoveResultFlagged(t *testing.T) {
 	var buf bytes.Buffer
 
 	result := types.MoveResult{
-		Flagged: []string{"M1", "M2"},
-		Errors:  []string{},
+		Matched:   2,
+		Processed: 2,
+		Failed:    0,
+		Flagged:   []string{"M1", "M2"},
+		Errors:    []string{},
 	}
 
 	if err := f.Format(&buf, result); err != nil {
@@ -534,8 +537,8 @@ func TestTextFormatter_MoveResultFlagged(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Flagged: M1, M2") {
-		t.Errorf("expected flagged IDs, got: %s", out)
+	if !strings.Contains(out, "Flagged 2 of 2 matched emails (0 failed)") {
+		t.Errorf("expected compact summary, got: %s", out)
 	}
 }
 
@@ -544,6 +547,9 @@ func TestTextFormatter_MoveResultUnflagged(t *testing.T) {
 	var buf bytes.Buffer
 
 	result := types.MoveResult{
+		Matched:   1,
+		Processed: 1,
+		Failed:    0,
 		Unflagged: []string{"M3"},
 		Errors:    []string{},
 	}
@@ -553,8 +559,60 @@ func TestTextFormatter_MoveResultUnflagged(t *testing.T) {
 	}
 
 	out := buf.String()
-	if !strings.Contains(out, "Unflagged: M3") {
-		t.Errorf("expected unflagged IDs, got: %s", out)
+	if !strings.Contains(out, "Unflagged 1 of 1 matched emails (0 failed)") {
+		t.Errorf("expected compact summary, got: %s", out)
+	}
+}
+
+func TestTextFormatter_MoveResultAllFailed(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		Matched:   2,
+		Processed: 2,
+		Failed:    2,
+		Errors:    []string{"M1: server error", "M2: server error"},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Processed 0 of 2 matched emails (2 failed)") {
+		t.Errorf("expected fallback summary, got: %s", out)
+	}
+	if !strings.Contains(out, "M1: server error") {
+		t.Errorf("expected error detail, got: %s", out)
+	}
+}
+
+func TestTextFormatter_MoveResultMovedWithDestination(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		Matched:   3,
+		Processed: 3,
+		Failed:    0,
+		Moved:     []string{"M1", "M2", "M3"},
+		Destination: &types.DestinationInfo{
+			ID: "mb-receipts", Name: "Receipts",
+		},
+		Errors: []string{},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Moved 3 of 3 matched emails to Receipts (0 failed)") {
+		t.Errorf("expected compact summary with destination, got: %s", out)
+	}
+	if strings.Contains(out, "M1") || strings.Contains(out, "M2") || strings.Contains(out, "M3") {
+		t.Errorf("should not list individual IDs, got: %s", out)
 	}
 }
 
