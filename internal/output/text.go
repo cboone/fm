@@ -210,29 +210,36 @@ func (f *TextFormatter) formatThreadView(w io.Writer, tv types.ThreadView) error
 	return f.formatEmailDetail(w, tv.Email)
 }
 
+func actionVerb(r types.MoveResult) (string, int) {
+	switch {
+	case r.Archived != nil:
+		return "Archived", len(r.Archived)
+	case r.MarkedSpam != nil:
+		return "Marked as spam", len(r.MarkedSpam)
+	case r.MarkedAsRead != nil:
+		return "Marked as read", len(r.MarkedAsRead)
+	case r.Flagged != nil:
+		return "Flagged", len(r.Flagged)
+	case r.Unflagged != nil:
+		return "Unflagged", len(r.Unflagged)
+	case r.Moved != nil:
+		return "Moved", len(r.Moved)
+	default:
+		return "Processed", r.Processed - r.Failed
+	}
+}
+
 func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error {
-	_, _ = fmt.Fprintf(w, "Matched: %d, Processed: %d, Failed: %d\n", r.Matched, r.Processed, r.Failed)
-	if len(r.Archived) > 0 {
-		_, _ = fmt.Fprintf(w, "Archived: %s\n", strings.Join(r.Archived, ", "))
+	verb, count := actionVerb(r)
+
+	if r.Moved != nil && r.Destination != nil {
+		_, _ = fmt.Fprintf(w, "%s %d of %d matched emails to %s (%d failed)\n",
+			verb, count, r.Matched, r.Destination.Name, r.Failed)
+	} else {
+		_, _ = fmt.Fprintf(w, "%s %d of %d matched emails (%d failed)\n",
+			verb, count, r.Matched, r.Failed)
 	}
-	if len(r.MarkedSpam) > 0 {
-		_, _ = fmt.Fprintf(w, "Marked as spam: %s\n", strings.Join(r.MarkedSpam, ", "))
-	}
-	if len(r.MarkedAsRead) > 0 {
-		_, _ = fmt.Fprintf(w, "Marked as read: %s\n", strings.Join(r.MarkedAsRead, ", "))
-	}
-	if len(r.Flagged) > 0 {
-		_, _ = fmt.Fprintf(w, "Flagged: %s\n", strings.Join(r.Flagged, ", "))
-	}
-	if len(r.Unflagged) > 0 {
-		_, _ = fmt.Fprintf(w, "Unflagged: %s\n", strings.Join(r.Unflagged, ", "))
-	}
-	if len(r.Moved) > 0 {
-		_, _ = fmt.Fprintf(w, "Moved: %s\n", strings.Join(r.Moved, ", "))
-	}
-	if r.Destination != nil {
-		_, _ = fmt.Fprintf(w, "Destination: %s (%s)\n", r.Destination.Name, r.Destination.ID)
-	}
+
 	if len(r.Errors) > 0 {
 		_, _ = fmt.Fprintf(w, "Errors:\n")
 		for _, e := range r.Errors {
