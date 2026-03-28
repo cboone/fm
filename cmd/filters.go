@@ -177,7 +177,10 @@ func resolveEmailIDs(cmd *cobra.Command, args []string, c *client.Client) ([]str
 // resolveFirstEmailID returns a single email ID from args or queries the most
 // recent match using filter flags.
 func resolveFirstEmailID(cmd *cobra.Command, args []string, c *client.Client) (string, error) {
-	if len(args) > 0 {
+	if len(args) > 1 {
+		return "", exitError("general_error", "multiple email IDs provided", "Provide exactly one email ID or use filter flags")
+	}
+	if len(args) == 1 {
 		return args[0], nil
 	}
 
