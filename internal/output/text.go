@@ -57,6 +57,8 @@ func (f *TextFormatter) Format(w io.Writer, v any) error {
 		return f.formatSieveValidateResult(w, val)
 	case types.SieveDryRunResult:
 		return f.formatSieveDryRunResult(w, val)
+	case types.UnsubscribeResult:
+		return f.formatUnsubscribeResult(w, val)
 	default:
 		// Fall back to JSON formatter for unknown types.
 		return (&JSONFormatter{}).Format(w, v)
@@ -509,6 +511,30 @@ func (f *TextFormatter) formatSieveDryRunResult(w io.Writer, r types.SieveDryRun
 		}
 	}
 
+	return nil
+}
+
+func (f *TextFormatter) formatUnsubscribeResult(w io.Writer, r types.UnsubscribeResult) error {
+	_, _ = fmt.Fprintf(w, "Unsubscribe: %s\n", r.Mechanism)
+	_, _ = fmt.Fprintf(w, "Email: %s\n", r.EmailID)
+	if r.Mailto != "" {
+		_, _ = fmt.Fprintf(w, "Address: %s\n", r.Mailto)
+	}
+	if r.Subject != "" {
+		_, _ = fmt.Fprintf(w, "Subject: %s\n", r.Subject)
+	}
+	if r.Body != "" {
+		_, _ = fmt.Fprintf(w, "Body: %s\n", r.Body)
+	}
+	if r.URL != "" {
+		_, _ = fmt.Fprintf(w, "URL: %s\n", r.URL)
+	}
+	if r.OneClick {
+		_, _ = fmt.Fprintln(w, "One-Click: yes")
+	}
+	if r.DraftID != "" {
+		_, _ = fmt.Fprintf(w, "Draft created: %s\n", r.DraftID)
+	}
 	return nil
 }
 

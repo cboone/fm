@@ -78,6 +78,26 @@ $ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexist
 [1]
 ```
 
+## Unsubscribe requires email ID or filter flags
+
+```scrut
+$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unsubscribe 2>&1
+{
+  "error": "general_error",
+  "message": "no emails specified",
+  "hint": "Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)"
+}
+[1]
+```
+
+## Unsubscribe rejects multiple arguments
+
+```scrut
+$ $TESTDIR/../fm unsubscribe M1 M2 2>&1
+Error: accepts at most 1 arg(s), received 2
+[1]
+```
+
 ## Move requires email IDs or filter flags
 
 ```scrut
