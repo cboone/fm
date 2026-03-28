@@ -230,7 +230,7 @@ func actionVerb(r types.MoveResult) (string, int) {
 func (f *TextFormatter) formatMoveResult(w io.Writer, r types.MoveResult) error {
 	verb, count := actionVerb(r)
 
-	if verb == "Moved" && r.Destination != nil {
+	if r.Moved != nil && r.Destination != nil {
 		_, _ = fmt.Fprintf(w, "%s %d of %d matched emails to %s (%d failed)\n",
 			verb, count, r.Matched, r.Destination.Name, r.Failed)
 	} else {

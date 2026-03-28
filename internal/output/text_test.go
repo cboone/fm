@@ -564,7 +564,7 @@ func TestTextFormatter_MoveResultUnflagged(t *testing.T) {
 	}
 }
 
-func TestTextFormatter_MoveResultAllFailed(t *testing.T) {
+func TestTextFormatter_MoveResultNoActionSlice(t *testing.T) {
 	f := &TextFormatter{}
 	var buf bytes.Buffer
 
@@ -582,6 +582,31 @@ func TestTextFormatter_MoveResultAllFailed(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "Processed 0 of 2 matched emails (2 failed)") {
 		t.Errorf("expected fallback summary, got: %s", out)
+	}
+	if !strings.Contains(out, "M1: server error") {
+		t.Errorf("expected error detail, got: %s", out)
+	}
+}
+
+func TestTextFormatter_MoveResultAllFailed(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	result := types.MoveResult{
+		Matched:   2,
+		Processed: 2,
+		Failed:    2,
+		Archived:  []string{},
+		Errors:    []string{"M1: server error", "M2: server error"},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Archived 0 of 2 matched emails (2 failed)") {
+		t.Errorf("expected action verb with zero success, got: %s", out)
 	}
 	if !strings.Contains(out, "M1: server error") {
 		t.Errorf("expected error detail, got: %s", out)
