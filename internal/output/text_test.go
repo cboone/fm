@@ -1061,6 +1061,106 @@ func TestFormatAddrs_Empty(t *testing.T) {
 	}
 }
 
+func TestTextFormatter_UnsubscribeResult(t *testing.T) {
+	tests := []struct {
+		name     string
+		result   types.UnsubscribeResult
+		contains []string
+		excludes []string
+	}{
+		{
+			name: "none mechanism",
+			result: types.UnsubscribeResult{
+				EmailID:   "M-abc123",
+				Mechanism: "none",
+			},
+			contains: []string{"Unsubscribe: none", "Email: M-abc123"},
+			excludes: []string{"Address:", "URL:", "One-Click:", "Draft created:"},
+		},
+		{
+			name: "url only",
+			result: types.UnsubscribeResult{
+				EmailID:   "M-abc123",
+				Mechanism: "url",
+				URL:       "https://example.com/unsub",
+			},
+			contains: []string{"Unsubscribe: url", "URL: https://example.com/unsub"},
+			excludes: []string{"Address:", "One-Click:"},
+		},
+		{
+			name: "mailto only",
+			result: types.UnsubscribeResult{
+				EmailID:   "M-abc123",
+				Mechanism: "mailto",
+				Mailto:    "unsub@example.com",
+				Subject:   "Unsubscribe",
+			},
+			contains: []string{
+				"Unsubscribe: mailto",
+				"Address: unsub@example.com",
+				"Subject: Unsubscribe",
+			},
+			excludes: []string{"URL:", "One-Click:"},
+		},
+		{
+			name: "both with one-click",
+			result: types.UnsubscribeResult{
+				EmailID:   "M-abc123",
+				Mechanism: "both",
+				Mailto:    "unsub@example.com",
+				URL:       "https://example.com/unsub",
+				OneClick:  true,
+			},
+			contains: []string{
+				"Unsubscribe: both",
+				"Address: unsub@example.com",
+				"URL: https://example.com/unsub",
+				"One-Click: yes",
+			},
+		},
+		{
+			name: "draft created",
+			result: types.UnsubscribeResult{
+				EmailID:   "M-abc123",
+				Mechanism: "mailto",
+				Mailto:    "unsub@example.com",
+				Subject:   "Unsubscribe",
+				Body:      "Please remove me",
+				DraftID:   "D-draft456",
+			},
+			contains: []string{
+				"Address: unsub@example.com",
+				"Subject: Unsubscribe",
+				"Body: Please remove me",
+				"Draft created: D-draft456",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &TextFormatter{}
+			var buf bytes.Buffer
+
+			if err := f.Format(&buf, tt.result); err != nil {
+				t.Fatalf("Format() error = %v", err)
+			}
+
+			out := buf.String()
+			for _, want := range tt.contains {
+				if !strings.Contains(out, want) {
+					t.Errorf("output missing %q, got:\n%s", want, out)
+				}
+			}
+			for _, exclude := range tt.excludes {
+				if strings.Contains(out, exclude) {
+					t.Errorf("output should not contain %q, got:\n%s", exclude, out)
+				}
+			}
+		})
+	}
+}
+
 // --- New factory test ---
 
 func TestNew_JSON(t *testing.T) {

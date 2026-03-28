@@ -235,6 +235,18 @@ type SieveDryRunResult struct {
 	Valid     *bool  `json:"valid,omitempty"`
 }
 
+// UnsubscribeResult reports the outcome of an unsubscribe inspection or draft creation.
+type UnsubscribeResult struct {
+	EmailID   string `json:"email_id"`
+	Mechanism string `json:"mechanism"`
+	Mailto    string `json:"mailto,omitempty"`
+	Subject   string `json:"subject,omitempty"`
+	Body      string `json:"body,omitempty"`
+	URL       string `json:"url,omitempty"`
+	OneClick  bool   `json:"one_click"`
+	DraftID   string `json:"draft_id,omitempty"`
+}
+
 // AppError is a structured error for JSON output.
 type AppError struct {
 	Error   string `json:"error"`

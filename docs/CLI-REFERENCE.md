@@ -914,6 +914,72 @@ If some emails fail, the successful ones are still listed and errors appear in t
 
 ---
 
+### unsubscribe
+
+Show or act on the `List-Unsubscribe` header of an email. Extracts and decodes the header (handling MIME encoded-words such as RFC 2047 Q/B encodings), then displays the unsubscribe mechanism. With `--draft`, creates a draft email for mailto-based unsubscribe.
+
+```bash
+fm unsubscribe <email-id>
+fm unsubscribe <email-id> --draft
+fm unsubscribe --from sender@example.com --mailbox inbox
+```
+
+Accepts a single email ID or filter flags (mutually exclusive). When using filter flags, operates on the first matching email.
+
+| Flag               | Short | Default         | Description                                                |
+| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
+| `--draft`          |       | false           | Create a draft unsubscribe email (mailto only)             |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
+| `--from`           |       | (none)          | Filter by sender address or name                           |
+| `--to`             |       | (none)          | Filter by recipient address or name                        |
+| `--subject`        |       | (none)          | Filter by subject text                                     |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
+| `--has-attachment`  |       | false           | Only emails with attachments                               |
+| `--unread`         | `-u`  | false           | Only unread messages                                       |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
+| `--unflagged`      |       | false           | Only unflagged messages                                    |
+
+The `mechanism` field indicates the type of unsubscribe method available: `mailto` (email-based), `url` (web link), `both`, or `none`.
+
+**JSON output:**
+
+```json
+{
+  "email_id": "M-email-id",
+  "mechanism": "mailto",
+  "mailto": "unsub-token@lists.example.com",
+  "subject": "Unsubscribe",
+  "one_click": false
+}
+```
+
+With `--draft`:
+
+```json
+{
+  "email_id": "M-email-id",
+  "mechanism": "mailto",
+  "mailto": "unsub-token@lists.example.com",
+  "subject": "Unsubscribe",
+  "one_click": false,
+  "draft_id": "M-draft-id"
+}
+```
+
+**Text output:**
+
+```text
+Unsubscribe: mailto
+Email: M-email-id
+Address: unsub-token@lists.example.com
+Subject: Unsubscribe
+```
+
+With `--draft`, the text output also includes `Draft created: M-draft-id`.
+
+---
+
 ### move
 
 Move emails to a specified mailbox by name or ID. Specify emails by ID or by filter flags.
@@ -1271,6 +1337,21 @@ Returned by the `draft` command.
 | `cc`          | Address[]       | Omitted if empty                                 |
 | `subject`     | string          | Final subject line                               |
 | `in_reply_to` | string          | Omitted for new/forward; message IDs for replies |
+
+### UnsubscribeResult
+
+Returned by the `unsubscribe` command.
+
+| Field       | Type   | Notes                                                  |
+| ----------- | ------ | ------------------------------------------------------ |
+| `email_id`  | string | ID of the inspected email                              |
+| `mechanism` | string | One of: `mailto`, `url`, `both`, `none`                |
+| `mailto`    | string | Unsubscribe email address (omitted if not available)   |
+| `subject`   | string | Mailto subject parameter (omitted if empty)            |
+| `body`      | string | Mailto body parameter (omitted if empty)               |
+| `url`       | string | HTTP unsubscribe URL (omitted if not available)        |
+| `one_click` | bool   | True if `List-Unsubscribe-Post` indicates one-click    |
+| `draft_id`  | string | Draft ID when `--draft` is used (omitted otherwise)    |
 
 ### DryRunResult
 
