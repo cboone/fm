@@ -113,6 +113,7 @@ No arguments.
 | Flag           | Short | Default           | Description                           |
 | -------------- | ----- | ----------------- | ------------------------------------- |
 | `--mailbox`    | `-m`  | `inbox`           | Mailbox name or ID                    |
+| `--subject`    |       | (none)            | Filter by subject text                |
 | `--limit`      | `-l`  | `25`              | Maximum number of results (minimum 1) |
 | `--offset`     | `-o`  | `0`               | Pagination offset (non-negative)      |
 | `--unread`     | `-u`  | `false`           | Only show unread messages             |
@@ -130,9 +131,11 @@ Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 **Filtering examples:**
 
 ```bash
-fm list --flagged                # only flagged emails
-fm list --unflagged              # only unflagged emails
-fm list --unread --unflagged     # unread and unflagged emails
+fm list --flagged                       # only flagged emails
+fm list --unflagged                     # only unflagged emails
+fm list --unread --unflagged            # unread and unflagged emails
+fm list --subject "Dependabot"          # emails with "Dependabot" in subject
+fm list --subject "Daily Digest" -u     # unread emails matching subject
 ```
 
 **JSON output:**
@@ -540,6 +543,7 @@ No arguments.
 | Flag            | Short | Default | Description                                             |
 | --------------- | ----- | ------- | ------------------------------------------------------- |
 | `--mailbox`     | `-m`  | `inbox` | Mailbox name or ID                                      |
+| `--subject`     |       | (none)  | Filter by subject text                                  |
 | `--unread`      | `-u`  | `false` | Only count unread messages                              |
 | `--flagged`     | `-f`  | `false` | Only count flagged messages                             |
 | `--unflagged`   |       | `false` | Only count unflagged messages                           |
@@ -555,6 +559,7 @@ No arguments.
 fm summary                                # inbox overview
 fm summary --unread                       # unread-only summary
 fm summary --unread --subjects            # with subject lines
+fm summary --subject "Dependabot"         # only emails matching subject
 fm summary --newsletters                  # detect newsletters
 fm summary --mailbox archive --limit 20   # top 20 in archive
 ```

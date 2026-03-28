@@ -16,6 +16,7 @@ var summaryCmd = &cobra.Command{
 detect newsletters. Provides a single-pass triage overview of a mailbox.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		mailboxName, _ := cmd.Flags().GetString("mailbox")
+		subject, _ := cmd.Flags().GetString("subject")
 		unread, _ := cmd.Flags().GetBool("unread")
 		flagged, _ := cmd.Flags().GetBool("flagged")
 		unflagged, _ := cmd.Flags().GetBool("unflagged")
@@ -43,6 +44,7 @@ detect newsletters. Provides a single-pass triage overview of a mailbox.`,
 
 		result, err := c.AggregateSummary(client.SummaryOptions{
 			MailboxID:     string(mailboxID),
+			Subject:       subject,
 			UnreadOnly:    unread,
 			FlaggedOnly:   flagged,
 			UnflaggedOnly: unflagged,
@@ -60,6 +62,7 @@ detect newsletters. Provides a single-pass triage overview of a mailbox.`,
 
 func init() {
 	summaryCmd.Flags().StringP("mailbox", "m", "inbox", "mailbox name or ID")
+	summaryCmd.Flags().String("subject", "", "filter by subject text")
 	summaryCmd.Flags().BoolP("unread", "u", false, "only count unread messages")
 	summaryCmd.Flags().BoolP("flagged", "f", false, "only count flagged messages")
 	summaryCmd.Flags().Bool("unflagged", false, "only count unflagged messages")

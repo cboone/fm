@@ -1721,6 +1721,48 @@ func TestListEmails_UnflaggedAndUnread(t *testing.T) {
 	}
 }
 
+// TestListEmails_SubjectFilter verifies that Subject sets the Subject field on the filter.
+func TestListEmails_SubjectFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{Total: 0, IDs: []jmap.ID{}}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{List: []*email.Email{}}},
+			}}, nil
+		},
+		mailboxCache: []*mailbox.Mailbox{{ID: "mb-inbox", Name: "Inbox", Role: mailbox.RoleInbox}},
+	}
+
+	_, err := c.ListEmails(ListOptions{
+		MailboxNameOrID: "inbox",
+		Subject:         "Dependabot",
+		Limit:           25,
+		SortField:       "receivedAt",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.Subject != "Dependabot" {
+		t.Errorf("expected Subject=%q, got %q", "Dependabot", fc.Subject)
+	}
+	if fc.InMailbox == "" {
+		t.Error("expected InMailbox to be set")
+	}
+}
+
 // --- GetEmailSummaries tests ---
 
 func TestGetEmailSummaries_ReturnsSummaries(t *testing.T) {
@@ -2828,5 +2870,47 @@ func TestAggregateSummary_MethodError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "summary query") {
 		t.Errorf("expected error to contain 'summary query', got: %v", err)
+	}
+}
+
+// TestAggregateSummary_SubjectFilter verifies that Subject sets the Subject field on the filter.
+func TestAggregateSummary_SubjectFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "Email/query", CallID: "0", Args: &email.QueryResponse{
+					Total: 0,
+					IDs:   []jmap.ID{},
+				}},
+				{Name: "Email/get", CallID: "1", Args: &email.GetResponse{
+					List: []*email.Email{},
+				}},
+			}}, nil
+		},
+	}
+
+	_, err := c.AggregateSummary(SummaryOptions{
+		MailboxID: "mb-inbox",
+		Subject:   "Daily Digest",
+		Limit:     10,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.Subject != "Daily Digest" {
+		t.Errorf("expected Subject=%q, got %q", "Daily Digest", fc.Subject)
 	}
 }
