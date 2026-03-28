@@ -72,7 +72,7 @@ If omitted, only the provided flags/filters are used for matching.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in FM_TOKEN or config file")
+				"Check your credential command or the token it returns")
 		}
 
 		if mailboxName != "" {

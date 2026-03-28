@@ -29,7 +29,7 @@ Moving to Trash or Deleted Items is not permitted.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in FM_TOKEN or config file")
+				"Check your credential command or the token it returns")
 		}
 
 		targetMB, err := c.GetMailboxByNameOrID(target)

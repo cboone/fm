@@ -63,11 +63,26 @@ go install github.com/cboone/fm@latest
 2. Grant only these scopes:
    - `urn:ietf:params:jmap:core`
    - `urn:ietf:params:jmap:mail`
-3. Configure runtime secrets using environment variables:
+3. Store the token in your OS keychain:
+
+**macOS (Keychain):**
 
 ```bash
-export FM_TOKEN="fmu1-..."
-export FM_FORMAT="json"
+security add-generic-password -s fm -a fastmail -w "fmu1-..."
+```
+
+**Linux (libsecret):**
+
+```bash
+echo -n "fmu1-..." | secret-tool store --label "fm" service fm
+```
+
+On macOS and Linux, `fm` retrieves the token from the OS keychain by default. No extra configuration is needed.
+
+To use a different credential store, set a custom command:
+
+```bash
+export FM_CREDENTIAL_COMMAND="op read op://Private/Fastmail/token"
 ```
 
 4. Validate auth and endpoint:
@@ -183,29 +198,29 @@ For complete schemas and examples, see [docs/CLI-REFERENCE.md](docs/CLI-REFERENC
 
 Resolution order (highest first):
 
-1. Command flags (`--token`, `--format`, etc.)
-2. Environment variables (`FM_TOKEN`, `FM_FORMAT`, etc.)
+1. Command flags (`--credential-command`, `--format`, etc.)
+2. Environment variables (`FM_CREDENTIAL_COMMAND`, `FM_FORMAT`, etc.)
 3. Config file (`~/.config/fm/config.yaml`)
+4. Platform default (OS keychain on macOS and Linux)
 
 ### Environment Variables
 
-| Variable         | Description                     | Default                                 |
-| ---------------- | ------------------------------- | --------------------------------------- |
-| `FM_TOKEN`       | Bearer token for authentication | (none)                                  |
-| `FM_SESSION_URL` | JMAP session endpoint           | `https://api.fastmail.com/jmap/session` |
-| `FM_FORMAT`      | Output format: `json` or `text` | `json`                                  |
-| `FM_ACCOUNT_ID`  | JMAP account ID override        | (auto-detected)                         |
+| Variable                 | Description                                        | Default                                                |
+| ------------------------ | -------------------------------------------------- | ------------------------------------------------------ |
+| `FM_CREDENTIAL_COMMAND`  | Shell command that prints the API token to stdout   | macOS: OS keychain; Linux: libsecret; other: (none)    |
+| `FM_SESSION_URL`         | JMAP session endpoint                              | `https://api.fastmail.com/jmap/session`                |
+| `FM_FORMAT`              | Output format: `json` or `text`                    | `json`                                                 |
+| `FM_ACCOUNT_ID`          | JMAP account ID override                           | (auto-detected)                                        |
 
 ### Optional Config File
 
 ```yaml
 # ~/.config/fm/config.yaml
+credential_command: "op read op://Private/Fastmail/token"
 session_url: "https://api.fastmail.com/jmap/session"
 format: "json"
 account_id: ""
 ```
-
-Security note: keep tokens in environment variables, never in committed files.
 
 ## Claude Code Specific Notes
 

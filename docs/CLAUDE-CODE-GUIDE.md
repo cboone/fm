@@ -17,16 +17,24 @@ Create a Fastmail API token at **Settings > Privacy & Security > Integrations > 
 - `urn:ietf:params:jmap:core`
 - `urn:ietf:params:jmap:mail`
 
-Set it as an environment variable:
+Store it in your OS keychain:
+
+**macOS:**
 
 ```bash
-export FM_TOKEN="fmu1-..."
+security add-generic-password -s fm -a fastmail -w "fmu1-..."
 ```
 
-Or add it to `~/.config/fm/config.yaml`:
+**Linux:**
+
+```bash
+echo -n "fmu1-..." | secret-tool store --label "fm" service fm
+```
+
+Or configure a custom credential command in `~/.config/fm/config.yaml`:
 
 ```yaml
-token: "fmu1-..."
+credential_command: "op read op://Private/Fastmail/token"
 ```
 
 ### 3. Verify
@@ -244,7 +252,7 @@ All errors produce exit code 1. Structured error details are written to **stderr
 
 | Error code              | Meaning                     | Typical cause                          |
 | ----------------------- | --------------------------- | -------------------------------------- |
-| `authentication_failed` | Token is missing or invalid | `FM_TOKEN` not set or expired           |
+| `authentication_failed` | Token is missing or invalid | Credential command not configured or token expired |
 | `not_found`             | Email or mailbox not found  | Stale email ID or typo in mailbox name |
 | `forbidden_operation`   | Safety constraint triggered | Attempted to move to Trash             |
 

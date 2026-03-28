@@ -24,7 +24,7 @@ Provide the script content via --script or --script-stdin.`,
 		c, err := newClient()
 		if err != nil {
 			return exitError("authentication_failed", err.Error(),
-				"Check your token in FM_TOKEN or config file")
+				"Check your credential command or the token it returns")
 		}
 
 		result, err := c.ValidateSieveScript(content)
