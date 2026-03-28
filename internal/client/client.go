@@ -11,6 +11,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/core"
 	"git.sr.ht/~rockorager/go-jmap/mail"
+	"git.sr.ht/~rockorager/go-jmap/mail/identity"
 	"git.sr.ht/~rockorager/go-jmap/mail/mailbox"
 
 	"github.com/cboone/fm/internal/types"
@@ -24,12 +25,13 @@ const defaultBatchSize = 50
 
 // Client wraps the go-jmap client with convenience methods and safety guardrails.
 type Client struct {
-	jmap         *jmap.Client
-	accountID    jmap.ID
-	mailboxCache []*mailbox.Mailbox
-	doFunc       func(*jmap.Request) (*jmap.Response, error)
-	uploadFunc   func(jmap.ID, io.Reader) (*jmap.UploadResponse, error)
-	downloadFunc func(jmap.ID, jmap.ID) (io.ReadCloser, error)
+	jmap          *jmap.Client
+	accountID     jmap.ID
+	mailboxCache  []*mailbox.Mailbox
+	identityCache []*identity.Identity
+	doFunc        func(*jmap.Request) (*jmap.Response, error)
+	uploadFunc    func(jmap.ID, io.Reader) (*jmap.UploadResponse, error)
+	downloadFunc  func(jmap.ID, jmap.ID) (io.ReadCloser, error)
 }
 
 // New creates a Client, authenticates, and discovers the session.
