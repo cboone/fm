@@ -100,3 +100,22 @@ func TestParseFilterOptions_RecipientToFilterStillWorks(t *testing.T) {
 		t.Fatalf("expected To=bob@example.com, got %q", opts.To)
 	}
 }
+
+func TestResolveFirstEmailID_ReturnsSingleArg(t *testing.T) {
+	cmd := newFilterTestCommand(false)
+	id, err := resolveFirstEmailID(cmd, []string{"M1"}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id != "M1" {
+		t.Errorf("expected M1, got %q", id)
+	}
+}
+
+func TestResolveFirstEmailID_RejectsMultipleArgs(t *testing.T) {
+	cmd := newFilterTestCommand(false)
+	_, err := resolveFirstEmailID(cmd, []string{"M1", "M2"}, nil)
+	if err == nil {
+		t.Fatal("expected error for multiple args, got nil")
+	}
+}

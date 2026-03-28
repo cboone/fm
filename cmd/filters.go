@@ -174,6 +174,33 @@ func resolveEmailIDs(cmd *cobra.Command, args []string, c *client.Client) ([]str
 	return ids, nil
 }
 
+// resolveFirstEmailID returns a single email ID from args or queries the most
+// recent match using filter flags.
+func resolveFirstEmailID(cmd *cobra.Command, args []string, c *client.Client) (string, error) {
+	if len(args) > 1 {
+		return "", exitError("general_error", "multiple email IDs provided", "Provide exactly one email ID or use filter flags")
+	}
+	if len(args) == 1 {
+		return args[0], nil
+	}
+
+	opts, err := parseFilterOptions(cmd, c)
+	if err != nil {
+		return "", err
+	}
+
+	id, err := c.QueryFirstEmailID(opts)
+	if err != nil {
+		return "", exitError("jmap_error", err.Error(), "")
+	}
+
+	if id == "" {
+		return "", exitError("not_found", "no emails matched the given filters", "")
+	}
+
+	return id, nil
+}
+
 // parseDate parses a date string in RFC 3339 format or as a bare date (YYYY-MM-DD).
 // Bare dates are treated as midnight UTC on that day.
 func parseDate(s string) (time.Time, error) {

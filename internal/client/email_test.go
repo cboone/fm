@@ -2648,6 +2648,161 @@ func TestQueryEmailIDs_IgnoresLimitAndSort(t *testing.T) {
 	}
 }
 
+// --- QueryFirstEmailID tests ---
+
+func TestQueryFirstEmailID_ReturnsFirst(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args: &email.QueryResponse{
+						Total: 5,
+						IDs:   []jmap.ID{"M42"},
+					},
+				},
+			}}, nil
+		},
+	}
+
+	id, err := c.QueryFirstEmailID(SearchOptions{From: "alice@test.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id != "M42" {
+		t.Errorf("expected M42, got %q", id)
+	}
+}
+
+func TestQueryFirstEmailID_EmptyResult(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args:   &email.QueryResponse{Total: 0, IDs: []jmap.ID{}},
+				},
+			}}, nil
+		},
+	}
+
+	id, err := c.QueryFirstEmailID(SearchOptions{From: "nobody@test.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id != "" {
+		t.Errorf("expected empty string, got %q", id)
+	}
+}
+
+func TestQueryFirstEmailID_MethodError(t *testing.T) {
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{Name: "error", CallID: "0", Args: &jmap.MethodError{Type: "invalidArguments"}},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryFirstEmailID(SearchOptions{From: "alice@test.com"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "email/query") {
+		t.Errorf("expected error to mention email/query, got: %s", err.Error())
+	}
+}
+
+func TestQueryFirstEmailID_UsesLimitOneAndSort(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args:   &email.QueryResponse{Total: 0, IDs: []jmap.ID{}},
+				},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryFirstEmailID(SearchOptions{From: "alice@test.com"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query := captured.Calls[0].Args.(*email.Query)
+	if query.Limit != 1 {
+		t.Errorf("expected Limit=1, got %d", query.Limit)
+	}
+	if len(query.Sort) != 1 {
+		t.Fatalf("expected 1 sort comparator, got %d", len(query.Sort))
+	}
+	if query.Sort[0].Property != "receivedAt" {
+		t.Errorf("expected sort by receivedAt, got %q", query.Sort[0].Property)
+	}
+	if query.Sort[0].IsAscending {
+		t.Error("expected IsAscending=false")
+	}
+	if query.CalculateTotal {
+		t.Error("expected CalculateTotal=false")
+	}
+}
+
+func TestQueryFirstEmailID_UsesFilter(t *testing.T) {
+	var captured *jmap.Request
+
+	c := &Client{
+		accountID: "test-account",
+		doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+			captured = req
+			return &jmap.Response{Responses: []*jmap.Invocation{
+				{
+					Name:   "Email/query",
+					CallID: "0",
+					Args:   &email.QueryResponse{Total: 0, IDs: []jmap.ID{}},
+				},
+			}}, nil
+		},
+	}
+
+	_, err := c.QueryFirstEmailID(SearchOptions{
+		From:       "alice@test.com",
+		UnreadOnly: true,
+		MailboxID:  "mb-inbox",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := captured.Calls[0].Args.(*email.Query)
+	if !ok {
+		t.Fatalf("expected *email.Query, got %T", captured.Calls[0].Args)
+	}
+	fc, ok := query.Filter.(*email.FilterCondition)
+	if !ok {
+		t.Fatalf("expected *email.FilterCondition, got %T", query.Filter)
+	}
+	if fc.From != "alice@test.com" {
+		t.Errorf("expected From=alice@test.com, got %q", fc.From)
+	}
+	if fc.NotKeyword != "$seen" {
+		t.Errorf("expected NotKeyword=$seen, got %q", fc.NotKeyword)
+	}
+	if fc.InMailbox != "mb-inbox" {
+		t.Errorf("expected InMailbox=mb-inbox, got %q", fc.InMailbox)
+	}
+}
+
 // --- extractDomain tests ---
 
 func TestExtractDomain(t *testing.T) {
