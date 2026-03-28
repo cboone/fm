@@ -147,6 +147,12 @@ func (f *TextFormatter) formatEmailList(w io.Writer, result types.EmailListResul
 			runewidth.FillRight(r.from, maxFrom),
 			runewidth.FillRight(r.subject, maxSubject),
 			r.date)
+		if len(result.Emails[i].To) > 0 {
+			_, _ = fmt.Fprintf(w, "  To: %s\n", formatAddrs(result.Emails[i].To))
+		}
+		if len(result.Emails[i].CC) > 0 {
+			_, _ = fmt.Fprintf(w, "  CC: %s\n", formatAddrs(result.Emails[i].CC))
+		}
 		_, _ = fmt.Fprintf(w, "  ID: %s\n", result.Emails[i].ID)
 		if result.Emails[i].Snippet != "" {
 			_, _ = fmt.Fprintf(w, "  ...%s\n", result.Emails[i].Snippet)

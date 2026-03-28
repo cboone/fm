@@ -112,6 +112,9 @@ func TestTextFormatter_EmailList(t *testing.T) {
 	if !strings.Contains(out, "ID: M1") {
 		t.Errorf("expected email ID in output, got: %s", out)
 	}
+	if !strings.Contains(out, "To: Bob <bob@test.com>") {
+		t.Errorf("expected To line in output, got: %s", out)
+	}
 }
 
 func TestTextFormatter_EmailListWithSnippet(t *testing.T) {
@@ -140,6 +143,96 @@ func TestTextFormatter_EmailListWithSnippet(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "matching text here") {
 		t.Errorf("expected snippet in output, got: %s", out)
+	}
+	if !strings.Contains(out, "To: me@test.com") {
+		t.Errorf("expected To line in output, got: %s", out)
+	}
+}
+
+func TestTextFormatter_EmailListWithCC(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Email: "sender@test.com"}},
+				To:         []types.Address{{Email: "me@test.com"}},
+				CC:         []types.Address{{Name: "Charlie", Email: "charlie@test.com"}},
+				Subject:    "Team sync",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "CC: Charlie <charlie@test.com>") {
+		t.Errorf("expected CC line in output, got: %s", out)
+	}
+	if !strings.Contains(out, "To: me@test.com") {
+		t.Errorf("expected To line in output, got: %s", out)
+	}
+}
+
+func TestTextFormatter_EmailListEmptyCC(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Email: "sender@test.com"}},
+				To:         []types.Address{{Email: "me@test.com"}},
+				Subject:    "Direct message",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if strings.Contains(out, "CC:") {
+		t.Errorf("expected no CC line in output, got: %s", out)
+	}
+}
+
+func TestTextFormatter_EmailListEmptyTo(t *testing.T) {
+	f := &TextFormatter{}
+	var buf bytes.Buffer
+
+	now := time.Date(2026, 2, 4, 10, 30, 0, 0, time.UTC)
+	result := types.EmailListResult{
+		Total: 1,
+		Emails: []types.EmailSummary{
+			{
+				ID:         "M1",
+				From:       []types.Address{{Email: "sender@test.com"}},
+				Subject:    "BCC only",
+				ReceivedAt: now,
+			},
+		},
+	}
+
+	if err := f.Format(&buf, result); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	if strings.Contains(out, "To:") {
+		t.Errorf("expected no To line in output, got: %s", out)
 	}
 }
 
