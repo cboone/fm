@@ -42,14 +42,17 @@ changelog:
       - "^test:"
       - "^chore:"
 
-brews:
+homebrew_casks:
   - repository:
       owner: cboone
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Formula
     homepage: "https://github.com/cboone/fm"
     description: "Safe, read-oriented CLI for Fastmail email via JMAP"
-    license: MIT
-    test: |
-      assert_match version.to_s, shell_output("#{bin}/fm --version")
+    url:
+      verified: "github.com/cboone/fm/"
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr",
+                         args: ["-dr", "com.apple.quarantine", "#{staged_path}"]
