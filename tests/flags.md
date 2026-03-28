@@ -28,6 +28,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ```scrut
 $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm session --format text 2>&1
 Error [authentication_failed]: credential command failed: * (glob)
+* (glob*)
 Hint: Check your credential command or the token it returns
 [1]
 ```
@@ -37,6 +38,7 @@ Hint: Check your credential command or the token it returns
 ```scrut
 $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_ACCOUNT_ID HOME=/nonexistent FM_FORMAT=text $TESTDIR/../fm session 2>&1
 Error [authentication_failed]: credential command failed: * (glob)
+* (glob*)
 Hint: Check your credential command or the token it returns
 [1]
 ```
