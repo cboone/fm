@@ -2,7 +2,7 @@
 
 Base: main (merge base: 11f69f9)
 Commits: 1
-Files changed: 33 (0 added, 33 modified, 0 deleted, 0 renamed)
+Files changed: 34 (1 added, 33 modified, 0 deleted, 0 renamed)
 Reviewed through: 9703513
 
 ### Summary
@@ -45,7 +45,7 @@ Makefile comment updated to reference `FM_CREDENTIAL_COMMAND` instead of `FM_TOK
 
 ### File Inventory
 
-- **New files**: 0
+- **New files**: 1 (docs/reviews/2026-03-27-feature-allow-configuring-credential-store.md)
 - **Modified files**: 33 (.env.example, Makefile, README.md, cmd/archive.go, cmd/draft.go, cmd/dryrun_test.go, cmd/flag.go, cmd/list.go, cmd/mailboxes.go, cmd/mark-read.go, cmd/move.go, cmd/read.go, cmd/root.go, cmd/search.go, cmd/session.go, cmd/sieve_activate.go, cmd/sieve_create.go, cmd/sieve_deactivate.go, cmd/sieve_delete.go, cmd/sieve_list.go, cmd/sieve_show.go, cmd/sieve_validate.go, cmd/spam.go, cmd/stats.go, cmd/summary.go, cmd/unflag.go, docs/CLAUDE-CODE-GUIDE.md, docs/CLI-REFERENCE.md, tests/arguments.md, tests/errors.md, tests/flags.md, tests/live.md, tests/sieve.md)
 - **Deleted files**: 0
 - **Renamed files**: 0
@@ -73,7 +73,7 @@ Makefile comment updated to reference `FM_CREDENTIAL_COMMAND` instead of `FM_TOK
 
 1. **Token executed on every command invocation**: `resolveToken()` shells out to the credential command on every CLI invocation. For commands run in tight loops, this could introduce latency (e.g., if the credential command hits a remote service like 1Password CLI). This is a reasonable tradeoff for a CLI tool, but worth being aware of.
 
-2. **No timeout on credential command execution**: If the credential command hangs (e.g., waiting for a GUI prompt from a password manager), the CLI will block indefinitely. Consider whether a timeout (e.g., via `context.WithTimeout`) would be appropriate for a future enhancement.
+2. **Fixed 10s timeout on credential command execution**: Credential commands run with a 10-second timeout via `context.WithTimeout`. This prevents indefinite hangs (e.g., waiting for a GUI prompt from a password manager). The fixed timeout may be too short for some setups; a future enhancement could make the timeout configurable.
 
 3. **Shell injection surface**: The credential command is executed via `sh -c`, which means the value from `FM_CREDENTIAL_COMMAND`, `--credential-command`, or the config file is interpreted as shell code. This is intentional and documented (the user controls the input), but it is worth confirming that no untrusted source can set these values in practice. Since all three sources (env var, CLI flag, config file) require the user or their environment to set them, this is acceptable.
 
