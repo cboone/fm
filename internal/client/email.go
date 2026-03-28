@@ -87,7 +87,7 @@ func (c *Client) batchSetEmails(emailIDs []string, patchFn func(string) jmap.Pat
 
 // summaryProperties are the Email/get properties used for list and search results.
 var summaryProperties = []string{
-	"id", "threadId", "mailboxIds", "from", "to",
+	"id", "threadId", "mailboxIds", "from", "to", "cc",
 	"subject", "receivedAt", "size", "keywords", "preview",
 }
 
@@ -1076,6 +1076,7 @@ func convertSummaries(emails []*email.Email) []types.EmailSummary {
 			ThreadID:   string(e.ThreadID),
 			From:       convertAddresses(e.From),
 			To:         convertAddresses(e.To),
+			CC:         convertAddresses(e.CC),
 			Subject:    e.Subject,
 			ReceivedAt: safeTime(e.ReceivedAt),
 			Size:       e.Size,

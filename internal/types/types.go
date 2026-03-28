@@ -31,6 +31,7 @@ type EmailSummary struct {
 	ThreadID   string    `json:"thread_id"`
 	From       []Address `json:"from"`
 	To         []Address `json:"to"`
+	CC         []Address `json:"cc,omitempty"`
 	Subject    string    `json:"subject"`
 	ReceivedAt time.Time `json:"received_at"`
 	Size       uint64    `json:"size"`

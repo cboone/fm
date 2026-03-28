@@ -61,6 +61,7 @@ $ test "$FM_LIVE_TESTS" = "1" -a -n "$FM_TOKEN" || exit 80; $TESTDIR/../fm list 
 ```scrut
 $ test "$FM_LIVE_TESTS" = "1" -a -n "$FM_TOKEN" || exit 80; $TESTDIR/../fm list --limit 1 --format text 2>&1
 Total: * (glob)
+*To: * (glob)
 * ID: * (glob)
 * (glob+)
 ```
