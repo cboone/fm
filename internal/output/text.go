@@ -210,17 +210,17 @@ func (f *TextFormatter) formatThreadView(w io.Writer, tv types.ThreadView) error
 
 func actionVerb(r types.MoveResult) (string, int) {
 	switch {
-	case len(r.Archived) > 0:
+	case r.Archived != nil:
 		return "Archived", len(r.Archived)
-	case len(r.MarkedSpam) > 0:
+	case r.MarkedSpam != nil:
 		return "Marked as spam", len(r.MarkedSpam)
-	case len(r.MarkedAsRead) > 0:
+	case r.MarkedAsRead != nil:
 		return "Marked as read", len(r.MarkedAsRead)
-	case len(r.Flagged) > 0:
+	case r.Flagged != nil:
 		return "Flagged", len(r.Flagged)
-	case len(r.Unflagged) > 0:
+	case r.Unflagged != nil:
 		return "Unflagged", len(r.Unflagged)
-	case len(r.Moved) > 0:
+	case r.Moved != nil:
 		return "Moved", len(r.Moved)
 	default:
 		return "Processed", r.Processed - r.Failed
