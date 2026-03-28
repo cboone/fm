@@ -1,0 +1,8 @@
+panes:
+  - command: claude --dangerously-skip-permissions --enable-auto-mode
+    focus: true
+  - split: vertical
+    percentage: 60
+  - command: opencode
+    split: vertical
+    percentage: 50
