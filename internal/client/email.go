@@ -566,6 +566,40 @@ func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
 	return collected, nil
 }
 
+// QueryFirstEmailID runs Email/query with Limit 1 and returns the most recent
+// matching email ID, sorted by receivedAt descending. If no emails match, it
+// returns ("", nil).
+func (c *Client) QueryFirstEmailID(opts SearchOptions) (string, error) {
+	filter := buildSearchFilter(opts)
+
+	req := &jmap.Request{}
+	req.Invoke(&email.Query{
+		Account: c.accountID,
+		Filter:  filter,
+		Sort:    []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
+		Limit:   1,
+	})
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("email/query: %w", err)
+	}
+
+	for _, inv := range resp.Responses {
+		switch r := inv.Args.(type) {
+		case *email.QueryResponse:
+			if len(r.IDs) == 0 {
+				return "", nil
+			}
+			return string(r.IDs[0]), nil
+		case *jmap.MethodError:
+			return "", fmt.Errorf("email/query: %s", r.Error())
+		}
+	}
+
+	return "", nil
+}
+
 // StatsOptions holds parameters for sender aggregation.
 type StatsOptions struct {
 	MailboxID     string
