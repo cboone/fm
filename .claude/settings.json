@@ -6,6 +6,6 @@
   },
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true,
-    "create-plugin@cboone-cc-plugins": true
+    "create-plugin@agent-harness-plugins": true
   }
 }
