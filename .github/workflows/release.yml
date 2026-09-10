@@ -9,6 +9,6 @@ permissions:
 
 jobs:
   release:
-    uses: cboone/gh-actions/.github/workflows/go-release.yml@v1
+    uses: cboone/gh-actions/.github/workflows/release-go-binaries.yml@844bf31d4ec26df9d0aa531e79d8c3fccf9f0638 # v3.1.0
     secrets:
       HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
