@@ -41,4 +41,5 @@ go.work.sum
 
 # Build output
 bin/
+completions/
 dist/

@@ -1,5 +1,10 @@
 version: 2
 
+before:
+  hooks:
+    - go mod tidy
+    - bash scripts/completions.sh
+
 builds:
   - id: fm
     main: .
@@ -27,6 +32,8 @@ archives:
         formats:
           - zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - completions/*
 
 checksum:
   name_template: checksums.txt
@@ -51,6 +58,10 @@ homebrew_casks:
     description: "Safe, read-oriented CLI for Fastmail email via JMAP"
     url:
       verified: "github.com/cboone/fm/"
+    completions:
+      bash: completions/fm.bash
+      zsh: completions/fm.zsh
+      fish: completions/fm.fish
     hooks:
       post:
         install: |
