@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -98,7 +98,7 @@
+ 			case errors.Is(identityErr, ErrMissingSubmissionCapability):
+ 				warnings = append(warnings, "Reply identity could not be matched; using the current default sender. "+identityErr.Error())
+ 			case identityErr != nil:
+-				return types.DraftResult{}, identityErr
++				warnings = nil
+ 			default:
+ 				// Match To before Cc, in message order.
+ 			matchRecipient:

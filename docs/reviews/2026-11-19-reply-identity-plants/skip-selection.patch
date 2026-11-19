@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -92,7 +92,7 @@
+ 			return types.DraftResult{}, fetchErr
+ 		}
+ 
+-		if opts.From == "" {
++		if false {
+ 			identities, identityErr := c.GetAllIdentities()
+ 			switch {
+ 			case errors.Is(identityErr, ErrMissingSubmissionCapability):

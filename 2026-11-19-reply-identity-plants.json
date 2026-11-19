@@ -1,0 +1,339 @@
+{
+  "inputs": [
+    "go.mod",
+    "go.sum",
+    "cmd/archive.go",
+    "cmd/docs_drift_test.go",
+    "cmd/draft.go",
+    "cmd/draft_output_test.go",
+    "cmd/dryrun.go",
+    "cmd/dryrun_test.go",
+    "cmd/filters.go",
+    "cmd/filters_test.go",
+    "cmd/flag.go",
+    "cmd/list.go",
+    "cmd/list_test.go",
+    "cmd/mailboxes.go",
+    "cmd/mark-read.go",
+    "cmd/move.go",
+    "cmd/read.go",
+    "cmd/root.go",
+    "cmd/search.go",
+    "cmd/session.go",
+    "cmd/sieve.go",
+    "cmd/sieve_activate.go",
+    "cmd/sieve_create.go",
+    "cmd/sieve_deactivate.go",
+    "cmd/sieve_delete.go",
+    "cmd/sieve_list.go",
+    "cmd/sieve_show.go",
+    "cmd/sieve_validate.go",
+    "cmd/spam.go",
+    "cmd/stats.go",
+    "cmd/stats_test.go",
+    "cmd/summary.go",
+    "cmd/summary_test.go",
+    "cmd/unflag.go",
+    "cmd/unsubscribe.go",
+    "cmd/unsubscribe_oneclick.go",
+    "cmd/unsubscribe_oneclick_test.go",
+    "internal/client/client.go",
+    "internal/client/client_test.go",
+    "internal/client/color.go",
+    "internal/client/color_test.go",
+    "internal/client/draft.go",
+    "internal/client/draft_test.go",
+    "internal/client/email.go",
+    "internal/client/email_test.go",
+    "internal/client/identity.go",
+    "internal/client/identity_test.go",
+    "internal/client/mailbox.go",
+    "internal/client/reply_identity_test.go",
+    "internal/client/safety.go",
+    "internal/client/safety_test.go",
+    "internal/client/sieve.go",
+    "internal/client/sieve_template.go",
+    "internal/client/sieve_template_test.go",
+    "internal/client/sieve_test.go",
+    "internal/client/unsubscribe.go",
+    "internal/client/unsubscribe_test.go",
+    "internal/jmap/sieve/get.go",
+    "internal/jmap/sieve/query.go",
+    "internal/jmap/sieve/set.go",
+    "internal/jmap/sieve/sieve.go",
+    "internal/jmap/sieve/validate.go",
+    "internal/output/formatter.go",
+    "internal/output/json.go",
+    "internal/output/json_test.go",
+    "internal/output/text.go",
+    "internal/output/text_test.go",
+    "internal/types/types.go",
+    "internal/types/types_test.go",
+    "internal/unsubscribe/ascii_test.go",
+    "internal/unsubscribe/auth.go",
+    "internal/unsubscribe/auth_test.go",
+    "internal/unsubscribe/oneclick.go",
+    "internal/unsubscribe/oneclick_test.go",
+    "internal/unsubscribe/unsubscribe.go",
+    "internal/unsubscribe/unsubscribe_test.go",
+    "main.go",
+    "tests/session-fixture/main.go",
+    "docs/reviews/2026-11-19-reply-identity-plants/case-sensitive.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/cc-first.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/check.sh",
+    "docs/reviews/2026-11-19-reply-identity-plants/discard-name.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/fail-fallback.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/ignore-lookup-error.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/lose-warnings-json.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/override-selection.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/retain-self-cc.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/setup.sh",
+    "docs/reviews/2026-11-19-reply-identity-plants/skip-selection.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/skip-warning.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/warn-in-json.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/warnings-stdout.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/rename-warnings-key.patch",
+    "docs/reviews/2026-11-19-reply-identity-plants/keep-empty-warnings.patch"
+  ],
+  "setup": "docs/reviews/2026-11-19-reply-identity-plants/setup.sh",
+  "check": "docs/reviews/2026-11-19-reply-identity-plants/check.sh",
+  "timeout": 120,
+  "green": {
+    "exit_code": 0,
+    "contains": [
+      "\nPASS\n"
+    ],
+    "excludes": [
+      "--- FAIL:",
+      "--- SKIP:",
+      "panic:",
+      "[build failed]"
+    ]
+  },
+  "variants": [
+    {
+      "name": "skip-selection",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/skip-selection.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply/To_match"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "override-selection",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/override-selection.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply/override"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "cc-first",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/cc-first.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply/To_before_Cc"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "case-sensitive",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/case-sensitive.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply/To_match"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "discard-name",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/discard-name.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply/To_match"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "skip-warning",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/skip-warning.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentityMissingCapability/reply/explicit=false"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "ignore-lookup-error",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/ignore-lookup-error.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentityLookupError"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "lose-warnings-json",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/lose-warnings-json.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestDraftWarningsOutput/json"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "warnings-stdout",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/warnings-stdout.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestDraftWarningsOutput/text"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "warn-in-json",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/warn-in-json.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestDraftWarningsOutput/json"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "fail-fallback",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/fail-fallback.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentityMissingCapability/reply/explicit=false"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "retain-self-cc",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/retain-self-cc.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_ReplyIdentity/reply-all/To_match"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "rename-warnings-key",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/rename-warnings-key.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestDraftWarningsOutput/json"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "keep-empty-warnings",
+      "patch": "docs/reviews/2026-11-19-reply-identity-plants/keep-empty-warnings.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestDraftWarningsOutput/json"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    }
+  ]
+}

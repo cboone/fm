@@ -64,7 +64,8 @@ func TestCreateDraft_WithoutSubmission(t *testing.T) {
 // testClientForDraft creates a Client with a Drafts mailbox and the given doFunc.
 func testClientForDraft(doFunc func(*jmap.Request) (*jmap.Response, error)) *Client {
 	return &Client{
-		accountID: "test-account",
+		accountID:     "test-account",
+		identityCache: []*identity.Identity{},
 		jmap: &jmap.Client{
 			Session: &jmap.Session{
 				Username: "user@fastmail.com",

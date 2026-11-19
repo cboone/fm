@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -102,7 +102,7 @@
+ 			default:
+ 				// Match To before Cc, in message order.
+ 			matchRecipient:
+-				for _, recipients := range [2][]*mail.Address{orig.To, orig.CC} {
++				for _, recipients := range [2][]*mail.Address{orig.CC, orig.To} {
+ 					for _, recipient := range recipients {
+ 						for _, ident := range identities {
+ 							if strings.EqualFold(recipient.Email, ident.Email) {
