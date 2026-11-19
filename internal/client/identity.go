@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~rockorager/go-jmap"
+	"git.sr.ht/~rockorager/go-jmap/mail/emailsubmission"
 	"git.sr.ht/~rockorager/go-jmap/mail/identity"
 )
 
@@ -18,6 +19,11 @@ import (
 func (c *Client) GetAllIdentities() ([]*identity.Identity, error) {
 	if c.identityCache != nil {
 		return c.identityCache, nil
+	}
+	if c.jmap != nil && c.jmap.Session != nil {
+		if _, ok := c.jmap.Session.RawCapabilities[emailsubmission.URI]; !ok {
+			return nil, fmt.Errorf("identity/get: missing %s capability; add the Email submission (submission) token scope (also grants sending permission)", emailsubmission.URI)
+		}
 	}
 
 	req := &jmap.Request{}

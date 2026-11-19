@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,6 +17,50 @@ import (
 
 const testDraftsID = "mb-drafts"
 
+func TestCreateDraft_SetErrorDetails(t *testing.T) {
+	for _, tt := range []struct {
+		name, response, want string
+	}{
+		{"type only", `{"type":"forbidden"}`, "forbidden"},
+		{"type and description", `{"type":"invalidProperties","description":"synthetic rejection"}`, "invalidProperties: synthetic rejection"},
+		{"description only", `{"description":"synthetic rejection"}`, "synthetic rejection"},
+		{"empty description", `{"type":"overQuota","description":""}`, "overQuota"},
+		{"empty error", `{}`, "unknown error"},
+		{"null error", `null`, "unknown error"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var rejection *jmap.SetError
+			if err := json.Unmarshal([]byte(tt.response), &rejection); err != nil {
+				t.Fatal(err)
+			}
+			c := testClientForDraft(func(req *jmap.Request) (*jmap.Response, error) {
+				return &jmap.Response{Responses: []*jmap.Invocation{{
+					Name: "Email/set", CallID: "0", Args: &email.SetResponse{
+						NotCreated: map[jmap.ID]*jmap.SetError{"draft-0": rejection},
+					},
+				}}}, nil
+			})
+			_, err := c.CreateDraft(DraftOptions{Mode: DraftModeNew, Subject: "synthetic", Body: "synthetic"})
+			want := "draft creation failed: " + tt.want
+			if err == nil || err.Error() != want {
+				t.Fatalf("CreateDraft() error = %v, want %q", err, want)
+			}
+		})
+	}
+}
+
+func TestCreateDraft_WithoutSubmission(t *testing.T) {
+	c := testClientForDraft(mockDraftCreateSuccess("synthetic-draft"))
+	c.jmap.Session.RawCapabilities = map[jmap.URI]json.RawMessage{
+		jmap.CoreURI: json.RawMessage(`{}`),
+		mail.URI:     json.RawMessage(`{}`),
+	}
+	result, err := c.CreateDraft(DraftOptions{Mode: DraftModeNew, Subject: "synthetic", Body: "synthetic"})
+	if err != nil || result.ID != "synthetic-draft" {
+		t.Fatalf("CreateDraft() = %v, %v; want synthetic draft without submission", result, err)
+	}
+}
+
 // testClientForDraft creates a Client with a Drafts mailbox and the given doFunc.
 func testClientForDraft(doFunc func(*jmap.Request) (*jmap.Response, error)) *Client {
 	return &Client{
@@ -23,6 +68,9 @@ func testClientForDraft(doFunc func(*jmap.Request) (*jmap.Response, error)) *Cli
 		jmap: &jmap.Client{
 			Session: &jmap.Session{
 				Username: "user@fastmail.com",
+				RawCapabilities: map[jmap.URI]json.RawMessage{
+					"urn:ietf:params:jmap:submission": json.RawMessage(`{}`),
+				},
 			},
 		},
 		mailboxCache: []*mailbox.Mailbox{
