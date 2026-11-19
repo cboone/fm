@@ -1,0 +1,8 @@
+diff --git a/internal/output/text.go b/internal/output/text.go
+--- a/internal/output/text.go
++++ b/internal/output/text.go
+@@ -231,3 +231,3 @@
+ 		if te.ID != tv.Email.ID {
+-			if err := writeFlagColor(w, "      ", te.FlagColor); err != nil {
++			if err := writeFlagColor(w, "      ", nil); err != nil {
+ 				return err

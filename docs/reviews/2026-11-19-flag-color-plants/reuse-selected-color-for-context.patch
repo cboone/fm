@@ -1,0 +1,8 @@
+diff --git a/internal/client/email.go b/internal/client/email.go
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -294,3 +294,3 @@
+ 					IsUnread:   !e.Keywords["$seen"],
+-					FlagColor:  decodeFlagColor(e.Keywords),
++					FlagColor:  detail.FlagColor,
+ 				})

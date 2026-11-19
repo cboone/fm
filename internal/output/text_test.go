@@ -2,6 +2,8 @@ package output
 
 import (
 	"bytes"
+	"errors"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +11,40 @@ import (
 	"github.com/cboone/fm/internal/types"
 	"github.com/mattn/go-runewidth"
 )
+
+type flagColorErrorWriter struct {
+	err error
+}
+
+func (w flagColorErrorWriter) Write(p []byte) (int, error) {
+	if bytes.Contains(p, []byte("Flag color:")) {
+		return 0, w.err
+	}
+	return io.Discard.Write(p)
+}
+
+func TestFlagColorTextWriteError(t *testing.T) {
+	red := "red"
+	writeError := errors.New("flag color output failed")
+	for _, tc := range []struct {
+		name  string
+		value any
+	}{
+		{"list", types.EmailListResult{Emails: []types.EmailSummary{{FlagColor: &red}}}},
+		{"read", types.EmailDetail{FlagColor: &red}},
+		{"thread", types.ThreadView{
+			Email:  types.EmailDetail{ID: "selected"},
+			Thread: []types.ThreadEmail{{ID: "previous", FlagColor: &red}},
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := New("text").Format(flagColorErrorWriter{err: writeError}, tc.value)
+			if !errors.Is(err, writeError) {
+				t.Errorf("Format error = %v, want %v", err, writeError)
+			}
+		})
+	}
+}
 
 func TestTextFormatter_Session(t *testing.T) {
 	f := &TextFormatter{}

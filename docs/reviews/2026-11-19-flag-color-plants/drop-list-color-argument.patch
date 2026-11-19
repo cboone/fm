@@ -1,0 +1,7 @@
+diff --git a/cmd/list.go b/cmd/list.go
+--- a/cmd/list.go
++++ b/cmd/list.go
+@@ -35,2 +35,3 @@
+ 		}
++		color = nil
+ 		sort, _ := cmd.Flags().GetString("sort")

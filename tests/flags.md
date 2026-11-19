@@ -446,3 +446,37 @@ $ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive --f
 }
 [1]
 ```
+
+## List color requires flagged
+
+```scrut
+$ $TESTDIR/../fm list --flagged=false --color red 2>&1
+{
+  "error": "general_error",
+  "message": "--color requires --flagged"
+}
+[1]
+```
+
+## Search rejects an unknown flag color
+
+```scrut
+$ $TESTDIR/../fm search --flagged --color magenta 2>&1
+{
+  "error": "general_error",
+  "message": "invalid color \"magenta\"; valid colors: red, orange, yellow, green, blue, purple, gray"
+}
+[1]
+```
+
+## Search accepts a case-insensitive flag color
+
+```scrut
+$ $TESTDIR/../fm search --flagged --color Orange 2>&1
+{
+  "error": "authentication_failed",
+  "message": "credential command failed: *", (glob)
+  "hint": "Check your credential command or the token it returns"
+}
+[1]
+```

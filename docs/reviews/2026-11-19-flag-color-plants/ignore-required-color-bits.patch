@@ -1,0 +1,8 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -118,3 +118,3 @@
+ 		if c&(1<<bit) != 0 {
+-			condition.HasKeyword = keyword.lowercase
++			condition.HasKeyword = ""
+ 		} else {

@@ -1,0 +1,8 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -106,3 +106,3 @@
+ 	}
+-	if int(color) >= len(colorNames) {
++	if color == FlagColorRed || int(color) >= len(colorNames) {
+ 		return nil
