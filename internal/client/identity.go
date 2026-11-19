@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,6 +9,9 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail/emailsubmission"
 	"git.sr.ht/~rockorager/go-jmap/mail/identity"
 )
+
+// ErrMissingSubmissionCapability means Identity/get cannot run with this token.
+var ErrMissingSubmissionCapability = errors.New("identity/get: missing urn:ietf:params:jmap:submission capability; add the Email submission (submission) token scope (also grants sending permission)")
 
 // GetAllIdentities retrieves all identities in the account.
 // Results are cached for the lifetime of the Client instance.
@@ -22,7 +26,7 @@ func (c *Client) GetAllIdentities() ([]*identity.Identity, error) {
 	}
 	if c.jmap != nil && c.jmap.Session != nil {
 		if _, ok := c.jmap.Session.RawCapabilities[emailsubmission.URI]; !ok {
-			return nil, fmt.Errorf("identity/get: missing %s capability; add the Email submission (submission) token scope (also grants sending permission)", emailsubmission.URI)
+			return nil, ErrMissingSubmissionCapability
 		}
 	}
 

@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -134,7 +134,7 @@
+ 			candidates = append(candidates, orig.CC...)
+ 			for _, a := range candidates {
+ 				lower := strings.ToLower(a.Email)
+-				if lower == selfEmail {
++				if lower == selfEmail && false {
+ 					continue
+ 				}
+ 				if toSet[lower] {

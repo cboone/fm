@@ -174,6 +174,7 @@ type DraftResult struct {
 	CC        []Address        `json:"cc,omitempty"`
 	Subject   string           `json:"subject"`
 	InReplyTo string           `json:"in_reply_to,omitempty"`
+	Warnings  []string         `json:"warnings,omitempty"`
 }
 
 // SieveScriptInfo is a summary view of a sieve script for list output.

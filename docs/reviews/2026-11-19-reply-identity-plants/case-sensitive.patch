@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -105,7 +105,7 @@
+ 				for _, recipients := range [2][]*mail.Address{orig.To, orig.CC} {
+ 					for _, recipient := range recipients {
+ 						for _, ident := range identities {
+-							if strings.EqualFold(recipient.Email, ident.Email) {
++							if recipient.Email == ident.Email {
+ 								fromAddrs = []*mail.Address{{Name: ident.Name, Email: ident.Email}}
+ 								break matchRecipient
+ 							}

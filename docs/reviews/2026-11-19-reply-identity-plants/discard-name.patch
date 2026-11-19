@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -106,7 +106,7 @@
+ 					for _, recipient := range recipients {
+ 						for _, ident := range identities {
+ 							if strings.EqualFold(recipient.Email, ident.Email) {
+-								fromAddrs = []*mail.Address{{Name: ident.Name, Email: ident.Email}}
++								fromAddrs = []*mail.Address{{Email: ident.Email}}
+ 								break matchRecipient
+ 							}
+ 						}

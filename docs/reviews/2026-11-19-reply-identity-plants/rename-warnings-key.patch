@@ -1,0 +1,11 @@
+--- a/internal/types/types.go
++++ b/internal/types/types.go
+@@ -174,7 +174,7 @@
+ 	CC        []Address        `json:"cc,omitempty"`
+ 	Subject   string           `json:"subject"`
+ 	InReplyTo string           `json:"in_reply_to,omitempty"`
+-	Warnings  []string         `json:"warnings,omitempty"`
++	Warnings  []string         `json:"warning,omitempty"`
+ }
+ 
+ // SieveScriptInfo is a summary view of a sieve script for list output.

@@ -78,6 +78,13 @@ Drafts are safe: they are created in the Drafts mailbox with the `$draft` keywor
 
 Always offer draft composition to the user rather than drafting autonomously. The user decides what to say and when to send.
 
+Replies use the first original To recipient matching an account identity, then
+Cc, in message order. With no match, the default sender stays; `--from` overrides
+selection. Without the submission capability, automatic selection keeps the
+default and warns. Check the JSON `warnings` array or text `Warning:` lines on
+stderr before presenting a draft. Explicit `--from` still requires the Email
+submission token scope; other identity lookup errors stop creation.
+
 ### Reply
 
 ```bash

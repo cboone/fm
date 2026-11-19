@@ -387,6 +387,12 @@ Available Commands: (glob)
 $ $TESTDIR/../fm draft --help
 Create a draft email for later review and sending from Fastmail. (glob)
 * (glob+)
+Replies use the first original To recipient matching an account identity, then Cc.
+With no match, the current default sender stays. --from overrides this selection.
+If the submission capability is missing, automatic selection keeps the default
+with a warning; explicit --from still requires the Email submission token scope.
+JSON includes an optional warnings array; text writes Warning: lines to stderr.
+* (glob+)
 Usage: (glob)
   fm draft [flags] (glob)
  (regex)

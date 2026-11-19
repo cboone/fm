@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -51,8 +52,9 @@ func (c *Client) CreateDraft(opts DraftOptions) (types.DraftResult, error) {
 
 	draftsID := draftsMB.ID
 
-	// Resolve From: use --from identity if provided, else session username.
+	// Start with --from or the session username; replies may select a recipient identity.
 	var fromAddrs []*mail.Address
+	var warnings []string
 	if opts.From != "" {
 		ident, err := c.ResolveIdentityByEmail(opts.From)
 		if err != nil {
@@ -88,6 +90,29 @@ func (c *Client) CreateDraft(opts DraftOptions) (types.DraftResult, error) {
 		orig, fetchErr := c.fetchOriginalForReply(opts.OriginalID)
 		if fetchErr != nil {
 			return types.DraftResult{}, fetchErr
+		}
+
+		if opts.From == "" {
+			identities, identityErr := c.GetAllIdentities()
+			switch {
+			case errors.Is(identityErr, ErrMissingSubmissionCapability):
+				warnings = append(warnings, "Reply identity could not be matched; using the current default sender. "+identityErr.Error())
+			case identityErr != nil:
+				return types.DraftResult{}, identityErr
+			default:
+				// Match To before Cc, in message order.
+			matchRecipient:
+				for _, recipients := range [2][]*mail.Address{orig.To, orig.CC} {
+					for _, recipient := range recipients {
+						for _, ident := range identities {
+							if strings.EqualFold(recipient.Email, ident.Email) {
+								fromAddrs = []*mail.Address{{Name: ident.Name, Email: ident.Email}}
+								break matchRecipient
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// Compute To: use ReplyTo if present, else From.
@@ -214,13 +239,14 @@ func (c *Client) CreateDraft(opts DraftOptions) (types.DraftResult, error) {
 		case *email.SetResponse:
 			if created, ok := r.Created[createID]; ok {
 				result := types.DraftResult{
-					ID:      string(created.ID),
-					Mode:    string(opts.Mode),
-					Mailbox: &types.DestinationInfo{ID: string(draftsID), Name: draftsMB.Name},
-					From:    convertAddresses(fromAddrs),
-					To:      convertAddresses(toAddrs),
-					CC:      convertAddresses(ccAddrs),
-					Subject: subject,
+					ID:       string(created.ID),
+					Mode:     string(opts.Mode),
+					Mailbox:  &types.DestinationInfo{ID: string(draftsID), Name: draftsMB.Name},
+					From:     convertAddresses(fromAddrs),
+					To:       convertAddresses(toAddrs),
+					CC:       convertAddresses(ccAddrs),
+					Subject:  subject,
+					Warnings: warnings,
 				}
 				if len(replyTo) > 0 {
 					result.InReplyTo = strings.Join(replyTo, ", ")
