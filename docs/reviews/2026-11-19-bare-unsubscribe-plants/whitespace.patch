@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -55,3 +55,3 @@
+ 		u, err := url.Parse(uri)
+-		if err != nil || strings.ContainsAny(uri, "<>\r\n\t ") {
++		if err != nil {
+ 			continue

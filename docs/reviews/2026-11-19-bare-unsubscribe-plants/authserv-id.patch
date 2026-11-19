@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -53,3 +53,3 @@
+ 		parts := strings.Split(value, ";")
+-		if !EqualFoldASCII(strings.TrimSpace(parts[0]), receiver) {
++		if !strings.EqualFold(strings.TrimSpace(parts[0]), receiver) {
+ 			continue

@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -84,3 +84,3 @@
+ 			tags := signatureTags(h.Value)
+-			if !EqualFoldASCII(tags["d"], domain) || tags["b"] == "" {
++			if !strings.EqualFold(tags["d"], domain) || tags["b"] == "" {
+ 				continue

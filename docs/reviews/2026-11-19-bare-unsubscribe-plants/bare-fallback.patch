@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -46,3 +46,3 @@
+ 	if !strings.ContainsAny(decoded, "<>") {
+-		uris = []string{strings.TrimSpace(decoded)}
++		uris = nil
+ 	} else {

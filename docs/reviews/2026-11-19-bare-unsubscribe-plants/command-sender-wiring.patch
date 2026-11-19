@@ -1,0 +1,7 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -200,3 +200,3 @@
+ 	}
+-	if len(message.From) != 1 || !unsubscribe.EqualSenderAddress(message.From[0], sender) {
++	if len(message.From) != 1 || !strings.EqualFold(message.From[0], sender) {
+ 		result.Reason = "ambiguous or nonmatching From address"

@@ -1,0 +1,7 @@
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -1166,3 +1166,3 @@
+ 	for _, h := range e.Headers {
+-		if unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe") {
++		if strings.EqualFold(h.Name, "List-Unsubscribe") {
+ 			detail.ListUnsubscribe = strings.TrimSpace(h.Value)

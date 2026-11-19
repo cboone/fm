@@ -70,7 +70,7 @@ func oneClickSenders(cmd *cobra.Command, args []string) ([]string, error) {
 	seen := make(map[string]bool)
 	for _, input := range inputs {
 		address, err := mail.ParseAddress(input)
-		if err != nil || address.Name != "" || address.Address != input || strings.ContainsAny(input, "*?\r\n\t \"<>\\[]") || strings.Count(input, "@") != 1 {
+		if err != nil || address.Name != "" || address.Address != input || strings.ContainsAny(input, "*?\r\n\t \"<>\\[]") || strings.Count(input, "@") != 1 || !unsubscribe.EqualSenderAddress(input, input) {
 			return nil, fmt.Errorf("--sender requires a plain mailbox address")
 		}
 		key := strings.ToLower(input)
@@ -198,7 +198,7 @@ func oneClickResult(ctx context.Context, sender string, confirm bool, selectEmai
 		result.Reason = "no exact sender message found"
 		return result, false
 	}
-	if len(message.From) != 1 || !strings.EqualFold(message.From[0], sender) {
+	if len(message.From) != 1 || !unsubscribe.EqualSenderAddress(message.From[0], sender) {
 		result.Reason = "ambiguous or nonmatching From address"
 		return result, false
 	}

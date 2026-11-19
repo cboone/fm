@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -62,3 +62,3 @@
+ 			if mailto == nil {
+-				mailto = parseMailtoURI(u)
++				mailto = nil
+ 			}

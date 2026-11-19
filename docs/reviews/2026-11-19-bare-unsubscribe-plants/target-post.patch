@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -35,3 +35,3 @@
+ 			links = append(links, h.Value)
+-		case EqualFoldASCII(h.Name, "list-unsubscribe-post"):
++		case strings.EqualFold(h.Name, "list-unsubscribe-post"):
+ 			posts = append(posts, h.Value)

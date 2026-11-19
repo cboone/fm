@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -10,3 +10,3 @@
+ 
+-// Mechanism constants describe the type of unsubscribe method available.
++// Unsubscribe mechanism constants describe the type of unsubscribe method available.
+ const (

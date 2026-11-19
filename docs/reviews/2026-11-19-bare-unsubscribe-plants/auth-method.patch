@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -58,3 +58,3 @@
+ 			fields := strings.Fields(method)
+-			if len(fields) == 0 || !EqualFoldASCII(fields[0], "dkim=pass") {
++			if len(fields) == 0 || !strings.EqualFold(fields[0], "dkim=pass") {
+ 				continue

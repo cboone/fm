@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"strings"
 
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/mail/email"
@@ -156,7 +155,7 @@ func (c *Client) NewestSenderEmail(sender string) (*unsubscribe.Candidate, error
 			}
 			matches := false
 			for _, from := range message.From {
-				if strings.EqualFold(from.Email, sender) {
+				if unsubscribe.EqualSenderAddress(from.Email, sender) {
 					matches = true
 				}
 			}

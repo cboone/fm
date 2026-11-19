@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -64,3 +64,3 @@
+ 			}
+-		case "http", "https":
++		case "https":
+ 			if httpURL == "" && u.Hostname() != "" {

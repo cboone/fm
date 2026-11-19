@@ -1,0 +1,7 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -72,3 +72,3 @@
+ 		address, err := mail.ParseAddress(input)
+-		if err != nil || address.Name != "" || address.Address != input || strings.ContainsAny(input, "*?\r\n\t \"<>\\[]") || strings.Count(input, "@") != 1 || !unsubscribe.EqualSenderAddress(input, input) {
++		if err != nil || address.Name != "" || address.Address != input || strings.ContainsAny(input, "*?\r\n\t \"<>\\[]") || strings.Count(input, "@") != 1 {
+ 			return nil, fmt.Errorf("--sender requires a plain mailbox address")

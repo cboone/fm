@@ -30,10 +30,10 @@ type Candidate struct {
 func Target(headers []Header) (*url.URL, error) {
 	var links, posts []string
 	for _, h := range headers {
-		switch strings.ToLower(h.Name) {
-		case "list-unsubscribe":
+		switch {
+		case EqualFoldASCII(h.Name, "list-unsubscribe"):
 			links = append(links, h.Value)
-		case "list-unsubscribe-post":
+		case EqualFoldASCII(h.Name, "list-unsubscribe-post"):
 			posts = append(posts, h.Value)
 		}
 	}

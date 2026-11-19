@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -39,3 +39,3 @@
+ 		}
+-		if EqualFoldASCII(h.Name, "Authentication-Results") {
++		if strings.EqualFold(h.Name, "Authentication-Results") {
+ 			results = append(results, h.Value)

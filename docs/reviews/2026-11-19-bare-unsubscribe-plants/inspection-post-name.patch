@@ -1,0 +1,7 @@
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -1168,3 +1168,3 @@
+ 			detail.ListUnsubscribe = strings.TrimSpace(h.Value)
+-		} else if unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe-Post") {
++		} else if strings.EqualFold(h.Name, "List-Unsubscribe-Post") {
+ 			detail.ListUnsubscribePost = strings.TrimSpace(h.Value)

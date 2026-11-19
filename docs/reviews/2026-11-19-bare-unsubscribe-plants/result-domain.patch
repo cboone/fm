@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -69,3 +69,3 @@
+ 			}
+-			if EqualFoldASCII(props["header.d"], domain) {
++			if strings.EqualFold(props["header.d"], domain) {
+ 				passes = append(passes, props["header.b"])

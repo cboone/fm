@@ -1,0 +1,7 @@
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -984,3 +984,3 @@
+ 	for _, h := range headers {
+-		if unsubscribe.EqualFoldASCII(h.Name, "List-Id") || unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe") {
++		if unsubscribe.EqualFoldASCII(h.Name, "List-Id") || strings.EqualFold(h.Name, "List-Unsubscribe") {
+ 			return true

@@ -13,6 +13,7 @@ import (
 	"git.sr.ht/~rockorager/go-jmap/mail/thread"
 
 	"github.com/cboone/fm/internal/types"
+	"github.com/cboone/fm/internal/unsubscribe"
 )
 
 // searchSnippetGet wraps searchsnippet.Get to fix the incorrect method name
@@ -981,7 +982,7 @@ func extractDomain(addr string) string {
 // List-Unsubscribe, indicating a newsletter or mailing list.
 func hasListHeaders(headers []*email.Header) bool {
 	for _, h := range headers {
-		if strings.EqualFold(h.Name, "List-Id") || strings.EqualFold(h.Name, "List-Unsubscribe") {
+		if unsubscribe.EqualFoldASCII(h.Name, "List-Id") || unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe") {
 			return true
 		}
 	}
@@ -1163,9 +1164,9 @@ func convertDetail(e *email.Email, preferHTML bool, rawHeaders bool) types.Email
 	}
 
 	for _, h := range e.Headers {
-		if strings.EqualFold(h.Name, "List-Unsubscribe") {
+		if unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe") {
 			detail.ListUnsubscribe = strings.TrimSpace(h.Value)
-		} else if strings.EqualFold(h.Name, "List-Unsubscribe-Post") {
+		} else if unsubscribe.EqualFoldASCII(h.Name, "List-Unsubscribe-Post") {
 			detail.ListUnsubscribePost = strings.TrimSpace(h.Value)
 		}
 		if rawHeaders {

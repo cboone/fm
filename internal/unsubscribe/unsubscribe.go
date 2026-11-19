@@ -34,21 +34,28 @@ type ParsedHeader struct {
 
 // Parse decodes and parses List-Unsubscribe and List-Unsubscribe-Post header
 // values. The listUnsubscribe value may contain MIME encoded-words (RFC 2047)
-// and angle-bracket-delimited URIs separated by commas (RFC 2369).
+// and angle-bracket-delimited URIs separated by commas (RFC 2369). A single
+// bare URI is also accepted for senders that omit the brackets.
 func Parse(listUnsubscribe, listUnsubscribePost string) ParsedHeader {
 	if strings.TrimSpace(listUnsubscribe) == "" {
 		return ParsedHeader{Mechanism: MechanismNone}
 	}
 
 	decoded := decodeHeader(listUnsubscribe)
-	uris := extractBracketedURIs(decoded)
+	var uris []string
+	if !strings.ContainsAny(decoded, "<>") {
+		uris = []string{strings.TrimSpace(decoded)}
+	} else {
+		uris = extractBracketedURIs(decoded)
+	}
 
 	var mailto *MailtoParams
 	var httpURL string
+	var httpsURL bool
 
 	for _, uri := range uris {
 		u, err := url.Parse(uri)
-		if err != nil {
+		if err != nil || strings.ContainsAny(uri, "<>\r\n\t ") {
 			continue
 		}
 
@@ -58,8 +65,9 @@ func Parse(listUnsubscribe, listUnsubscribePost string) ParsedHeader {
 				mailto = parseMailtoURI(u)
 			}
 		case "http", "https":
-			if httpURL == "" {
+			if httpURL == "" && u.Hostname() != "" {
 				httpURL = uri
+				httpsURL = EqualFoldASCII(u.Scheme, "https")
 			}
 		}
 	}
@@ -67,7 +75,7 @@ func Parse(listUnsubscribe, listUnsubscribePost string) ParsedHeader {
 	result := ParsedHeader{
 		Mailto:   mailto,
 		URL:      httpURL,
-		OneClick: isOneClick(listUnsubscribePost),
+		OneClick: httpsURL && isOneClick(listUnsubscribePost),
 		Raw:      decoded,
 	}
 
@@ -153,8 +161,32 @@ func parseMailtoURI(u *url.URL) *MailtoParams {
 // isOneClick checks whether the List-Unsubscribe-Post header indicates
 // one-click unsubscribe support (RFC 8058).
 func isOneClick(listUnsubscribePost string) bool {
-	return strings.Contains(
-		strings.ToLower(listUnsubscribePost),
+	return EqualFoldASCII(
+		strings.TrimSpace(listUnsubscribePost),
 		"list-unsubscribe=one-click",
 	)
+}
+
+// EqualFoldASCII compares ASCII protocol tokens without Unicode equivalences.
+func EqualFoldASCII(a, b string) bool {
+	return isASCII(a) && isASCII(b) && strings.EqualFold(a, b)
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
+}
+
+// EqualSenderAddress preserves case-insensitive local parts and compares domains
+// using ASCII case only.
+func EqualSenderAddress(a, b string) bool {
+	ai, bi := strings.LastIndexByte(a, '@'), strings.LastIndexByte(b, '@')
+	if ai < 0 || bi < 0 {
+		return false
+	}
+	return strings.EqualFold(a[:ai], b[:bi]) && EqualFoldASCII(a[ai+1:], b[bi+1:])
 }

@@ -919,6 +919,11 @@ fm unsubscribe --from sender@example.com --mailbox inbox
 
 Accepts a single email ID or filter flags (mutually exclusive). When using filter flags, operates on the first matching email.
 
+Inspection accepts bracketed URI alternatives or a single bare HTTP, HTTPS or
+mailto URI. `one_click` requires a parsed HTTPS URL and the one-click POST marker;
+it does not establish authentication or execution eligibility. Execution
+still requires bracketed targets and separate validity checks.
+
 For an explicit sender list, use `fm unsubscribe --one-click --sender a@example.com`
 and repeat `--sender` for each reviewed address. Preview is the default and sends
 nothing. `--dry-run` explicitly previews; `--confirm` sends one HTTPS RFC 8058 POST
@@ -1359,16 +1364,16 @@ Returned by the `draft` command.
 Returned by `unsubscribe` in inspection and mailto-draft modes. One-click mode
 returns an array of `OneClickResult` rows, as described in the command section.
 
-| Field       | Type   | Notes                                                  |
-| ----------- | ------ | ------------------------------------------------------ |
-| `email_id`  | string | ID of the inspected email                              |
-| `mechanism` | string | One of: `mailto`, `url`, `both`, `none`                |
-| `mailto`    | string | Unsubscribe email address (omitted if not available)   |
-| `subject`   | string | Mailto subject parameter (omitted if empty)            |
-| `body`      | string | Mailto body parameter (omitted if empty)               |
-| `url`       | string | HTTP unsubscribe URL (omitted if not available)        |
-| `one_click` | bool   | True if `List-Unsubscribe-Post` indicates one-click    |
-| `draft_id`  | string | Draft ID when `--draft` is used (omitted otherwise)    |
+| Field       | Type   | Notes                                                    |
+| ----------- | ------ | -------------------------------------------------------- |
+| `email_id`  | string | ID of the inspected email                                |
+| `mechanism` | string | One of: `mailto`, `url`, `both`, `none`                  |
+| `mailto`    | string | Unsubscribe email address (omitted if not available)     |
+| `subject`   | string | Mailto subject parameter (omitted if empty)              |
+| `body`      | string | Mailto body parameter (omitted if empty)                 |
+| `url`       | string | HTTP unsubscribe URL (omitted if not available)          |
+| `one_click` | bool   | True if a parsed HTTPS URL has the one-click POST marker |
+| `draft_id`  | string | Draft ID when `--draft` is used (omitted otherwise)      |
 
 ### DryRunResult
 

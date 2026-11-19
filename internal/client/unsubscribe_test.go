@@ -272,3 +272,27 @@ func TestSenderLookupTypedErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestNewestSenderEmailASCII(t *testing.T) {
+	received := time.Date(2026, 11, 18, 0, 0, 0, 0, time.UTC)
+	c := &Client{accountID: "test"}
+	c.doFunc = func(req *jmap.Request) (*jmap.Response, error) {
+		var args jmap.MethodResponse
+		switch req.Calls[0].Args.(type) {
+		case *email.Query:
+			args = &email.QueryResponse{Account: "test", QueryState: "stable", IDs: []jmap.ID{"unicode", "ascii"}}
+		case *email.Get:
+			args = &email.GetResponse{Account: "test", List: []*email.Email{
+				{ID: "unicode", ReceivedAt: &received, From: []*mail.Address{{Email: "a@liſt.example"}}},
+				{ID: "ascii", ReceivedAt: &received, From: []*mail.Address{{Email: "A@LIST.EXAMPLE"}}},
+			}}
+		default:
+			t.Fatal("unexpected synthetic operation")
+		}
+		return &jmap.Response{Responses: []*jmap.Invocation{{Args: args}}}, nil
+	}
+	got, err := c.NewestSenderEmail("a@list.example")
+	if err != nil || got == nil || got.ID != "ascii" {
+		t.Errorf("NewestSenderEmail()=%+v,%v; want ASCII sender match", got, err)
+	}
+}

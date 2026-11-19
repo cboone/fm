@@ -1,0 +1,595 @@
+{
+  "inputs": [
+    "cmd/archive.go",
+    "cmd/docs_drift_test.go",
+    "cmd/draft.go",
+    "cmd/dryrun.go",
+    "cmd/dryrun_test.go",
+    "cmd/filters.go",
+    "cmd/filters_test.go",
+    "cmd/flag.go",
+    "cmd/list.go",
+    "cmd/list_test.go",
+    "cmd/mailboxes.go",
+    "cmd/mark-read.go",
+    "cmd/move.go",
+    "cmd/read.go",
+    "cmd/root.go",
+    "cmd/search.go",
+    "cmd/session.go",
+    "cmd/sieve.go",
+    "cmd/sieve_activate.go",
+    "cmd/sieve_create.go",
+    "cmd/sieve_deactivate.go",
+    "cmd/sieve_delete.go",
+    "cmd/sieve_list.go",
+    "cmd/sieve_show.go",
+    "cmd/sieve_validate.go",
+    "cmd/spam.go",
+    "cmd/stats.go",
+    "cmd/stats_test.go",
+    "cmd/summary.go",
+    "cmd/summary_test.go",
+    "cmd/unflag.go",
+    "cmd/unsubscribe.go",
+    "cmd/unsubscribe_oneclick.go",
+    "cmd/unsubscribe_oneclick_test.go",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-method.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-result-name.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-signature-name.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/authserv-id.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-fallback.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-http.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-mailto.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/check.sh",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/command-sender-wiring.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/comment-control.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/complete-marker.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/host.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-list-unsubscribe.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-marker-wiring.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-post-name.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/internal-host.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/judge-url.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/lookup-sender-wiring.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/newsletter-list-id.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/newsletter-list-unsubscribe.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/oneclick-marker.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/oneclick-target.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/provider-host.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/result-domain.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/sender-domain.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/sender-input-domain.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/setup.sh",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/signature-domain.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/signed-header-names.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/target-links.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/target-post.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/unicode-guard.patch",
+    "docs/reviews/2026-11-19-bare-unsubscribe-plants/whitespace.patch",
+    "go.mod",
+    "go.sum",
+    "internal/client/client.go",
+    "internal/client/client_test.go",
+    "internal/client/color.go",
+    "internal/client/color_test.go",
+    "internal/client/draft.go",
+    "internal/client/draft_test.go",
+    "internal/client/email.go",
+    "internal/client/email_test.go",
+    "internal/client/identity.go",
+    "internal/client/identity_test.go",
+    "internal/client/mailbox.go",
+    "internal/client/safety.go",
+    "internal/client/safety_test.go",
+    "internal/client/sieve.go",
+    "internal/client/sieve_template.go",
+    "internal/client/sieve_template_test.go",
+    "internal/client/sieve_test.go",
+    "internal/client/unsubscribe.go",
+    "internal/client/unsubscribe_test.go",
+    "internal/jmap/sieve/get.go",
+    "internal/jmap/sieve/query.go",
+    "internal/jmap/sieve/set.go",
+    "internal/jmap/sieve/sieve.go",
+    "internal/jmap/sieve/validate.go",
+    "internal/output/formatter.go",
+    "internal/output/json.go",
+    "internal/output/json_test.go",
+    "internal/output/text.go",
+    "internal/output/text_test.go",
+    "internal/types/types.go",
+    "internal/types/types_test.go",
+    "internal/unsubscribe/ascii_test.go",
+    "internal/unsubscribe/auth.go",
+    "internal/unsubscribe/auth_test.go",
+    "internal/unsubscribe/oneclick.go",
+    "internal/unsubscribe/oneclick_test.go",
+    "internal/unsubscribe/unsubscribe.go",
+    "internal/unsubscribe/unsubscribe_test.go",
+    "main.go"
+  ],
+  "setup": "docs/reviews/2026-11-19-bare-unsubscribe-plants/setup.sh",
+  "check": "docs/reviews/2026-11-19-bare-unsubscribe-plants/check.sh",
+  "timeout": 60,
+  "green": {
+    "exit_code": 0,
+    "contains": [
+      "--- PASS: TestParseBareAndOneClick",
+      "\nPASS\n",
+      "URL_JUDGE_REJECTED"
+    ],
+    "excludes": [
+      "--- SKIP:",
+      "--- FAIL:",
+      "panic:",
+      "[build failed]"
+    ]
+  },
+  "variants": [
+    {
+      "name": "bare-fallback",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-fallback.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "bare_HTTPS",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "bare-http",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-http.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "bare_HTTP",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "bare-mailto",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/bare-mailto.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "bare_mailto",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "whitespace",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/whitespace.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "embedded_whitespace",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "host",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/host.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "missing_host",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "oneclick-target",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/oneclick-target.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "bare_HTTP",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "oneclick-marker",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/oneclick-marker.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "missing_marker",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "judge-url",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/judge-url.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "URL_JUDGE_MISSED"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "complete-marker",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/complete-marker.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "prefixed_marker",
+          "--- FAIL: TestParseBareAndOneClick"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "unicode-guard",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/unicode-guard.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestEqualFoldASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "inspection-marker-wiring",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-marker-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestProtocolMarkerASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "target-links",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/target-links.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestProtocolMarkerASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "target-post",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/target-post.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestProtocolMarkerASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "auth-result-name",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-result-name.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "auth-signature-name",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-signature-name.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "auth-method",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/auth-method.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "newsletter-list-id",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/newsletter-list-id.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestUnsubscribeHeaderNamesASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "newsletter-list-unsubscribe",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/newsletter-list-unsubscribe.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestUnsubscribeHeaderNamesASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "inspection-list-unsubscribe",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-list-unsubscribe.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestUnsubscribeHeaderNamesASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "inspection-post-name",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/inspection-post-name.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestUnsubscribeHeaderNamesASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "provider-host",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/provider-host.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedProviderASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "authserv-id",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/authserv-id.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "result-domain",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/result-domain.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "signature-domain",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/signature-domain.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "sender-domain",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/sender-domain.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestEqualSenderAddressASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "lookup-sender-wiring",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/lookup-sender-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestNewestSenderEmailASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "command-sender-wiring",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/command-sender-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickFromASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "internal-host",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/internal-host.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "signed-header-names",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/signed-header-names.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticatedASCII"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "sender-input-domain",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/sender-input-domain.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSenders"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    }
+  ],
+  "controls": [
+    {
+      "name": "comment-only",
+      "patch": "docs/reviews/2026-11-19-bare-unsubscribe-plants/comment-control.patch"
+    }
+  ]
+}
