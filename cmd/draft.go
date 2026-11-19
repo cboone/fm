@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cboone/fm/internal/client"
 	"github.com/cboone/fm/internal/types"
@@ -23,6 +24,12 @@ Supports four composition modes:
   - Reply: provide --reply-to <email-id> and --body/--body-stdin
   - Reply-all: provide --reply-all <email-id> and --body/--body-stdin
   - Forward: provide --forward <email-id>, --to, and --body/--body-stdin
+
+Replies use the first original To recipient matching an account identity, then Cc.
+With no match, the current default sender stays. --from overrides this selection.
+If the submission capability is missing, automatic selection keeps the default
+with a warning; explicit --from still requires the Email submission token scope.
+JSON includes an optional warnings array; text writes Warning: lines to stderr.
 
 The draft is placed in the Drafts mailbox with $draft and $seen keywords.
 It is NOT sent. Review and send from Fastmail.`,
@@ -96,8 +103,19 @@ It is NOT sent. Review and send from Fastmail.`,
 			return exitError("jmap_error", err.Error(), "")
 		}
 
-		return formatter().Format(os.Stdout, result)
+		return formatDraftResult(cmd, result)
 	},
+}
+
+func formatDraftResult(cmd *cobra.Command, result types.DraftResult) error {
+	if viper.GetString("format") == "text" {
+		for _, warning := range result.Warnings {
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Warning: "+warning); err != nil {
+				return err
+			}
+		}
+	}
+	return formatter().Format(cmd.OutOrStdout(), result)
 }
 
 func init() {
