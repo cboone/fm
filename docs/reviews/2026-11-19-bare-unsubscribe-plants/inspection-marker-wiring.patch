@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -161,3 +161,3 @@
+ func isOneClick(listUnsubscribePost string) bool {
+-	return EqualFoldASCII(
++	return strings.EqualFold(
+ 		strings.TrimSpace(listUnsubscribePost),

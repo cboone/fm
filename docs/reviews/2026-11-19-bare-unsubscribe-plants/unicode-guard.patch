@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -174,3 +174,3 @@
+ 	for i := 0; i < len(s); i++ {
+-		if s[i] >= 0x80 {
++		if false {
+ 			return false

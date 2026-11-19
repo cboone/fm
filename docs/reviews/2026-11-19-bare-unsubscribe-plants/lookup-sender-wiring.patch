@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -4,2 +4,3 @@
+ 	"errors"
++ "strings"
+ 
+@@ -157,3 +158,3 @@
+ 			for _, from := range message.From {
+-				if unsubscribe.EqualSenderAddress(from.Email, sender) {
++				if strings.EqualFold(from.Email, sender) {
+ 					matches = true

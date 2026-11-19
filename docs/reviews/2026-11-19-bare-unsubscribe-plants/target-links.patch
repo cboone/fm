@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -33,3 +33,3 @@
+ 		switch {
+-		case EqualFoldASCII(h.Name, "list-unsubscribe"):
++		case strings.EqualFold(h.Name, "list-unsubscribe"):
+ 			links = append(links, h.Value)

@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -188,3 +188,3 @@
+ 	}
+-	return strings.EqualFold(a[:ai], b[:bi]) && EqualFoldASCII(a[ai+1:], b[bi+1:])
++	return strings.EqualFold(a[:ai], b[:bi]) && strings.EqualFold(a[ai+1:], b[bi+1:])
+ }

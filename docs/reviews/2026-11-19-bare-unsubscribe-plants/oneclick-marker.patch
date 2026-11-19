@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/unsubscribe.go
++++ b/internal/unsubscribe/unsubscribe.go
+@@ -75,3 +75,3 @@
+ 		URL:      httpURL,
+-		OneClick: httpsURL && isOneClick(listUnsubscribePost),
++		OneClick: httpsURL,
+ 		Raw:      decoded,

@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -34,3 +34,3 @@
+ 			}
+-			if isASCII(parts[2]) && fastmailHost.MatchString(parts[2]) {
++			if fastmailHost.MatchString(parts[2]) {
+ 				receiver = parts[2]

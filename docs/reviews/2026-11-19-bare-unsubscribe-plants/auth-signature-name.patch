@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -80,3 +80,3 @@
+ 		for _, h := range headers {
+-			if !EqualFoldASCII(h.Name, "DKIM-Signature") {
++			if !strings.EqualFold(h.Name, "DKIM-Signature") {
+ 				continue

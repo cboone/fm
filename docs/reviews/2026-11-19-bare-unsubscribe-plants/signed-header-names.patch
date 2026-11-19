@@ -1,0 +1,7 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -96,3 +96,3 @@
+ 		for _, name := range strings.Split(matching[0]["h"], ":") {
+-			if !isASCII(name) {
++			if false {
+ 				continue
