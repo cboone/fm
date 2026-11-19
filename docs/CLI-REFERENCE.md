@@ -919,19 +919,44 @@ fm unsubscribe --from sender@example.com --mailbox inbox
 
 Accepts a single email ID or filter flags (mutually exclusive). When using filter flags, operates on the first matching email.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--draft`          |       | false           | Create a draft unsubscribe email (mailto only)             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+For an explicit sender list, use `fm unsubscribe --one-click --sender a@example.com`
+and repeat `--sender` for each reviewed address. Preview is the default and sends
+nothing. `--dry-run` explicitly previews; `--confirm` sends one HTTPS RFC 8058 POST
+per eligible sender. Do not mix these with IDs, filters or `--draft`, or combine
+`--confirm` with `--dry-run`. Addresses must be plain mailbox addresses, without
+display names, searches or wildcards. Addresses are deduplicated case insensitively,
+retaining input order and first spelling.
+
+Selection uses the newest exact From match across all mailboxes. One-click needs
+one HTTPS target, exact Post marker, unambiguous fields and a Fastmail DKIM pass
+for the sender domain with signature coverage of both fields. See
+[authentication and Limits](../README.md#reviewed-one-click-unsubscribe).
+
+One-click JSON is an array of rows: `sender`, `status` (`previewed`, `skipped`,
+`http_status`, `error`), and optional `reason`, `email_id`, `received_at`, `host`,
+`http_status` (numeric). Text prints the same outcomes one per line. URL paths,
+queries and response bodies are never included. Skips are normal results;
+lookup/transport errors and non-2xx responses emit all rows then return
+`partial_failure`. No redirects or retries occur; uncertain requests must not be
+retried automatically. HTTP acceptance does not prove removal from a list.
+
+The one-click flags are `--one-click`, repeatable `--sender`, `--confirm`, and
+`--dry-run`; all default to disabled except that one-click always previews unless
+confirmed.
+
+| Flag               | Short | Default         | Description                                               |
+| ------------------ | ----- | --------------- | --------------------------------------------------------- |
+| `--draft`          |       | false           | Create a draft unsubscribe email (mailto only)            |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--to`             |       | (none)          | Filter by recipient address or name                       |
+| `--subject`        |       | (none)          | Filter by subject text                                    |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                     |
+| `--unflagged`      |       | false           | Only unflagged messages                                   |
 
 The `mechanism` field indicates the type of unsubscribe method available: `mailto` (email-based), `url` (web link), `both`, or `none`.
 
@@ -1331,7 +1356,8 @@ Returned by the `draft` command.
 
 ### UnsubscribeResult
 
-Returned by the `unsubscribe` command.
+Returned by `unsubscribe` in inspection and mailto-draft modes. One-click mode
+returns an array of `OneClickResult` rows, as described in the command section.
 
 | Field       | Type   | Notes                                                  |
 | ----------- | ------ | ------------------------------------------------------ |
