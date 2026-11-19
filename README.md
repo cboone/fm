@@ -165,6 +165,16 @@ fm search --from billing@example.com --after 2026-01-01
 fm read <email-id>
 ```
 
+`list`, `search` and `read` include `flag_color` in JSON and show the color
+name in text when one is available. A flagged message with all three color bits
+clear reads as red. Unflagged messages and the reserved bit pattern return
+`null` in JSON and omit the color line in text.
+
+Filter on the server with `list --flagged --color <color>` or
+`search --flagged --color <color>`. For example, to find orange flags in the
+inbox, run `fm list --flagged --color orange`. Use `--color red` with
+`--flagged` to find flagged messages with all three color bits clear.
+
 ### 3) Preview Mutations
 
 ```bash
