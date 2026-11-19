@@ -1,0 +1,11 @@
+--- a/cmd/filters.go
++++ b/cmd/filters.go
+@@ -67,7 +67,7 @@
+ 		if err != nil || addr.Address != value || !validSenderDomain(value[strings.LastIndexByte(value, '@')+1:]) {
+ 			return exitError("general_error", "--from-exact requires a plain email address", "")
+ 		}
+-		opts.FromExact = value
++		opts.FromExact = ""
+ 	}
+ 	if cmd.Flags().Changed("from-domain") {
+ 		value, _ := cmd.Flags().GetString("from-domain")

@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -31,7 +31,7 @@
+ 	if term == "" {
+ 		term = opts.FromDomain
+ 	}
+-	if opts.From == "" {
++	if opts.From != "\x00" {
+ 		opts.From = term
+ 		return buildSearchFilter(opts)
+ 	}

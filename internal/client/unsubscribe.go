@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"slices"
 
 	"git.sr.ht/~rockorager/go-jmap"
 	"git.sr.ht/~rockorager/go-jmap/mail/email"
@@ -66,10 +67,8 @@ func validateSenderResponse(resp *jmap.Response, operation string, accountID jma
 			if message == nil || message.ID == "" || message.ReceivedAt == nil {
 				return ErrSenderResponseInvalid
 			}
-			for _, from := range message.From {
-				if from == nil {
-					return ErrSenderResponseInvalid
-				}
+			if slices.Contains(message.From, nil) || slices.Contains(message.To, nil) || slices.Contains(message.CC, nil) {
+				return ErrSenderResponseInvalid
 			}
 			for _, header := range message.Headers {
 				if header == nil || !validSenderHeaderName(header.Name) {
@@ -99,60 +98,87 @@ func validSenderHeaderName(name string) bool {
 	return true
 }
 
+type senderQueryCursor struct {
+	position int64
+	state    string
+}
+
+func (c *Client) senderQueryPage(query *email.Query, cursor *senderQueryCursor) ([]jmap.ID, error) {
+	query.Position = cursor.position
+	req := &jmap.Request{}
+	req.Invoke(query)
+	resp, err := c.senderResponse(req, "query")
+	if err != nil {
+		return nil, err
+	}
+	switch page := resp.Responses[0].Args.(type) {
+	case *email.QueryResponse:
+		if page.Position != uint64(cursor.position) || (cursor.position > 0 && page.QueryState != cursor.state) {
+			return nil, ErrSenderSelectionChanged
+		}
+		if uint64(len(page.IDs)) > query.Limit {
+			return nil, ErrSenderResponseInvalid
+		}
+		cursor.position += int64(len(page.IDs))
+		cursor.state = page.QueryState
+		return page.IDs, nil
+	case *jmap.MethodError:
+		return nil, page
+	}
+	return nil, ErrSenderResponseInvalid
+}
+
+func (c *Client) senderMessages(ids []jmap.ID, properties []string) ([]*email.Email, error) {
+	req := &jmap.Request{}
+	req.Invoke(&email.Get{Account: c.accountID, IDs: ids, Properties: properties})
+	resp, err := c.senderResponse(req, "get")
+	if err != nil {
+		return nil, err
+	}
+	get, ok := resp.Responses[0].Args.(*email.GetResponse)
+	if !ok {
+		return nil, resp.Responses[0].Args.(*jmap.MethodError)
+	}
+	if len(get.List) != len(ids) || len(get.NotFound) != 0 {
+		return nil, ErrSenderSelectionChanged
+	}
+	messages := make(map[jmap.ID]*email.Email, len(ids))
+	for _, message := range get.List {
+		messages[message.ID] = message
+	}
+	for i, id := range ids {
+		message := messages[id]
+		if message == nil {
+			return nil, ErrSenderSelectionChanged
+		}
+		get.List[i] = message
+		delete(messages, id)
+	}
+	return get.List, nil
+}
+
 // NewestSenderEmail pages past fuzzy From matches and reads only metadata and
 // ordered headers. Query state changes abort selection instead of skipping mail.
 func (c *Client) NewestSenderEmail(sender string) (*unsubscribe.Candidate, error) {
-	var position int64
-	var state string
+	cursor := senderQueryCursor{}
+	query := &email.Query{
+		Account: c.accountID, Filter: &email.FilterCondition{From: sender},
+		Sort:  []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
+		Limit: uint64(c.senderPageSize()),
+	}
 	for {
-		req := &jmap.Request{}
-		req.Invoke(&email.Query{
-			Account: c.accountID, Filter: &email.FilterCondition{From: sender},
-			Sort:     []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
-			Position: position, Limit: 50,
-		})
-		resp, err := c.senderResponse(req, "query")
+		ids, err := c.senderQueryPage(query, &cursor)
 		if err != nil {
 			return nil, &SenderLookupError{Operation: "query", Err: err}
 		}
-		var page *email.QueryResponse
-		for _, inv := range resp.Responses {
-			switch r := inv.Args.(type) {
-			case *email.QueryResponse:
-				page = r
-			case *jmap.MethodError:
-				return nil, &SenderLookupError{Operation: "query", Err: r}
-			}
-		}
-		if page.Position != uint64(position) || (position > 0 && page.QueryState != state) {
-			return nil, &SenderLookupError{Operation: "query", Err: ErrSenderSelectionChanged}
-		}
-		state = page.QueryState
-		if len(page.IDs) == 0 {
+		if len(ids) == 0 {
 			return nil, nil
 		}
-		req = &jmap.Request{}
-		req.Invoke(&email.Get{Account: c.accountID, IDs: page.IDs, Properties: []string{"id", "from", "receivedAt", "headers"}})
-		resp, err = c.senderResponse(req, "get")
+		messages, err := c.senderMessages(ids, []string{"id", "from", "receivedAt", "headers"})
 		if err != nil {
 			return nil, &SenderLookupError{Operation: "get", Err: err}
 		}
-		messages := make(map[jmap.ID]*email.Email)
-		for _, inv := range resp.Responses {
-			switch r := inv.Args.(type) {
-			case *email.GetResponse:
-				for _, message := range r.List {
-					messages[message.ID] = message
-				}
-			case *jmap.MethodError:
-				return nil, &SenderLookupError{Operation: "get", Err: r}
-			}
-		}
-		for _, id := range page.IDs {
-			message := messages[id]
-			if message == nil {
-				return nil, &SenderLookupError{Operation: "get", Err: ErrSenderSelectionChanged}
-			}
+		for _, message := range messages {
 			matches := false
 			for _, from := range message.From {
 				if unsubscribe.EqualSenderAddress(from.Email, sender) {
@@ -162,7 +188,7 @@ func (c *Client) NewestSenderEmail(sender string) (*unsubscribe.Candidate, error
 			if !matches {
 				continue
 			}
-			candidate := &unsubscribe.Candidate{ID: string(id), ReceivedAt: safeTime(message.ReceivedAt)}
+			candidate := &unsubscribe.Candidate{ID: string(message.ID), ReceivedAt: safeTime(message.ReceivedAt)}
 			for _, from := range message.From {
 				candidate.From = append(candidate.From, from.Email)
 			}
@@ -171,6 +197,5 @@ func (c *Client) NewestSenderEmail(sender string) (*unsubscribe.Candidate, error
 			}
 			return candidate, nil
 		}
-		position += int64(len(page.IDs))
 	}
 }

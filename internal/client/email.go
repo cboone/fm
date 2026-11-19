@@ -383,6 +383,9 @@ func buildSearchFilter(opts SearchOptions) email.Filter {
 
 // SearchEmails performs a filtered search across emails.
 func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error) {
+	if opts.hasExactSender() {
+		return c.searchExactSender(opts)
+	}
 	filter := buildSearchFilter(opts)
 
 	sortField := opts.SortField
@@ -437,7 +440,7 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 	}
 
 	result := types.EmailListResult{Offset: opts.Offset}
-	snippets := make(map[string]string)
+	var snippets []*searchsnippet.SearchSnippet
 
 	for i, inv := range resp.Responses {
 		switch r := inv.Args.(type) {
@@ -446,11 +449,7 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		case *email.GetResponse:
 			result.Emails = convertSummaries(r.List)
 		case *searchsnippet.GetResponse:
-			for _, s := range r.List {
-				if s.Preview != "" {
-					snippets[string(s.Email)] = s.Preview
-				}
-			}
+			snippets = append(snippets, r.List...)
 		case *jmap.MethodError:
 			method := callMethods[inv.CallID]
 			if method == "" {
@@ -476,14 +475,25 @@ func (c *Client) SearchEmails(opts SearchOptions) (types.EmailListResult, error)
 		}
 	}
 
-	// Attach snippets to emails.
-	for i := range result.Emails {
-		if s, ok := snippets[result.Emails[i].ID]; ok {
-			result.Emails[i].Snippet = s
+	attachSnippets(result.Emails, snippets)
+	return result, nil
+}
+
+func attachSnippets(summaries []types.EmailSummary, snippets []*searchsnippet.SearchSnippet) {
+	if len(snippets) == 0 {
+		return
+	}
+	previews := make(map[string]string, len(snippets))
+	for _, snippet := range snippets {
+		if snippet != nil && snippet.Preview != "" {
+			previews[string(snippet.Email)] = snippet.Preview
 		}
 	}
-
-	return result, nil
+	for i := range summaries {
+		if preview, ok := previews[summaries[i].ID]; ok {
+			summaries[i].Snippet = preview
+		}
+	}
 }
 
 // SearchOptions holds search filter parameters.
@@ -491,6 +501,8 @@ type SearchOptions struct {
 	Text          string
 	MailboxID     string
 	From          string
+	FromExact     string
+	FromDomain    string
 	To            string
 	Subject       string
 	Before        *time.Time
@@ -512,6 +524,18 @@ const defaultQueryPageSize = 250
 // through the full result set, returning all matching email IDs.
 // It ignores Limit, Offset, SortField, and SortAsc from opts.
 func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
+	if opts.hasExactSender() {
+		opts.SortField, opts.SortAsc = "", false
+		matches, _, err := c.exactSenderIDs(opts, 0, 0, false)
+		if err != nil {
+			return nil, err
+		}
+		ids := make([]string, len(matches))
+		for i, id := range matches {
+			ids[i] = string(id)
+		}
+		return ids, nil
+	}
 	filter := buildSearchFilter(opts)
 
 	var collected []string
@@ -554,10 +578,18 @@ func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
 	return collected, nil
 }
 
-// QueryFirstEmailID runs Email/query with Limit 1 and returns the most recent
-// matching email ID, sorted by receivedAt descending. If no emails match, it
-// returns ("", nil). It ignores Limit, Offset, SortField, and SortAsc from opts.
+// QueryFirstEmailID returns the most recent matching email ID, or ("", nil)
+// if none match. Exact sender selection pages until it verifies a match.
+// It ignores Limit, Offset, SortField, and SortAsc from opts.
 func (c *Client) QueryFirstEmailID(opts SearchOptions) (string, error) {
+	if opts.hasExactSender() {
+		opts.SortField, opts.SortAsc = "receivedAt", false
+		ids, _, err := c.exactSenderIDs(opts, 0, 1, true)
+		if err != nil || len(ids) == 0 {
+			return "", err
+		}
+		return string(ids[0]), nil
+	}
 	filter := buildSearchFilter(opts)
 
 	req := &jmap.Request{}

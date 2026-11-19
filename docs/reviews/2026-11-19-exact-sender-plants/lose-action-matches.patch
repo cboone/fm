@@ -1,0 +1,11 @@
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -524,7 +524,7 @@
+ // through the full result set, returning all matching email IDs.
+ // It ignores Limit, Offset, SortField, and SortAsc from opts.
+ func (c *Client) QueryEmailIDs(opts SearchOptions) ([]string, error) {
+-	if opts.hasExactSender() {
++	if opts.hasExactSender() && opts.FromDomain == "" {
+ 		opts.SortField, opts.SortAsc = "", false
+ 		matches, _, err := c.exactSenderIDs(opts, 0, 0, false)
+ 		if err != nil {

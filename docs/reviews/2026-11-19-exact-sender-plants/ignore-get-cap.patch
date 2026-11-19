@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -44,7 +44,7 @@
+ func (c *Client) senderPageSize() int {
+ 	if c.jmap != nil && c.jmap.Session != nil {
+ 		capability, _ := c.jmap.Session.Capabilities[jmap.CoreURI].(*core.Core)
+-		if capability != nil && capability.MaxObjectsInGet > 0 && capability.MaxObjectsInGet < defaultBatchSize {
++		if capability != nil && capability.MaxObjectsInGet > 0 && capability.MaxObjectsInGet > defaultBatchSize {
+ 			return int(capability.MaxObjectsInGet)
+ 		}
+ 	}

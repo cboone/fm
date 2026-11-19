@@ -447,6 +447,40 @@ $ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive --f
 [1]
 ```
 
+## Search rejects a display name as an exact sender
+
+```scrut
+$ "$TESTDIR/../fm" search --from-exact 'Notices <notices@example.com>' 2>&1
+{
+  "error": "general_error",
+  "message": "--from-exact requires a plain email address"
+}
+[1]
+```
+
+## Archive rejects an empty domain before authentication
+
+```scrut
+$ "$TESTDIR/../fm" archive --dry-run --mailbox inbox --from-domain '' 2>&1
+{
+  "error": "general_error",
+  "message": "--from-domain requires a bare ASCII domain"
+}
+[1]
+```
+
+## Archive rejects an exact sender filter with explicit IDs
+
+```scrut
+$ "$TESTDIR/../fm" archive --dry-run M1 --from-exact notices@example.com 2>&1
+{
+  "error": "general_error",
+  "message": "cannot combine email IDs with filter flags",
+  "hint": "Use either email IDs or filter flags, not both"
+}
+[1]
+```
+
 ## List color requires flagged
 
 ```scrut

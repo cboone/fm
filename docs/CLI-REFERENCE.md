@@ -324,22 +324,24 @@ fm search [query] [flags]
 
 0 or 1 argument. The optional `[query]` searches across subject, from, to, and body. If omitted, only the provided flags are used for filtering (filter-only search).
 
-| Flag               | Short | Default           | Description                                 |
-| ------------------ | ----- | ----------------- | ------------------------------------------- |
-| `--mailbox`        | `-m`  | (all mailboxes)   | Restrict search to a specific mailbox       |
-| `--limit`          | `-l`  | `25`              | Maximum results (minimum 1)                 |
-| `--offset`         | `-o`  | `0`               | Pagination offset (non-negative)            |
-| `--unread`         | `-u`  | `false`           | Only show unread messages                   |
-| `--flagged`        | `-f`  | `false`           | Only show flagged messages                  |
-| `--color`          |       | (none)            | Filter by color with `--flagged`            |
-| `--unflagged`      |       | `false`           | Only show unflagged messages                |
-| `--sort`           | `-s`  | `receivedAt desc` | Sort order: field + direction               |
-| `--from`           |       | (none)            | Filter by sender address or name            |
-| `--to`             |       | (none)            | Filter by recipient address or name         |
-| `--subject`        |       | (none)            | Filter by subject text                      |
+| Flag               | Short | Default           | Description                                               |
+| ------------------ | ----- | ----------------- | --------------------------------------------------------- |
+| `--mailbox`        | `-m`  | (all mailboxes)   | Restrict search to a specific mailbox                     |
+| `--limit`          | `-l`  | `25`              | Maximum results (minimum 1)                               |
+| `--offset`         | `-o`  | `0`               | Pagination offset (non-negative)                          |
+| `--unread`         | `-u`  | `false`           | Only show unread messages                                 |
+| `--flagged`        | `-f`  | `false`           | Only show flagged messages                                |
+| `--color`          |       | (none)            | Filter by color with `--flagged`                          |
+| `--unflagged`      |       | `false`           | Only show unflagged messages                              |
+| `--sort`           | `-s`  | `receivedAt desc` | Sort order: field + direction                             |
+| `--from`           |       | (none)            | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)            | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)            | Match an exact sender domain                              |
+| `--to`             |       | (none)            | Filter by recipient address or name                       |
+| `--subject`        |       | (none)            | Filter by subject text                                    |
 | `--before`         |       | (none)            | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
 | `--after`          |       | (none)            | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
-| `--has-attachment` |       | `false`           | Only emails with attachments                |
+| `--has-attachment` |       | `false`           | Only emails with attachments                              |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 
@@ -360,6 +362,22 @@ fm search "invoice" --flagged --color yellow
 ```
 
 All filters are combined with AND logic.
+
+`--from-exact` compares a plain email address against the parsed From
+addresses. `--from-domain` compares the part after the final `@` against a
+bare ASCII domain. Specify a subdomain explicitly to match it. Both comparisons
+ignore case. If both flags are set, the same From address must satisfy both.
+Display names cannot satisfy either flag.
+
+The server's From text search supplies candidates. The client checks them before
+applying the offset or limit. The total counts confirmed matches. Narrow broad
+candidate sets with flags such as `--mailbox` and `--after`.
+
+```bash
+fm search --mailbox inbox --from-exact notices@example.com --unread
+fm search "receipt" --from-domain example.com --after 2026-01-01
+fm search --flagged --color green --from-domain example.com
+```
 
 **JSON output:**
 
@@ -666,19 +684,21 @@ fm archive --mailbox inbox --from notifications@github.com
 
 Email IDs and filter flags are mutually exclusive.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+| Flag               | Short | Default         | Description                                               |
+| ------------------ | ----- | --------------- | --------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes            |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                              |
+| `--to`             |       | (none)          | Filter by recipient address or name                       |
+| `--subject`        |       | (none)          | Filter by subject text                                    |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                     |
+| `--unflagged`      |       | false           | Only unflagged messages                                   |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 
@@ -719,19 +739,21 @@ fm spam --mailbox inbox --from spammer@example.com
 
 Email IDs and filter flags are mutually exclusive.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+| Flag               | Short | Default         | Description                                               |
+| ------------------ | ----- | --------------- | --------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes            |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                              |
+| `--to`             |       | (none)          | Filter by recipient address or name                       |
+| `--subject`        |       | (none)          | Filter by subject text                                    |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                     |
+| `--unflagged`      |       | false           | Only unflagged messages                                   |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 
@@ -773,19 +795,21 @@ fm mark-read --mailbox inbox --from notifications@github.com --unread
 
 Email IDs and filter flags are mutually exclusive.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+| Flag               | Short | Default         | Description                                               |
+| ------------------ | ----- | --------------- | --------------------------------------------------------- |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes            |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                              |
+| `--to`             |       | (none)          | Filter by recipient address or name                       |
+| `--subject`        |       | (none)          | Filter by subject text                                    |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                     |
+| `--unflagged`      |       | false           | Only unflagged messages                                   |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 
@@ -829,11 +853,13 @@ Email IDs and filter flags are mutually exclusive.
 | `--dry-run`        | `-n`  | false           | Preview affected emails without making changes                           |
 | `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                                           |
 | `--from`           |       | (none)          | Filter by sender address or name                                         |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                                      |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                                             |
 | `--to`             |       | (none)          | Filter by recipient address or name                                      |
 | `--subject`        |       | (none)          | Filter by subject text                                                   |
 | `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)                |
 | `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)                 |
-| `--has-attachment`  |       | false           | Only emails with attachments                                             |
+| `--has-attachment` |       | false           | Only emails with attachments                                             |
 | `--unread`         | `-u`  | false           | Only unread messages                                                     |
 | `--flagged`        | `-f`  | false           | Only flagged messages                                                    |
 | `--unflagged`      |       | false           | Only unflagged messages                                                  |
@@ -884,20 +910,22 @@ fm unflag --mailbox inbox --flagged --before 2025-01-01
 
 Email IDs and filter flags are mutually exclusive.
 
-| Flag               | Short | Default         | Description                                                |
-| ------------------ | ----- | --------------- | ---------------------------------------------------------- |
-| `--color`          | `-c`  | false           | Remove only the flag color (keep the email flagged)        |
-| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | (none)          | Filter by sender address or name                           |
-| `--to`             |       | (none)          | Filter by recipient address or name                        |
-| `--subject`        |       | (none)          | Filter by subject text                                     |
-| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | false           | Only flagged messages                                      |
-| `--unflagged`      |       | false           | Only unflagged messages                                    |
+| Flag               | Short | Default         | Description                                               |
+| ------------------ | ----- | --------------- | --------------------------------------------------------- |
+| `--color`          | `-c`  | false           | Remove only the flag color (keep the email flagged)       |
+| `--dry-run`        | `-n`  | false           | Preview affected emails without making changes            |
+| `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                              |
+| `--to`             |       | (none)          | Filter by recipient address or name                       |
+| `--subject`        |       | (none)          | Filter by subject text                                    |
+| `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | false           | Only flagged messages                                     |
+| `--unflagged`      |       | false           | Only unflagged messages                                   |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 
@@ -979,6 +1007,8 @@ confirmed.
 | `--draft`          |       | false           | Create a draft unsubscribe email (mailto only)            |
 | `--mailbox`        | `-m`  | (all mailboxes) | Restrict to a specific mailbox                            |
 | `--from`           |       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | (none)          | Match an exact sender domain                              |
 | `--to`             |       | (none)          | Filter by recipient address or name                       |
 | `--subject`        |       | (none)          | Filter by subject text                                    |
 | `--before`         |       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
@@ -1039,19 +1069,21 @@ fm move --mailbox inbox --from notifications@github.com --to Archive
 
 Email IDs and filter flags are mutually exclusive. The `--to` flag is always required as the destination mailbox.
 
-| Flag               | Short | Required | Default         | Description                                                |
-| ------------------ | ----- | -------- | --------------- | ---------------------------------------------------------- |
-| `--to`             |       | yes      | (none)          | Target mailbox name or ID                                  |
-| `--dry-run`        | `-n`  | no       | false           | Preview affected emails without making changes             |
-| `--mailbox`        | `-m`  | no       | (all mailboxes) | Restrict to a specific mailbox                             |
-| `--from`           |       | no       | (none)          | Filter by sender address or name                           |
-| `--subject`        |       | no       | (none)          | Filter by subject text                                     |
-| `--before`         |       | no       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD)  |
-| `--after`          |       | no       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)   |
-| `--has-attachment`  |       | no       | false           | Only emails with attachments                               |
-| `--unread`         | `-u`  | no       | false           | Only unread messages                                       |
-| `--flagged`        | `-f`  | no       | false           | Only flagged messages                                      |
-| `--unflagged`      |       | no       | false           | Only unflagged messages                                    |
+| Flag               | Short | Required | Default         | Description                                               |
+| ------------------ | ----- | -------- | --------------- | --------------------------------------------------------- |
+| `--to`             |       | yes      | (none)          | Target mailbox name or ID                                 |
+| `--dry-run`        | `-n`  | no       | false           | Preview affected emails without making changes            |
+| `--mailbox`        | `-m`  | no       | (all mailboxes) | Restrict to a specific mailbox                            |
+| `--from`           |       | no       | (none)          | Filter by sender address or name                          |
+| `--from-exact`     |       | no       | (none)          | Match an exact sender email address                       |
+| `--from-domain`    |       | no       | (none)          | Match an exact sender domain                              |
+| `--subject`        |       | no       | (none)          | Filter by subject text                                    |
+| `--before`         |       | no       | (none)          | Emails received before this date (RFC 3339 or YYYY-MM-DD) |
+| `--after`          |       | no       | (none)          | Emails received after this date (RFC 3339 or YYYY-MM-DD)  |
+| `--has-attachment` |       | no       | false           | Only emails with attachments                              |
+| `--unread`         | `-u`  | no       | false           | Only unread messages                                      |
+| `--flagged`        | `-f`  | no       | false           | Only flagged messages                                     |
+| `--unflagged`      |       | no       | false           | Only unflagged messages                                   |
 
 `--flagged` and `--unflagged` are mutually exclusive.
 

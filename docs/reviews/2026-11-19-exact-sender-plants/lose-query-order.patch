@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -151,7 +151,7 @@
+ 		if message == nil {
+ 			return nil, ErrSenderSelectionChanged
+ 		}
+-		get.List[i] = message
++		_ = i
+ 		delete(messages, id)
+ 	}
+ 	return get.List, nil

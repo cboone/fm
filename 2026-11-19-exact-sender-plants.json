@@ -1,0 +1,480 @@
+{
+  "inputs": [
+    "cmd/archive.go",
+    "cmd/docs_drift_test.go",
+    "cmd/draft.go",
+    "cmd/draft_output_test.go",
+    "cmd/dryrun.go",
+    "cmd/dryrun_test.go",
+    "cmd/exact_sender_test.go",
+    "cmd/filters.go",
+    "cmd/filters_test.go",
+    "cmd/flag.go",
+    "cmd/flag_color_test.go",
+    "cmd/list.go",
+    "cmd/list_test.go",
+    "cmd/mailboxes.go",
+    "cmd/mark-read.go",
+    "cmd/move.go",
+    "cmd/read.go",
+    "cmd/root.go",
+    "cmd/search.go",
+    "cmd/session.go",
+    "cmd/sieve.go",
+    "cmd/sieve_activate.go",
+    "cmd/sieve_create.go",
+    "cmd/sieve_deactivate.go",
+    "cmd/sieve_delete.go",
+    "cmd/sieve_list.go",
+    "cmd/sieve_show.go",
+    "cmd/sieve_validate.go",
+    "cmd/spam.go",
+    "cmd/stats.go",
+    "cmd/stats_test.go",
+    "cmd/summary.go",
+    "cmd/summary_test.go",
+    "cmd/unflag.go",
+    "cmd/unsubscribe.go",
+    "cmd/unsubscribe_oneclick.go",
+    "cmd/unsubscribe_oneclick_test.go",
+    "docs/reviews/2026-11-19-exact-sender-plants/accept-empty-exact-address.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/address-case.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/address-unicode.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/check.sh",
+    "docs/reviews/2026-11-19-exact-sender-plants/domain-suffix.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/domain-unicode.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/drop-color-in-combined-query.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/drop-domain-cli-option.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/drop-exact-cli-option.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/ignore-get-cap.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/ignore-limit.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/ignore-query-position.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/ignore-query-state.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/ignore-snippet.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/lose-action-matches.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/lose-first-match.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/lose-fuzzy-combination.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/lose-query-order.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/lose-summary-batch.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/separate-from-entries.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/setup.sh",
+    "docs/reviews/2026-11-19-exact-sender-plants/skip-missing-page.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/stop-counting.patch",
+    "docs/reviews/2026-11-19-exact-sender-plants/wrong-offset.patch",
+    "go.mod",
+    "go.sum",
+    "internal/client/client.go",
+    "internal/client/client_test.go",
+    "internal/client/color.go",
+    "internal/client/color_test.go",
+    "internal/client/draft.go",
+    "internal/client/draft_test.go",
+    "internal/client/email.go",
+    "internal/client/email_test.go",
+    "internal/client/exact_sender.go",
+    "internal/client/exact_sender_test.go",
+    "internal/client/flag_color_read_test.go",
+    "internal/client/identity.go",
+    "internal/client/identity_test.go",
+    "internal/client/mailbox.go",
+    "internal/client/reply_identity_test.go",
+    "internal/client/safety.go",
+    "internal/client/safety_test.go",
+    "internal/client/sieve.go",
+    "internal/client/sieve_template.go",
+    "internal/client/sieve_template_test.go",
+    "internal/client/sieve_test.go",
+    "internal/client/unsubscribe.go",
+    "internal/client/unsubscribe_test.go",
+    "internal/jmap/sieve/get.go",
+    "internal/jmap/sieve/query.go",
+    "internal/jmap/sieve/set.go",
+    "internal/jmap/sieve/sieve.go",
+    "internal/jmap/sieve/validate.go",
+    "internal/output/formatter.go",
+    "internal/output/json.go",
+    "internal/output/json_test.go",
+    "internal/output/text.go",
+    "internal/output/text_test.go",
+    "internal/types/types.go",
+    "internal/types/types_test.go",
+    "internal/unsubscribe/ascii_test.go",
+    "internal/unsubscribe/auth.go",
+    "internal/unsubscribe/auth_test.go",
+    "internal/unsubscribe/oneclick.go",
+    "internal/unsubscribe/oneclick_test.go",
+    "internal/unsubscribe/unsubscribe.go",
+    "internal/unsubscribe/unsubscribe_test.go"
+  ],
+  "setup": "docs/reviews/2026-11-19-exact-sender-plants/setup.sh",
+  "check": "docs/reviews/2026-11-19-exact-sender-plants/check.sh",
+  "timeout": 120,
+  "green": {
+    "exit_code": 0,
+    "contains": [
+      "=== RUN   TestExactSenderSearch",
+      "\nPASS\n"
+    ],
+    "excludes": [
+      "panic:",
+      "--- FAIL:",
+      "--- SKIP:",
+      "[build failed]",
+      "[setup failed]"
+    ]
+  },
+  "variants": [
+    {
+      "name": "address-case",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/address-case.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "domain-suffix",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/domain-suffix.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/domain"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "domain-unicode",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/domain-unicode.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/domain_rejects_Unicode_fold"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "address-unicode",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/address-unicode.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address_rejects_Unicode_domain_fold"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "separate-from-entries",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/separate-from-entries.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/different_From_entries"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "lose-fuzzy-combination",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/lose-fuzzy-combination.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "wrong-offset",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/wrong-offset.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/both"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "ignore-limit",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/ignore-limit.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "stop-counting",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/stop-counting.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "ignore-query-state",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/ignore-query-state.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSelectionErrors/state_changed"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "ignore-query-position",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/ignore-query-position.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSelectionErrors/wrong_position"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "lose-query-order",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/lose-query-order.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderActionIDs"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "ignore-get-cap",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/ignore-get-cap.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "ignore-snippet",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/ignore-snippet.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearch/address"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "lose-action-matches",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/lose-action-matches.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderActionIDs"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "lose-first-match",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/lose-first-match.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderFirstID"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "skip-missing-page",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/skip-missing-page.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSelectionErrors/missing_message"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "lose-summary-batch",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/lose-summary-batch.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderSearchSummaryBatches"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "drop-exact-cli-option",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/drop-exact-cli-option.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderCLI/archive/from-exact"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "drop-domain-cli-option",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/drop-domain-cli-option.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderCLI/archive/from-domain"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "drop-color-in-combined-query",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/drop-color-in-combined-query.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderCLI/search/from-domain"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    },
+    {
+      "name": "accept-empty-exact-address",
+      "patch": "docs/reviews/2026-11-19-exact-sender-plants/accept-empty-exact-address.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestExactSenderCLIRejectsEmptyAddress/archive"
+        ],
+        "excludes": [
+          "panic:",
+          "--- SKIP:",
+          "[build failed]",
+          "[setup failed]"
+        ]
+      }
+    }
+  ]
+}

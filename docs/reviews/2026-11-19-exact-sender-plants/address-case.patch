@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -22,7 +22,7 @@
+ 	if at <= 0 || at == len(address)-1 {
+ 		return false
+ 	}
+-	return (opts.FromExact == "" || unsubscribe.EqualSenderAddress(address, opts.FromExact)) &&
++	return (opts.FromExact == "" || address == opts.FromExact) &&
+ 		(opts.FromDomain == "" || unsubscribe.EqualFoldASCII(address[at+1:], opts.FromDomain))
+ }
+ 

@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -78,7 +78,7 @@
+ 				if !opts.matchesSender(from.Email) {
+ 					continue
+ 				}
+-				if total >= offset && (limit == 0 || uint64(len(matches)) < limit) {
++				if total >= offset && (limit == 0 || uint64(len(matches)) <= limit) {
+ 					matches = append(matches, message.ID)
+ 				}
+ 				total++
