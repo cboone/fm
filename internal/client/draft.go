@@ -229,8 +229,17 @@ func (c *Client) CreateDraft(opts DraftOptions) (types.DraftResult, error) {
 			}
 			if setErr, ok := r.NotCreated[createID]; ok {
 				desc := "unknown error"
-				if setErr.Description != nil {
-					desc = *setErr.Description
+				if setErr != nil {
+					if setErr.Type != "" {
+						desc = setErr.Type
+					}
+					if setErr.Description != nil && *setErr.Description != "" {
+						if setErr.Type != "" {
+							desc += ": " + *setErr.Description
+						} else {
+							desc = *setErr.Description
+						}
+					}
 				}
 				return types.DraftResult{}, fmt.Errorf("draft creation failed: %s", desc)
 			}
