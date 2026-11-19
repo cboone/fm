@@ -1,0 +1,10 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -155,6 +155,7 @@
+ 		Timeout:       30 * time.Second,
+ 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+ 		Transport: &http.Transport{
++			Proxy: http.ProxyFromEnvironment,
+ 			DialContext:         publicDial(net.DefaultResolver.LookupNetIP, dialer.DialContext),
+ 			DisableKeepAlives:   true,
+ 			TLSHandshakeTimeout: 10 * time.Second,

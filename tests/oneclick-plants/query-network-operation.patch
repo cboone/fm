@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -114,7 +114,7 @@
+ 		})
+ 		resp, err := c.senderResponse(req, "query")
+ 		if err != nil {
+-			return nil, &SenderLookupError{Operation: "query", Err: err}
++			return nil, &SenderLookupError{Operation: "get", Err: err}
+ 		}
+ 		var page *email.QueryResponse
+ 		for _, inv := range resp.Responses {

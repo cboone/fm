@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -48,7 +48,7 @@
+ 		if !strings.HasPrefix(remaining, "<") || end < 2 {
+ 			return nil, errors.New("malformed unsubscribe target")
+ 		}
+-		part := remaining[1:end]
++		part := strings.Split(remaining[1:end], ",")[0]
+ 		remaining = strings.TrimSpace(remaining[end+1:])
+ 		if remaining != "" {
+ 			if !strings.HasPrefix(remaining, ",") || strings.TrimSpace(remaining[1:]) == "" {

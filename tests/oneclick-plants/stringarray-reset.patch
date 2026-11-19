@@ -1,0 +1,11 @@
+--- a/cmd/dryrun_test.go
++++ b/cmd/dryrun_test.go
+@@ -197,7 +197,7 @@
+ 	resetFlagSet := func(fs *pflag.FlagSet) {
+ 		fs.VisitAll(func(f *pflag.Flag) {
+ 			f.Changed = false
+-			if f.Value.Type() == "stringArray" {
++			if f.Value.Type() == "stringArray" && false {
+ 				_ = f.Value.(pflag.SliceValue).Replace(nil)
+ 			} else {
+ 				_ = f.Value.Set(f.DefValue)

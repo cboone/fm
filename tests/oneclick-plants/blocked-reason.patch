@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -173,7 +173,7 @@
+ 	req.GetBody = nil
+ 	resp, err := c.Do(req)
+ 	if err != nil {
+-		if errors.Is(err, ErrUnsafeDestination) {
++		if errors.Is(err, ErrUnsafeDestination) && false {
+ 			return 0, errors.New("unsubscribe destination blocked; no request sent")
+ 		}
+ 		if errors.Is(err, ErrResolution) {

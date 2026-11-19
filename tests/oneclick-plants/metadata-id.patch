@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -64,7 +64,7 @@
+ 			}
+ 		}
+ 		for _, message := range r.List {
+-			if message == nil || message.ID == "" || message.ReceivedAt == nil {
++			if message == nil || message.ID == "" && false || message.ReceivedAt == nil {
+ 				return ErrSenderResponseInvalid
+ 			}
+ 			for _, from := range message.From {

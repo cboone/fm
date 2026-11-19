@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -134,7 +134,7 @@
+ 				return nil, ErrUnsafeDestination
+ 			}
+ 		}
+-		for _, ip := range ips {
++		for _, ip := range ips[:1] {
+ 			conn, err := dial(ctx, network, net.JoinHostPort(ip.String(), port))
+ 			if err == nil {
+ 				return conn, nil

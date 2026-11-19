@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -54,7 +54,7 @@
+ 	draft, _ := cmd.Flags().GetBool("draft")
+ 	confirm, _ := cmd.Flags().GetBool("confirm")
+ 	dryRun, _ := cmd.Flags().GetBool("dry-run")
+-	if !oneClick || draft || len(args) != 0 || (confirm && dryRun) {
++	if !oneClick || draft || len(args) != 0 || (confirm && dryRun && false) {
+ 		return nil, fmt.Errorf("use --one-click --sender addresses, without IDs, --draft or conflicting --confirm/--dry-run")
+ 	}
+ 	for _, name := range filterFlagNames {

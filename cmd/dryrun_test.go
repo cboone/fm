@@ -197,7 +197,11 @@ func resetCommandFlags(cmd *cobra.Command) {
 	resetFlagSet := func(fs *pflag.FlagSet) {
 		fs.VisitAll(func(f *pflag.Flag) {
 			f.Changed = false
-			_ = f.Value.Set(f.DefValue)
+			if f.Value.Type() == "stringArray" {
+				_ = f.Value.(pflag.SliceValue).Replace(nil)
+			} else {
+				_ = f.Value.Set(f.DefValue)
+			}
 		})
 	}
 	resetFlagSet(cmd.Flags())

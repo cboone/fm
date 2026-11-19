@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -122,7 +122,7 @@
+ 			case *email.QueryResponse:
+ 				page = r
+ 			case *jmap.MethodError:
+-				return nil, &SenderLookupError{Operation: "query", Err: r}
++				return nil, &SenderLookupError{Operation: "query", Err: errors.New(r.Error())}
+ 			}
+ 		}
+ 		if page.Position != uint64(position) || (position > 0 && page.QueryState != state) {

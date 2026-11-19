@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -156,7 +156,7 @@
+ 			}
+ 			matches := false
+ 			for _, from := range message.From {
+-				if strings.EqualFold(from.Email, sender) {
++				if strings.EqualFold(from.Email, sender) || from.Name == sender {
+ 					matches = true
+ 				}
+ 			}

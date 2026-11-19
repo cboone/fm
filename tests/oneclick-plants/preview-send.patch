@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -216,7 +216,7 @@
+ 	}
+ 	result.Host = target.Hostname()
+ 	result.Status = "previewed"
+-	if !confirm {
++	if !confirm && false {
+ 		return result, false
+ 	}
+ 	result.HTTPStatus, err = unsubscribe.Post(ctx, httpClient, target)

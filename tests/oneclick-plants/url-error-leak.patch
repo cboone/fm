@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -186,7 +186,7 @@
+ 		if errors.As(err, &certificateErr) {
+ 			return 0, errors.New("unsubscribe TLS certificate verification failed; no request sent")
+ 		}
+-		return 0, errors.New("unsubscribe request failed; outcome unknown, do not retry automatically")
++		return 0, fmt.Errorf("unsubscribe failed: %v", err)
+ 	}
+ 	if err := resp.Body.Close(); err != nil {
+ 		return resp.StatusCode, fmt.Errorf("HTTP %d; response close failed", resp.StatusCode)

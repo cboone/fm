@@ -1,0 +1,1358 @@
+{
+  "inputs": [
+    "cmd/archive.go",
+    "cmd/docs_drift_test.go",
+    "cmd/draft.go",
+    "cmd/dryrun.go",
+    "cmd/dryrun_test.go",
+    "cmd/filters.go",
+    "cmd/filters_test.go",
+    "cmd/flag.go",
+    "cmd/list.go",
+    "cmd/list_test.go",
+    "cmd/mailboxes.go",
+    "cmd/mark-read.go",
+    "cmd/move.go",
+    "cmd/read.go",
+    "cmd/root.go",
+    "cmd/search.go",
+    "cmd/session.go",
+    "cmd/sieve.go",
+    "cmd/sieve_activate.go",
+    "cmd/sieve_create.go",
+    "cmd/sieve_deactivate.go",
+    "cmd/sieve_delete.go",
+    "cmd/sieve_list.go",
+    "cmd/sieve_show.go",
+    "cmd/sieve_validate.go",
+    "cmd/spam.go",
+    "cmd/stats.go",
+    "cmd/stats_test.go",
+    "cmd/summary.go",
+    "cmd/summary_test.go",
+    "cmd/unflag.go",
+    "cmd/unsubscribe.go",
+    "cmd/unsubscribe_oneclick.go",
+    "cmd/unsubscribe_oneclick_test.go",
+    "go.mod",
+    "go.sum",
+    "internal/client/client.go",
+    "internal/client/client_test.go",
+    "internal/client/color.go",
+    "internal/client/color_test.go",
+    "internal/client/draft.go",
+    "internal/client/draft_test.go",
+    "internal/client/email.go",
+    "internal/client/email_test.go",
+    "internal/client/identity.go",
+    "internal/client/identity_test.go",
+    "internal/client/mailbox.go",
+    "internal/client/safety.go",
+    "internal/client/safety_test.go",
+    "internal/client/sieve.go",
+    "internal/client/sieve_template.go",
+    "internal/client/sieve_template_test.go",
+    "internal/client/sieve_test.go",
+    "internal/client/unsubscribe.go",
+    "internal/client/unsubscribe_test.go",
+    "internal/jmap/sieve/get.go",
+    "internal/jmap/sieve/query.go",
+    "internal/jmap/sieve/set.go",
+    "internal/jmap/sieve/sieve.go",
+    "internal/jmap/sieve/validate.go",
+    "internal/output/formatter.go",
+    "internal/output/json.go",
+    "internal/output/json_test.go",
+    "internal/output/text.go",
+    "internal/output/text_test.go",
+    "internal/types/types.go",
+    "internal/types/types_test.go",
+    "internal/unsubscribe/auth.go",
+    "internal/unsubscribe/auth_test.go",
+    "internal/unsubscribe/oneclick.go",
+    "internal/unsubscribe/oneclick_test.go",
+    "internal/unsubscribe/unsubscribe.go",
+    "internal/unsubscribe/unsubscribe_test.go",
+    "main.go",
+    "tests/credential-stubs/secret-tool",
+    "tests/credential-stubs/security",
+    "tests/oneclick-plants/address-null.patch",
+    "tests/oneclick-plants/ambient-proxy.patch",
+    "tests/oneclick-plants/batch-confirm-all.patch",
+    "tests/oneclick-plants/batch-continue.patch",
+    "tests/oneclick-plants/batch-prior-results.patch",
+    "tests/oneclick-plants/blocked-reason.patch",
+    "tests/oneclick-plants/check.sh",
+    "tests/oneclick-plants/command-consent.patch",
+    "tests/oneclick-plants/command-partial-exit.patch",
+    "tests/oneclick-plants/cookie-leak.patch",
+    "tests/oneclick-plants/credential-preflight.patch",
+    "tests/oneclick-plants/credential-stub-resolution.patch",
+    "tests/oneclick-plants/destination-signature.patch",
+    "tests/oneclick-plants/dkim-failure.patch",
+    "tests/oneclick-plants/dns-fallback.patch",
+    "tests/oneclick-plants/duplicate-target-header.patch",
+    "tests/oneclick-plants/endpoint-preflight.patch",
+    "tests/oneclick-plants/external-endpoint-fixture.patch",
+    "tests/oneclick-plants/fastmail-endpoint.patch",
+    "tests/oneclick-plants/from-ambiguity.patch",
+    "tests/oneclick-plants/fuzzy-sender.patch",
+    "tests/oneclick-plants/get-empty-notfound.patch",
+    "tests/oneclick-plants/get-method-cause.patch",
+    "tests/oneclick-plants/get-network-operation.patch",
+    "tests/oneclick-plants/get-null-args.patch",
+    "tests/oneclick-plants/get-operation.patch",
+    "tests/oneclick-plants/get-order.patch",
+    "tests/oneclick-plants/get-response-account.patch",
+    "tests/oneclick-plants/get-validation-wiring.patch",
+    "tests/oneclick-plants/guard-wiring.patch",
+    "tests/oneclick-plants/header-empty-name.patch",
+    "tests/oneclick-plants/header-name-syntax.patch",
+    "tests/oneclick-plants/header-null.patch",
+    "tests/oneclick-plants/http-batch-failure.patch",
+    "tests/oneclick-plants/internal-lmtp-prefix.patch",
+    "tests/oneclick-plants/invocation-null.patch",
+    "tests/oneclick-plants/jmap-payload-leak.patch",
+    "tests/oneclick-plants/jmap-safe-category.patch",
+    "tests/oneclick-plants/json-field-contract.patch",
+    "tests/oneclick-plants/keychain-fixture.patch",
+    "tests/oneclick-plants/metadata-date.patch",
+    "tests/oneclick-plants/metadata-id.patch",
+    "tests/oneclick-plants/metadata-null-guard.patch",
+    "tests/oneclick-plants/method-empty-type.patch",
+    "tests/oneclick-plants/method-null-args.patch",
+    "tests/oneclick-plants/mixed-mode.patch",
+    "tests/oneclick-plants/no-retry.patch",
+    "tests/oneclick-plants/opaque-comma.patch",
+    "tests/oneclick-plants/outgoing-path.patch",
+    "tests/oneclick-plants/outgoing-query.patch",
+    "tests/oneclick-plants/post-substring.patch",
+    "tests/oneclick-plants/preflight-wiring.patch",
+    "tests/oneclick-plants/preview-send.patch",
+    "tests/oneclick-plants/query-empty-id.patch",
+    "tests/oneclick-plants/query-method-cause.patch",
+    "tests/oneclick-plants/query-network-operation.patch",
+    "tests/oneclick-plants/query-null-args.patch",
+    "tests/oneclick-plants/query-operation.patch",
+    "tests/oneclick-plants/query-validation-wiring.patch",
+    "tests/oneclick-plants/redirect-follow.patch",
+    "tests/oneclick-plants/response-account.patch",
+    "tests/oneclick-plants/response-count.patch",
+    "tests/oneclick-plants/response-null.patch",
+    "tests/oneclick-plants/selection-reason.patch",
+    "tests/oneclick-plants/sender-auth-injection.patch",
+    "tests/oneclick-plants/session-reason.patch",
+    "tests/oneclick-plants/setup-credential-stage.patch",
+    "tests/oneclick-plants/setup-session-stage.patch",
+    "tests/oneclick-plants/setup.sh",
+    "tests/oneclick-plants/signature-coverage.patch",
+    "tests/oneclick-plants/smtp-helo-boundary.patch",
+    "tests/oneclick-plants/stringarray-reset.patch",
+    "tests/oneclick-plants/text-format.patch",
+    "tests/oneclick-plants/text-write-error.patch",
+    "tests/oneclick-plants/timeout.patch",
+    "tests/oneclick-plants/token-leak.patch",
+    "tests/oneclick-plants/unsafe-literal.patch",
+    "tests/oneclick-plants/unsafe-resolved-dial.patch",
+    "tests/oneclick-plants/url-error-leak.patch",
+    "tests/oneclick-plants/wrong-form.patch",
+    "tests/oneclick.md",
+    "tests/run-cli-tests",
+    "tests/session-fixture/main.go",
+    "tests/test-cli-containment"
+  ],
+  "setup": "tests/oneclick-plants/setup.sh",
+  "check": "tests/oneclick-plants/check.sh",
+  "timeout": 60,
+  "green": {
+    "exit_code": 0,
+    "contains": [
+      "FM88_CHECK_COMPLETE\n"
+    ],
+    "excludes": [
+      "--- FAIL:",
+      "[build failed]",
+      "panic:",
+      "--- SKIP:"
+    ]
+  },
+  "variants": [
+    {
+      "name": "duplicate-target-header",
+      "patch": "tests/oneclick-plants/duplicate-target-header.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestTarget"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "post-substring",
+      "patch": "tests/oneclick-plants/post-substring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestTarget"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "unsafe-literal",
+      "patch": "tests/oneclick-plants/unsafe-literal.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestTarget"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "unsafe-resolved-dial",
+      "patch": "tests/oneclick-plants/unsafe-resolved-dial.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPublicDial"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "redirect-follow",
+      "patch": "tests/oneclick-plants/redirect-follow.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "cookie-leak",
+      "patch": "tests/oneclick-plants/cookie-leak.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "token-leak",
+      "patch": "tests/oneclick-plants/token-leak.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "wrong-form",
+      "patch": "tests/oneclick-plants/wrong-form.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "url-error-leak",
+      "patch": "tests/oneclick-plants/url-error-leak.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostErrorRedaction"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "signature-coverage",
+      "patch": "tests/oneclick-plants/signature-coverage.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "dkim-failure",
+      "patch": "tests/oneclick-plants/dkim-failure.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "sender-auth-injection",
+      "patch": "tests/oneclick-plants/sender-auth-injection.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "fuzzy-sender",
+      "patch": "tests/oneclick-plants/fuzzy-sender.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestNewestSenderEmail"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-order",
+      "patch": "tests/oneclick-plants/get-order.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestNewestSenderEmail"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "preview-send",
+      "patch": "tests/oneclick-plants/preview-send.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickResults"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "from-ambiguity",
+      "patch": "tests/oneclick-plants/from-ambiguity.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickResults"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "mixed-mode",
+      "patch": "tests/oneclick-plants/mixed-mode.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSenders"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "opaque-comma",
+      "patch": "tests/oneclick-plants/opaque-comma.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestTarget"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "http-batch-failure",
+      "patch": "tests/oneclick-plants/http-batch-failure.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickHTTPBatchFailure"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "no-retry",
+      "patch": "tests/oneclick-plants/no-retry.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation",
+          "request retried"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "timeout",
+      "patch": "tests/oneclick-plants/timeout.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation",
+          "missing timeout or unexpected cookies"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "ambient-proxy",
+      "patch": "tests/oneclick-plants/ambient-proxy.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation",
+          "ambient proxy or connection reuse enabled"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "internal-lmtp-prefix",
+      "patch": "tests/oneclick-plants/internal-lmtp-prefix.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated/documented_internal_LMTP_hop"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "smtp-helo-boundary",
+      "patch": "tests/oneclick-plants/smtp-helo-boundary.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated/internal_SMTP_HELO_is_a_boundary"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "dns-fallback",
+      "patch": "tests/oneclick-plants/dns-fallback.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPublicDialFallback"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "guard-wiring",
+      "patch": "tests/oneclick-plants/guard-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestProductionDestinationGuard"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "outgoing-query",
+      "patch": "tests/oneclick-plants/outgoing-query.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation",
+          "outgoing capability URL changed"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "outgoing-path",
+      "patch": "tests/oneclick-plants/outgoing-path.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostIsolation",
+          "outgoing capability URL changed"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "blocked-reason",
+      "patch": "tests/oneclick-plants/blocked-reason.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestPostSafeErrorCategories"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "session-reason",
+      "patch": "tests/oneclick-plants/session-reason.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSafeFailureReasons"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "selection-reason",
+      "patch": "tests/oneclick-plants/selection-reason.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSafeFailureReasons"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "fastmail-endpoint",
+      "patch": "tests/oneclick-plants/fastmail-endpoint.patch",
+      "red": {
+        "exit_code": 50,
+        "contains": [
+          "one-click requires the Fastmail session endpoint",
+          "2 failed and 0 skipped"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "credential-stub-resolution",
+      "patch": "tests/oneclick-plants/credential-stub-resolution.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "refusing CLI tests: security stub not selected"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-method-cause",
+      "patch": "tests/oneclick-plants/query-method-cause.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupTypedErrors"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-method-cause",
+      "patch": "tests/oneclick-plants/get-method-cause.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupTypedErrors"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-network-operation",
+      "patch": "tests/oneclick-plants/query-network-operation.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupNetworkErrors"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-network-operation",
+      "patch": "tests/oneclick-plants/get-network-operation.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupNetworkErrors"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "metadata-null-guard",
+      "patch": "tests/oneclick-plants/metadata-null-guard.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses",
+          "invalid metadata was processed before rejection"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "setup-credential-stage",
+      "patch": "tests/oneclick-plants/setup-credential-stage.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickMailboxSetupStages"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "setup-session-stage",
+      "patch": "tests/oneclick-plants/setup-session-stage.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickMailboxSetupStages"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "jmap-safe-category",
+      "patch": "tests/oneclick-plants/jmap-safe-category.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSafeFailureReasons"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "jmap-payload-leak",
+      "patch": "tests/oneclick-plants/jmap-payload-leak.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickSafeFailureReasons"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "command-consent",
+      "patch": "tests/oneclick-plants/command-consent.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandConsent"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "command-partial-exit",
+      "patch": "tests/oneclick-plants/command-partial-exit.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandConsent/HTTP_failure"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "stringarray-reset",
+      "patch": "tests/oneclick-plants/stringarray-reset.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandConsent"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "text-format",
+      "patch": "tests/oneclick-plants/text-format.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickTextOutput"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "text-write-error",
+      "patch": "tests/oneclick-plants/text-write-error.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickTextWriteFailure"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "credential-preflight",
+      "patch": "tests/oneclick-plants/credential-preflight.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "ASSERT CLI wrapper accepted a secret-capable credential"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "endpoint-preflight",
+      "patch": "tests/oneclick-plants/endpoint-preflight.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "ASSERT CLI wrapper accepted an external endpoint"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "preflight-wiring",
+      "patch": "tests/oneclick-plants/preflight-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "ASSERT CLI wrapper accepted a secret-capable credential"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "keychain-fixture",
+      "patch": "tests/oneclick-plants/keychain-fixture.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "refusing CLI tests: credential source is not an allowed literal fixture"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "external-endpoint-fixture",
+      "patch": "tests/oneclick-plants/external-endpoint-fixture.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "refusing CLI tests: endpoint is outside the owned session fixture"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "response-null",
+      "patch": "tests/oneclick-plants/response-null.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "response-count",
+      "patch": "tests/oneclick-plants/response-count.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "invocation-null",
+      "patch": "tests/oneclick-plants/invocation-null.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-null-args",
+      "patch": "tests/oneclick-plants/query-null-args.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-null-args",
+      "patch": "tests/oneclick-plants/get-null-args.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-operation",
+      "patch": "tests/oneclick-plants/query-operation.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-operation",
+      "patch": "tests/oneclick-plants/get-operation.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "response-account",
+      "patch": "tests/oneclick-plants/response-account.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "method-null-args",
+      "patch": "tests/oneclick-plants/method-null-args.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "method-empty-type",
+      "patch": "tests/oneclick-plants/method-empty-type.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "metadata-date",
+      "patch": "tests/oneclick-plants/metadata-date.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "metadata-id",
+      "patch": "tests/oneclick-plants/metadata-id.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "address-null",
+      "patch": "tests/oneclick-plants/address-null.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "header-null",
+      "patch": "tests/oneclick-plants/header-null.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "header-empty-name",
+      "patch": "tests/oneclick-plants/header-empty-name.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "header-name-syntax",
+      "patch": "tests/oneclick-plants/header-name-syntax.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "destination-signature",
+      "patch": "tests/oneclick-plants/destination-signature.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestAuthenticated/destination_uncovered"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "batch-confirm-all",
+      "patch": "tests/oneclick-plants/batch-confirm-all.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandBatch"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "batch-continue",
+      "patch": "tests/oneclick-plants/batch-continue.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandBatch"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "batch-prior-results",
+      "patch": "tests/oneclick-plants/batch-prior-results.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandBatch"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-response-account",
+      "patch": "tests/oneclick-plants/get-response-account.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-empty-id",
+      "patch": "tests/oneclick-plants/query-empty-id.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-empty-notfound",
+      "patch": "tests/oneclick-plants/get-empty-notfound.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "query-validation-wiring",
+      "patch": "tests/oneclick-plants/query-validation-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "get-validation-wiring",
+      "patch": "tests/oneclick-plants/get-validation-wiring.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestSenderLookupInvalidResponses"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "json-field-contract",
+      "patch": "tests/oneclick-plants/json-field-contract.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestOneClickCommandConsent"
+        ],
+        "excludes": [
+          "[build failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    }
+  ]
+}

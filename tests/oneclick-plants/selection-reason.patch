@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -176,7 +176,7 @@
+ 	message, err := selectEmail(sender)
+ 	if err != nil {
+ 		result.Status = "error"
+-		if errors.Is(err, client.ErrSenderSelectionChanged) {
++		if errors.Is(err, client.ErrSenderSelectionChanged) && false {
+ 			result.Reason = "sender selection changed; preview again"
+ 		} else {
+ 			operation := "sender metadata lookup"

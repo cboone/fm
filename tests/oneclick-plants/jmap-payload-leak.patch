@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -131,7 +131,7 @@
+ 	if errors.As(err, &methodErr) {
+ 		switch methodErr.Type {
+ 		case "serverFail":
+-			return "JMAP serverFail", "check Fastmail service availability and try a fresh preview later"
++			return methodErr.Error(), "check Fastmail service availability and try a fresh preview later"
+ 		case "forbidden":
+ 			return "JMAP forbidden", "check account and token permissions"
+ 		case "accountNotFound", "accountNotSupportedByMethod", "accountReadOnly":

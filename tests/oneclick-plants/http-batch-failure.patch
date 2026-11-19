@@ -1,0 +1,10 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -224,5 +224,5 @@
+ 	if err != nil {
+ 		result.Status, result.Reason = "error", err.Error()
+ 	}
+-	return result, err != nil || result.HTTPStatus < 200 || result.HTTPStatus >= 300
+-}
++	return result, err != nil
++}

@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -93,7 +93,7 @@
+ 		return false
+ 	}
+ 	for _, ch := range name {
+-		if ch < 33 || ch > 126 || ch == ':' {
++		if (ch < 33 || ch > 126 || ch == ':') && false {
+ 			return false
+ 		}
+ 	}

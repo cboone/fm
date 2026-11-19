@@ -1,0 +1,12 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -172,6 +172,9 @@
+ 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+ 	req.GetBody = nil
+ 	resp, err := c.Do(req)
++	if resp != nil && (resp.StatusCode == 429 || resp.StatusCode == 503) {
++		resp, err = c.Do(req)
++	}
+ 	if err != nil {
+ 		if errors.Is(err, ErrUnsafeDestination) {
+ 			return 0, errors.New("unsubscribe destination blocked; no request sent")

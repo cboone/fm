@@ -1,0 +1,11 @@
+--- a/internal/output/text.go
++++ b/internal/output/text.go
+@@ -59,7 +59,7 @@
+ 		return f.formatSieveDryRunResult(w, val)
+ 	case types.UnsubscribeResult:
+ 		return f.formatUnsubscribeResult(w, val)
+-	case []types.OneClickResult:
++	case [999]types.OneClickResult:
+ 		for _, result := range val {
+ 			line := fmt.Sprintf("%s: %s", result.Sender, result.Status)
+ 			if result.HTTPStatus != 0 {

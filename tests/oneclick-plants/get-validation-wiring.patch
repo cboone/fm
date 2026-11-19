@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -134,7 +134,7 @@
+ 		}
+ 		req = &jmap.Request{}
+ 		req.Invoke(&email.Get{Account: c.accountID, IDs: page.IDs, Properties: []string{"id", "from", "receivedAt", "headers"}})
+-		resp, err = c.senderResponse(req, "get")
++		resp, err = c.Do(req)
+ 		if err != nil {
+ 			return nil, &SenderLookupError{Operation: "get", Err: err}
+ 		}

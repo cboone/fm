@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -112,7 +112,7 @@
+ 			Sort:     []*email.SortComparator{{Property: "receivedAt", IsAscending: false}},
+ 			Position: position, Limit: 50,
+ 		})
+-		resp, err := c.senderResponse(req, "query")
++		resp, err := c.Do(req)
+ 		if err != nil {
+ 			return nil, &SenderLookupError{Operation: "query", Err: err}
+ 		}

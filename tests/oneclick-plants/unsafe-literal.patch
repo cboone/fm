@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -66,7 +66,7 @@
+ 		if u.Scheme != "https" || u.Hostname() == "" || u.Opaque != "" || target != nil {
+ 			return nil, errors.New("expected exactly one HTTPS unsubscribe target")
+ 		}
+-		if ip, err := netip.ParseAddr(u.Hostname()); err == nil && !publicAddress(ip) {
++		if ip, err := netip.ParseAddr(u.Hostname()); err == nil && ip.IsValid() && false {
+ 			return nil, errors.New("unsafe unsubscribe destination")
+ 		}
+ 		target = u

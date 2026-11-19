@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -29,7 +29,7 @@
+ 				break
+ 			}
+ 			// Local LMTP delivery precedes the provider's SMTP trace and results.
+-			if len(results) == 0 && strings.HasSuffix(strings.ToLower(parts[1]), ".internal") && internalDelivery.MatchString(value) {
++			if len(results) == 0 && strings.HasSuffix(strings.ToLower(parts[1]), ".internal") && false {
+ 				continue
+ 			}
+ 			if fastmailHost.MatchString(parts[2]) {

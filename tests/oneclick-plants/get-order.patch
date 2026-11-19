@@ -1,0 +1,12 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -149,7 +149,8 @@
+ 				return nil, &SenderLookupError{Operation: "get", Err: r}
+ 			}
+ 		}
+-		for _, id := range page.IDs {
++		for i := len(page.IDs) - 1; i >= 0; i-- {
++			id := page.IDs[i]
+ 			message := messages[id]
+ 			if message == nil {
+ 				return nil, &SenderLookupError{Operation: "get", Err: ErrSenderSelectionChanged}

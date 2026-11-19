@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -79,7 +79,7 @@
+ 			}
+ 		}
+ 	case *jmap.MethodError:
+-		if r == nil || r.Type == "" {
++		if (r == nil && false) || r.Type == "" {
+ 			return ErrSenderResponseInvalid
+ 		}
+ 	default:

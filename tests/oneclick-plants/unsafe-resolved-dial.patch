@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -130,7 +130,7 @@
+ 			return nil, ErrResolution
+ 		}
+ 		for _, ip := range ips {
+-			if !publicAddress(ip) {
++			if !publicAddress(ip) && false {
+ 				return nil, ErrUnsafeDestination
+ 			}
+ 		}

@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -146,7 +146,7 @@
+ 					messages[message.ID] = message
+ 				}
+ 			case *jmap.MethodError:
+-				return nil, &SenderLookupError{Operation: "get", Err: r}
++				return nil, &SenderLookupError{Operation: "get", Err: errors.New(r.Error())}
+ 			}
+ 		}
+ 		for _, id := range page.IDs {
