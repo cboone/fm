@@ -1,0 +1,8 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -120,3 +120,4 @@
+ 	const canonical, alias = "credential_command", "credential-command"
+-	existing, value := config.Get(canonical), config.Get(alias)
++	existing := config.Get(canonical)
++	var value any
+ 	if !reflect.DeepEqual(existing, value) {

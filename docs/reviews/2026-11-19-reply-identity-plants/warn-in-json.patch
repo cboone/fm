@@ -4,8 +4,8 @@
  }
  
  func formatDraftResult(cmd *cobra.Command, result types.DraftResult) error {
--	if viper.GetString("format") == "text" {
-+	if viper.GetString("format") != "" {
+-	if config.GetString("format") == "text" {
++	if config.GetString("format") != "" {
  		for _, warning := range result.Warnings {
  			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Warning: "+warning); err != nil {
  				return err

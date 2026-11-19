@@ -1,0 +1,11 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -10,3 +10,2 @@
+ 	"path/filepath"
+-	"reflect"
+ 	"runtime"
+@@ -121,3 +120,3 @@
+ 	existing, value := config.Get(canonical), config.Get(alias)
+-	if !reflect.DeepEqual(existing, value) {
++	if existing != nil && value != nil {
+ 		// AllKeys retains explicit null keys, which Get treats as missing.

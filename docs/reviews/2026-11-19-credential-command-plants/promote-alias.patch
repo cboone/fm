@@ -1,0 +1,8 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -130,3 +130,4 @@
+ 	if existing == nil && value != nil {
+-		return config.MergeConfigMap(map[string]any{canonical: value})
++		config.Set(canonical, value)
++		return nil
+ 	}

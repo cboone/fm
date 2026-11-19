@@ -17,7 +17,6 @@ import (
 
 	"git.sr.ht/~rockorager/go-jmap"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cboone/fm/internal/client"
 	"github.com/cboone/fm/internal/output"
@@ -113,9 +112,9 @@ func TestOneClickMailboxSetupStages(t *testing.T) {
 	oldTransport := http.DefaultTransport
 	t.Cleanup(func() {
 		http.DefaultTransport = oldTransport
-		viper.Set("credential_command", nil)
-		viper.Set("session_url", nil)
-		viper.Set("account_id", nil)
+		config.Set("credential_command", nil)
+		config.Set("session_url", nil)
+		config.Set("account_id", nil)
 	})
 	for _, tc := range []struct {
 		name, command, body        string
@@ -129,9 +128,9 @@ func TestOneClickMailboxSetupStages(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			requests := 0
-			viper.Set("credential_command", tc.command)
-			viper.Set("session_url", "http://fixture.invalid/session")
-			viper.Set("account_id", "")
+			config.Set("credential_command", tc.command)
+			config.Set("session_url", "http://fixture.invalid/session")
+			config.Set("account_id", "")
 			http.DefaultTransport = unsubscribeTransport(func(r *http.Request) (*http.Response, error) {
 				if r.URL.Host != "fixture.invalid" || r.URL.Path != "/session" {
 					t.Fatal("test refuses unexpected host/path")

@@ -7,17 +7,16 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cboone/fm/internal/types"
 )
 
 func TestDraftWarningsOutput(t *testing.T) {
-	previous := viper.Get("format")
-	t.Cleanup(func() { viper.Set("format", previous) })
+	previous := config.Get("format")
+	t.Cleanup(func() { config.Set("format", previous) })
 	for _, format := range []string{"json", "text"} {
 		t.Run(format, func(t *testing.T) {
-			viper.Set("format", format)
+			config.Set("format", format)
 			var stdout, stderr bytes.Buffer
 			command := &cobra.Command{}
 			command.SetOut(&stdout)

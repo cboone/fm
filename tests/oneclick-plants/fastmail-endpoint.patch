@@ -4,8 +4,8 @@
  		return exitError("general_error", err.Error(), "")
  	}
  	// Authentication headers are meaningful only within the Fastmail trust boundary.
--	if viper.GetString("session_url") != "https://api.fastmail.com/jmap/session" {
-+	if viper.GetString("session_url") != "https://api.fastmail.com/jmap/session" && false {
+-	if config.GetString("session_url") != "https://api.fastmail.com/jmap/session" {
++	if config.GetString("session_url") != "https://api.fastmail.com/jmap/session" && false {
  		return exitError("general_error", "one-click requires the Fastmail session endpoint", "")
  	}
  	c, err := oneClickOpenMailbox()

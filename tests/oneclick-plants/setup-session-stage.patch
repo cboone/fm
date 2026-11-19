@@ -2,7 +2,7 @@
 +++ b/cmd/unsubscribe_oneclick.go
 @@ -44,7 +44,7 @@
  	}
- 	c, err := client.New(viper.GetString("session_url"), token, viper.GetString("account_id"))
+ 	c, err := client.New(config.GetString("session_url"), token, config.GetString("account_id"))
  	if err != nil {
 -		return nil, &oneClickSetupError{err: err}
 +		return nil, &oneClickSetupError{credential: true, err: err}

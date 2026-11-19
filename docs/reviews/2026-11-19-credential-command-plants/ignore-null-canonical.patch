@@ -1,0 +1,7 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -124,3 +124,3 @@
+ 		keys := config.AllKeys()
+-		if (existing != nil || slices.Contains(keys, canonical)) &&
++		if existing != nil &&
+ 			(value != nil || slices.Contains(keys, alias)) {

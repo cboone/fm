@@ -1,0 +1,7 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -155,3 +155,3 @@
+
+-// credentialTimeout is the maximum time allowed for a credential command to complete.
++// Test control: credentialTimeout is the maximum time allowed for a credential command to complete.
+ const credentialTimeout = 10 * time.Second
