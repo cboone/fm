@@ -1,0 +1,8 @@
+diff --git a/internal/output/text.go b/internal/output/text.go
+--- a/internal/output/text.go
++++ b/internal/output/text.go
+@@ -178,3 +178,3 @@
+ 		_, _ = fmt.Fprintf(w, "  ID: %s\n", result.Emails[i].ID)
+-		if err := writeFlagColor(w, "  ", result.Emails[i].FlagColor); err != nil {
++		if err := writeFlagColor(w, "  ", nil); err != nil {
+ 			return err

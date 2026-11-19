@@ -1,0 +1,8 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -90,3 +90,3 @@
+ 
+-// clearColorPatch returns a jmap.Patch that clears all three $MailFlagBit keywords.
++// clearColorPatch clears all three $MailFlagBit keywords.
+ func clearColorPatch() jmap.Patch {

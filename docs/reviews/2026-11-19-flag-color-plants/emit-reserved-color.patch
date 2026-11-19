@@ -1,0 +1,9 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -107,3 +107,4 @@
+ 	if int(color) >= len(colorNames) {
+-		return nil
++		name := "red"
++		return &name
+ 	}

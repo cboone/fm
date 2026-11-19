@@ -1,0 +1,163 @@
+{
+  "inputs": ["cmd/archive.go", "cmd/docs_drift_test.go", "cmd/draft.go", "cmd/draft_output_test.go", "cmd/dryrun.go", "cmd/dryrun_test.go", "cmd/filters.go", "cmd/filters_test.go", "cmd/flag.go", "cmd/flag_color_test.go", "cmd/list.go", "cmd/list_test.go", "cmd/mailboxes.go", "cmd/mark-read.go", "cmd/move.go", "cmd/read.go", "cmd/root.go", "cmd/search.go", "cmd/session.go", "cmd/sieve.go", "cmd/sieve_activate.go", "cmd/sieve_create.go", "cmd/sieve_deactivate.go", "cmd/sieve_delete.go", "cmd/sieve_list.go", "cmd/sieve_show.go", "cmd/sieve_validate.go", "cmd/spam.go", "cmd/stats.go", "cmd/stats_test.go", "cmd/summary.go", "cmd/summary_test.go", "cmd/unflag.go", "cmd/unsubscribe.go", "cmd/unsubscribe_oneclick.go", "cmd/unsubscribe_oneclick_test.go", "docs/reviews/2026-11-19-flag-color-plants/allow-unflagged-color-matches.patch", "docs/reviews/2026-11-19-flag-color-plants/check.sh", "docs/reviews/2026-11-19-flag-color-plants/decode-unflagged-as-colored.patch", "docs/reviews/2026-11-19-flag-color-plants/drop-list-color-argument.patch", "docs/reviews/2026-11-19-flag-color-plants/drop-search-color-argument.patch", "docs/reviews/2026-11-19-flag-color-plants/emit-reserved-color.patch", "docs/reviews/2026-11-19-flag-color-plants/hide-list-color.patch", "docs/reviews/2026-11-19-flag-color-plants/hide-read-color.patch", "docs/reviews/2026-11-19-flag-color-plants/hide-thread-context-color.patch", "docs/reviews/2026-11-19-flag-color-plants/ignore-missing-color-bits.patch", "docs/reviews/2026-11-19-flag-color-plants/ignore-required-color-bits.patch", "docs/reviews/2026-11-19-flag-color-plants/lose-plain-red.patch", "docs/reviews/2026-11-19-flag-color-plants/lose-thread-color.patch", "docs/reviews/2026-11-19-flag-color-plants/omit-null-detail-color.patch", "docs/reviews/2026-11-19-flag-color-plants/omit-null-summary-color.patch", "docs/reviews/2026-11-19-flag-color-plants/reuse-selected-color-for-context.patch", "docs/reviews/2026-11-19-flag-color-plants/setup.sh", "docs/reviews/2026-11-19-flag-color-plants/swallow-color-write-error.patch", "docs/reviews/2026-11-19-flag-color-plants/unrelated-comment.patch", "go.mod", "go.sum", "internal/client/client.go", "internal/client/client_test.go", "internal/client/color.go", "internal/client/color_test.go", "internal/client/draft.go", "internal/client/draft_test.go", "internal/client/email.go", "internal/client/email_test.go", "internal/client/flag_color_read_test.go", "internal/client/identity.go", "internal/client/identity_test.go", "internal/client/mailbox.go", "internal/client/reply_identity_test.go", "internal/client/safety.go", "internal/client/safety_test.go", "internal/client/sieve.go", "internal/client/sieve_template.go", "internal/client/sieve_template_test.go", "internal/client/sieve_test.go", "internal/client/unsubscribe.go", "internal/client/unsubscribe_test.go", "internal/jmap/sieve/get.go", "internal/jmap/sieve/query.go", "internal/jmap/sieve/set.go", "internal/jmap/sieve/sieve.go", "internal/jmap/sieve/validate.go", "internal/output/formatter.go", "internal/output/json.go", "internal/output/json_test.go", "internal/output/text.go", "internal/output/text_test.go", "internal/types/types.go", "internal/types/types_test.go", "internal/unsubscribe/ascii_test.go", "internal/unsubscribe/auth.go", "internal/unsubscribe/auth_test.go", "internal/unsubscribe/oneclick.go", "internal/unsubscribe/oneclick_test.go", "internal/unsubscribe/unsubscribe.go", "internal/unsubscribe/unsubscribe_test.go"],
+  "setup": "docs/reviews/2026-11-19-flag-color-plants/setup.sh",
+  "check": "docs/reviews/2026-11-19-flag-color-plants/check.sh",
+  "timeout": 90,
+  "green": {
+    "exit_code": 0,
+    "contains": ["--- PASS: TestFlagColorQuery", "--- PASS: TestFlagColorRead", "--- PASS: TestFlagColorCLIQuery", "--- PASS: TestFlagColorCLIListNull", "--- PASS: TestFlagColorTextWriteError", "\nPASS\n"],
+    "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+  },
+  "variants": [
+    {
+      "name": "ignore-missing-color-bits",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/ignore-missing-color-bits.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorQuery/list/red", "query filter =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "ignore-required-color-bits",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/ignore-required-color-bits.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorQuery/list/orange", "query filter =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "allow-unflagged-color-matches",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/allow-unflagged-color-matches.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorQuery/list/red", "query filter =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "emit-reserved-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/emit-reserved-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/reserved", "flag_color = \"red\", want null", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "decode-unflagged-as-colored",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/decode-unflagged-as-colored.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/unflagged", "flag_color = \"orange\", want null", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "lose-plain-red",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/lose-plain-red.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/red", "flag_color = null, want \"red\"", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "hide-list-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/hide-list-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorQuery/list/orange", "expected \"Flag color: orange\"", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "hide-read-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/hide-read-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/orange", "expected \"Flag color: orange\"", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "hide-thread-context-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/hide-thread-context-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorThreadContext", "expected \"Flag color: orange\"", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "omit-null-detail-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/omit-null-detail-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/unflagged", "flag_color = , want null", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "lose-thread-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/lose-thread-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/orange", "flag_color = null, want \"orange\"", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "swallow-color-write-error",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/swallow-color-write-error.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorTextWriteError/list", "Format error = <nil>", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "drop-list-color-argument",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/drop-list-color-argument.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorCLIQuery/list/red", "Email/query filter =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "drop-search-color-argument",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/drop-search-color-argument.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorCLIQuery/search/red", "Email/query filter =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "omit-null-summary-color",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/omit-null-summary-color.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorRead/unflagged", "flag_color = , want null", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    },
+    {
+      "name": "reuse-selected-color-for-context",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/reuse-selected-color-for-context.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": ["--- FAIL: TestFlagColorThreadContext", "thread colors =", "\nFAIL\n"],
+        "excludes": ["--- SKIP:", "panic:", "no tests to run"]
+      }
+    }
+  ],
+  "controls": [
+    {
+      "name": "unrelated-comment",
+      "patch": "docs/reviews/2026-11-19-flag-color-plants/unrelated-comment.patch"
+    }
+  ]
+}

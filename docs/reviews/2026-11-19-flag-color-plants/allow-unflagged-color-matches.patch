@@ -1,0 +1,8 @@
+diff --git a/internal/client/email.go b/internal/client/email.go
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -358,3 +358,3 @@
+ 	}
+-	if opts.FlaggedOnly || opts.FlagColor != nil {
++	if opts.FlaggedOnly {
+ 		fc.HasKeyword = "$flagged"

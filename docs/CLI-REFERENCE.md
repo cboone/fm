@@ -118,6 +118,7 @@ No arguments.
 | `--offset`     | `-o`  | `0`               | Pagination offset (non-negative)      |
 | `--unread`     | `-u`  | `false`           | Only show unread messages             |
 | `--flagged`    | `-f`  | `false`           | Only show flagged messages            |
+| `--color`      |       | (none)            | Filter by color with `--flagged`      |
 | `--unflagged`  |       | `false`           | Only show unflagged messages          |
 | `--sort`       | `-s`  | `receivedAt desc` | Sort order: field + direction         |
 
@@ -132,6 +133,7 @@ Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 
 ```bash
 fm list --flagged                       # only flagged emails
+fm list --flagged --color orange        # orange flags in the mailbox
 fm list --unflagged                     # only unflagged emails
 fm list --unread --unflagged            # unread and unflagged emails
 fm list --subject "Dependabot"          # emails with "Dependabot" in subject
@@ -155,6 +157,7 @@ fm list --subject "Daily Digest" -u     # unread emails matching subject
       "size": 4521,
       "is_unread": true,
       "is_flagged": false,
+      "flag_color": null,
       "preview": "Hi, just wanted to confirm our meeting..."
     }
   ]
@@ -171,6 +174,9 @@ Total: 1542 (showing 25 from offset 0)
 ```
 
 Unread emails are marked with `*` in text output.
+Flagged messages with all three color bits clear read as red. The JSON
+`flag_color` value is null for unflagged messages and the reserved bit pattern.
+Text shows a `Flag color:` line when a color is available.
 
 ---
 
@@ -204,6 +210,7 @@ Exactly 1 argument required: the email ID.
   "received_at": "2026-02-04T10:30:00Z",
   "is_unread": true,
   "is_flagged": false,
+  "flag_color": null,
   "body": "Hi,\n\nJust wanted to confirm our meeting tomorrow at 3pm.\n\nBest,\nAlice",
   "attachments": [
     {
@@ -229,6 +236,7 @@ Exactly 1 argument required: the email ID.
     "received_at": "2026-02-04T10:30:00Z",
     "is_unread": true,
     "is_flagged": false,
+    "flag_color": null,
     "body": "Hi,\n\nJust wanted to confirm our meeting tomorrow at 3pm.\n\nBest,\nAlice",
     "attachments": []
   },
@@ -240,7 +248,8 @@ Exactly 1 argument required: the email ID.
       "subject": "Meeting tomorrow",
       "received_at": "2026-02-04T09:00:00Z",
       "preview": "Can we meet tomorrow at 3pm?",
-      "is_unread": false
+      "is_unread": false,
+      "flag_color": null
     },
     {
       "id": "M-email-id",
@@ -249,7 +258,8 @@ Exactly 1 argument required: the email ID.
       "subject": "Meeting tomorrow",
       "received_at": "2026-02-04T10:30:00Z",
       "preview": "Hi, just wanted to confirm our meeting...",
-      "is_unread": true
+      "is_unread": true,
+      "flag_color": null
     }
   ]
 }
@@ -321,6 +331,7 @@ fm search [query] [flags]
 | `--offset`         | `-o`  | `0`               | Pagination offset (non-negative)            |
 | `--unread`         | `-u`  | `false`           | Only show unread messages                   |
 | `--flagged`        | `-f`  | `false`           | Only show flagged messages                  |
+| `--color`          |       | (none)            | Filter by color with `--flagged`            |
 | `--unflagged`      |       | `false`           | Only show unflagged messages                |
 | `--sort`           | `-s`  | `receivedAt desc` | Sort order: field + direction               |
 | `--from`           |       | (none)            | Filter by sender address or name            |
@@ -345,6 +356,7 @@ Examples: `"receivedAt desc"`, `"subject asc"`, `"from:asc"`.
 fm search --flagged                       # only flagged emails
 fm search --unread --unflagged            # unread and unflagged emails
 fm search "invoice" --flagged --from acme
+fm search "invoice" --flagged --color yellow
 ```
 
 All filters are combined with AND logic.
@@ -368,6 +380,7 @@ Same shape as `list` output (`EmailListResult`), with an additional `snippet` fi
       "size": 4521,
       "is_unread": true,
       "is_flagged": false,
+      "flag_color": null,
       "preview": "Hi, just wanted to confirm our meeting...",
       "snippet": "...confirm our <mark>meeting</mark> tomorrow at 3pm..."
     }
@@ -1206,6 +1219,7 @@ Returned within `EmailListResult` by the `list` and `search` commands.
 | `size`        | number    | Bytes                              |
 | `is_unread`   | boolean   |                                    |
 | `is_flagged`  | boolean   |                                    |
+| `flag_color`  | string    | Color name or null                 |
 | `preview`     | string    | Server-generated preview           |
 | `snippet`     | string    | Omitted unless text search is used |
 
@@ -1278,6 +1292,7 @@ Returned by the `read` command (without `--thread`).
 | `received_at` | string       | RFC 3339 timestamp                         |
 | `is_unread`   | boolean      |                                            |
 | `is_flagged`  | boolean      |                                            |
+| `flag_color`  | string       | Color name or null                         |
 | `body`        | string       | Plain text by default; HTML with `--html`  |
 | `attachments` | Attachment[] |                                            |
 | `headers`     | Header[]     | Omitted unless `--raw-headers` is used     |
@@ -1303,6 +1318,7 @@ Condensed view of an email within a thread listing.
 | `subject`     | string    |                    |
 | `received_at` | string    | RFC 3339 timestamp |
 | `preview`     | string    |                    |
+| `flag_color`  | string    | Color name or null |
 | `is_unread`   | boolean   |                    |
 
 ### ThreadView
@@ -1420,6 +1436,7 @@ Returned by any mutating command when `--dry-run` / `-n` is passed. Previews the
       "size": 4521,
       "is_unread": true,
       "is_flagged": false,
+      "flag_color": null,
       "preview": "Hi, just wanted to confirm..."
     }
   ],

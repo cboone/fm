@@ -1,0 +1,8 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -120,3 +120,3 @@
+ 		} else {
+-			condition.NotKeyword = keyword.lowercase
++			condition.NotKeyword = ""
+ 		}

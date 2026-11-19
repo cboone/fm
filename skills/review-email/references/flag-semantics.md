@@ -22,11 +22,16 @@ Set a color flag:
 fm flag --color <color> <email-id>
 ```
 
-Remove only the color (keep flagged):
+Show a color in `list`, `search` or `read`. Filter by color with
+`--flagged --color <color>` in `list` or `search`.
+
+Clear the color bits while keeping the flag:
 
 ```bash
 fm unflag --color <email-id>
 ```
+
+A flagged message with all bits clear reads as red and matches the red filter.
 
 Fully unflag (remove flag and color):
 

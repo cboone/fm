@@ -29,6 +29,10 @@ var listCmd = &cobra.Command{
 		if flagged && unflagged {
 			return exitError("general_error", "--flagged and --unflagged are mutually exclusive", "")
 		}
+		color, err := parseColorFilter(cmd, flagged)
+		if err != nil {
+			return err
+		}
 		sort, _ := cmd.Flags().GetString("sort")
 
 		sortField, sortAsc, err := parseSort(sort)
@@ -52,6 +56,7 @@ var listCmd = &cobra.Command{
 			UnreadOnly:      unread,
 			FlaggedOnly:     flagged,
 			UnflaggedOnly:   unflagged,
+			FlagColor:       color,
 			SortField:       sortField,
 			SortAsc:         sortAsc,
 		})
@@ -70,6 +75,7 @@ func init() {
 	listCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
 	listCmd.Flags().BoolP("flagged", "f", false, "only show flagged messages")
 	listCmd.Flags().Bool("unflagged", false, "only show unflagged messages")
+	listCmd.Flags().String("color", "", colorFilterUsage)
 	listCmd.Flags().String("subject", "", "filter by subject text")
 	listCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	rootCmd.AddCommand(listCmd)

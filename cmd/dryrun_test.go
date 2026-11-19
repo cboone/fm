@@ -26,6 +26,7 @@ type jmapMockServer struct {
 
 	mu           sync.Mutex
 	methodCounts map[string]int
+	queryFilters []json.RawMessage
 }
 
 func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[string]any, notFound []string) *jmapMockServer {
@@ -121,6 +122,16 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 					}
 					resp.MethodResponses = append(resp.MethodResponses, []any{"Email/get", args, callID})
 				case "Email/query":
+					var query struct {
+						Filter json.RawMessage `json:"filter"`
+					}
+					if err := json.Unmarshal(call[1], &query); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+						return
+					}
+					m.mu.Lock()
+					m.queryFilters = append(m.queryFilters, query.Filter)
+					m.mu.Unlock()
 					ids := make([]string, len(m.emails))
 					for i, e := range m.emails {
 						ids[i] = e["id"].(string)

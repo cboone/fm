@@ -1,0 +1,8 @@
+diff --git a/internal/output/text.go b/internal/output/text.go
+--- a/internal/output/text.go
++++ b/internal/output/text.go
+@@ -246,3 +246,3 @@
+ 	if _, err := fmt.Fprintf(w, "%sFlag color: %s\n", indent, *color); err != nil {
+-		return fmt.Errorf("write flag color: %w", err)
++		return nil
+ 	}

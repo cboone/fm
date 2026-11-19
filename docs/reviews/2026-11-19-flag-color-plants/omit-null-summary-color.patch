@@ -1,0 +1,8 @@
+diff --git a/internal/types/types.go b/internal/types/types.go
+--- a/internal/types/types.go
++++ b/internal/types/types.go
+@@ -39,3 +39,3 @@
+ 	IsFlagged  bool      `json:"is_flagged"`
+-	FlagColor  *string   `json:"flag_color"`
++	FlagColor  *string   `json:"flag_color,omitempty"`
+ 	Preview    string    `json:"preview"`

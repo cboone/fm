@@ -108,6 +108,7 @@ type ListOptions struct {
 	UnreadOnly      bool
 	FlaggedOnly     bool
 	UnflaggedOnly   bool
+	FlagColor       *FlagColor
 	SortField       string
 	SortAsc         bool
 }
@@ -126,34 +127,14 @@ func (c *Client) ListEmails(opts ListOptions) (types.EmailListResult, error) {
 		return types.EmailListResult{}, err
 	}
 
-	fc := &email.FilterCondition{
-		InMailbox: mailboxID,
-	}
-	if opts.Subject != "" {
-		fc.Subject = opts.Subject
-	}
-	if opts.UnreadOnly {
-		fc.NotKeyword = "$seen"
-	}
-	if opts.FlaggedOnly {
-		fc.HasKeyword = "$flagged"
-	}
-
-	// Build the final filter. When both UnflaggedOnly and UnreadOnly are set,
-	// they each need a separate NotKeyword field, so we must use a compound
-	// FilterOperator with AND. InMailbox stays on the first FilterCondition
-	// inside the operator so the mailbox scope is preserved.
-	var filter email.Filter = fc
-	if opts.UnflaggedOnly {
-		if opts.UnreadOnly {
-			filter = &email.FilterOperator{
-				Operator:   jmap.OperatorAND,
-				Conditions: []email.Filter{fc, &email.FilterCondition{NotKeyword: "$flagged"}},
-			}
-		} else {
-			fc.NotKeyword = "$flagged"
-		}
-	}
+	filter := buildSearchFilter(SearchOptions{
+		MailboxID:     string(mailboxID),
+		Subject:       opts.Subject,
+		UnreadOnly:    opts.UnreadOnly,
+		FlaggedOnly:   opts.FlaggedOnly,
+		UnflaggedOnly: opts.UnflaggedOnly,
+		FlagColor:     opts.FlagColor,
+	})
 
 	req := &jmap.Request{}
 	queryCallID := req.Invoke(&email.Query{
@@ -311,6 +292,7 @@ func (c *Client) ReadThread(emailID string, preferHTML bool, rawHeaders bool) (t
 					ReceivedAt: safeTime(e.ReceivedAt),
 					Preview:    e.Preview,
 					IsUnread:   !e.Keywords["$seen"],
+					FlagColor:  decodeFlagColor(e.Keywords),
 				})
 			}
 		case *jmap.MethodError:
@@ -340,6 +322,7 @@ func singleThreadEntry(d types.EmailDetail) types.ThreadEmail {
 		Subject:    d.Subject,
 		ReceivedAt: d.ReceivedAt,
 		IsUnread:   d.IsUnread,
+		FlagColor:  d.FlagColor,
 	}
 }
 
@@ -373,7 +356,7 @@ func buildSearchFilter(opts SearchOptions) email.Filter {
 	if opts.MailboxID != "" {
 		fc.InMailbox = jmap.ID(opts.MailboxID)
 	}
-	if opts.FlaggedOnly {
+	if opts.FlaggedOnly || opts.FlagColor != nil {
 		fc.HasKeyword = "$flagged"
 	}
 
@@ -392,6 +375,9 @@ func buildSearchFilter(opts SearchOptions) email.Filter {
 		}
 	}
 
+	if opts.FlagColor != nil {
+		return opts.FlagColor.filter(filter)
+	}
 	return filter
 }
 
@@ -513,6 +499,7 @@ type SearchOptions struct {
 	UnreadOnly    bool
 	FlaggedOnly   bool
 	UnflaggedOnly bool
+	FlagColor     *FlagColor
 	Limit         uint64
 	Offset        int64
 	SortField     string
@@ -1125,6 +1112,7 @@ func convertSummaries(emails []*email.Email) []types.EmailSummary {
 			Size:       e.Size,
 			IsUnread:   !e.Keywords["$seen"],
 			IsFlagged:  e.Keywords["$flagged"],
+			FlagColor:  decodeFlagColor(e.Keywords),
 			Preview:    e.Preview,
 		}
 	}
@@ -1159,6 +1147,7 @@ func convertDetail(e *email.Email, preferHTML bool, rawHeaders bool) types.Email
 		ReceivedAt:  safeTime(e.ReceivedAt),
 		IsUnread:    !e.Keywords["$seen"],
 		IsFlagged:   e.Keywords["$flagged"],
+		FlagColor:   decodeFlagColor(e.Keywords),
 		Body:        body,
 		Attachments: attachments,
 	}

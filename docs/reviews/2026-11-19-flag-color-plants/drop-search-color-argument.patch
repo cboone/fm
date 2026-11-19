@@ -1,0 +1,7 @@
+diff --git a/cmd/search.go b/cmd/search.go
+--- a/cmd/search.go
++++ b/cmd/search.go
+@@ -47,2 +47,3 @@
+ 		}
++		color = nil
+ 		opts.FlagColor = color

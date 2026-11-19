@@ -11,6 +11,24 @@ import (
 
 const recipientToUsage = "filter by recipient address/name"
 
+var colorFilterUsage = "flag color (" + strings.Join(client.ValidColorNames(), ", ") +
+	"); requires --flagged; red includes flags with no color bits set"
+
+func parseColorFilter(cmd *cobra.Command, flagged bool) (*client.FlagColor, error) {
+	if !cmd.Flags().Changed("color") {
+		return nil, nil
+	}
+	if !flagged {
+		return nil, exitError("general_error", "--color requires --flagged", "")
+	}
+	value, _ := cmd.Flags().GetString("color")
+	color, err := client.ParseFlagColor(value)
+	if err != nil {
+		return nil, exitError("general_error", err.Error(), "")
+	}
+	return &color, nil
+}
+
 // filterFlagNames lists all flags that addFilterFlags may register.
 var filterFlagNames = []string{
 	"mailbox", "from", "to", "subject",

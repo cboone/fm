@@ -1,0 +1,8 @@
+diff --git a/internal/client/color.go b/internal/client/color.go
+--- a/internal/client/color.go
++++ b/internal/client/color.go
+@@ -96,3 +96,3 @@
+ func decodeFlagColor(keywords map[string]bool) *string {
+-	if !keywords["$flagged"] {
++	if keywords == nil {
+ 		return nil

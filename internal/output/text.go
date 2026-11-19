@@ -176,6 +176,9 @@ func (f *TextFormatter) formatEmailList(w io.Writer, result types.EmailListResul
 			_, _ = fmt.Fprintf(w, "  CC: %s\n", formatAddrs(result.Emails[i].CC))
 		}
 		_, _ = fmt.Fprintf(w, "  ID: %s\n", result.Emails[i].ID)
+		if err := writeFlagColor(w, "  ", result.Emails[i].FlagColor); err != nil {
+			return err
+		}
 		if result.Emails[i].Snippet != "" {
 			_, _ = fmt.Fprintf(w, "  ...%s\n", result.Emails[i].Snippet)
 		}
@@ -198,6 +201,9 @@ func (f *TextFormatter) formatEmailDetail(w io.Writer, e types.EmailDetail) erro
 		_, _ = fmt.Fprintf(w, "List-Unsubscribe-Post: %s\n", e.ListUnsubscribePost)
 	}
 	_, _ = fmt.Fprintf(w, "ID: %s\n", e.ID)
+	if err := writeFlagColor(w, "", e.FlagColor); err != nil {
+		return err
+	}
 	_, _ = fmt.Fprintln(w, strings.Repeat("-", 72))
 	_, _ = fmt.Fprintln(w, e.Body)
 	if len(e.Attachments) > 0 {
@@ -223,11 +229,24 @@ func (f *TextFormatter) formatThreadView(w io.Writer, tv types.ThreadView) error
 		}
 		_, _ = fmt.Fprintf(w, "%s[%d] %s - %s (%s)\n", marker, i+1, from, te.Subject, te.ReceivedAt.Format("2006-01-02 15:04"))
 		if te.ID != tv.Email.ID {
+			if err := writeFlagColor(w, "      ", te.FlagColor); err != nil {
+				return err
+			}
 			_, _ = fmt.Fprintf(w, "      %s\n", te.Preview)
 		}
 	}
 	_, _ = fmt.Fprintln(w)
 	return f.formatEmailDetail(w, tv.Email)
+}
+
+func writeFlagColor(w io.Writer, indent string, color *string) error {
+	if color == nil {
+		return nil
+	}
+	if _, err := fmt.Fprintf(w, "%sFlag color: %s\n", indent, *color); err != nil {
+		return fmt.Errorf("write flag color: %w", err)
+	}
+	return nil
 }
 
 func actionVerb(r types.MoveResult) (string, int) {
