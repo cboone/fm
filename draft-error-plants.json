@@ -1,0 +1,134 @@
+{
+  "inputs": [
+    "go.mod",
+    "go.sum",
+    "internal/client/client.go",
+    "internal/client/client_test.go",
+    "internal/client/color.go",
+    "internal/client/color_test.go",
+    "internal/client/draft.go",
+    "internal/client/draft_test.go",
+    "internal/client/email.go",
+    "internal/client/email_test.go",
+    "internal/client/identity.go",
+    "internal/client/identity_test.go",
+    "internal/client/mailbox.go",
+    "internal/client/safety.go",
+    "internal/client/safety_test.go",
+    "internal/client/sieve.go",
+    "internal/client/sieve_template.go",
+    "internal/client/sieve_template_test.go",
+    "internal/client/sieve_test.go",
+    "internal/jmap/sieve/get.go",
+    "internal/jmap/sieve/query.go",
+    "internal/jmap/sieve/set.go",
+    "internal/jmap/sieve/sieve.go",
+    "internal/jmap/sieve/validate.go",
+    "internal/types/types.go",
+    "internal/types/types_test.go",
+    "tests/draft-error-plants/setup.sh",
+    "tests/draft-error-plants/check.sh",
+    "tests/draft-error-plants/drop-type.patch",
+    "tests/draft-error-plants/drop-description.patch",
+    "tests/draft-error-plants/skip-capability-check.patch",
+    "tests/draft-error-plants/drop-scope-advice.patch",
+    "tests/draft-error-plants/require-submission-for-drafts.patch"
+  ],
+  "setup": "tests/draft-error-plants/setup.sh",
+  "check": "tests/draft-error-plants/check.sh",
+  "timeout": 60,
+  "green": {
+    "exit_code": 0,
+    "contains": [
+      "\nPASS\n"
+    ],
+    "excludes": [
+      "--- FAIL:",
+      "--- SKIP:",
+      "panic:",
+      "[build failed]"
+    ]
+  },
+  "variants": [
+    {
+      "name": "drop-type",
+      "patch": "tests/draft-error-plants/drop-type.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_SetErrorDetails/type_only"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "drop-description",
+      "patch": "tests/draft-error-plants/drop-description.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_SetErrorDetails/type_and_description"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "skip-capability-check",
+      "patch": "tests/draft-error-plants/skip-capability-check.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestGetAllIdentities_SubmissionCapability/present=false"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "drop-scope-advice",
+      "patch": "tests/draft-error-plants/drop-scope-advice.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestGetAllIdentities_SubmissionCapability/present=false"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    },
+    {
+      "name": "require-submission-for-drafts",
+      "patch": "tests/draft-error-plants/require-submission-for-drafts.patch",
+      "red": {
+        "exit_code": 1,
+        "contains": [
+          "--- FAIL: TestCreateDraft_WithoutSubmission"
+        ],
+        "excludes": [
+          "[build failed]",
+          "[setup failed]",
+          "panic:",
+          "--- SKIP:"
+        ]
+      }
+    }
+  ]
+}

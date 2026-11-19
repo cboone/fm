@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -235,7 +235,7 @@
+ 					}
+ 					if setErr.Description != nil && *setErr.Description != "" {
+ 						if setErr.Type != "" {
+-							desc += ": " + *setErr.Description
++							desc += ""
+ 						} else {
+ 							desc = *setErr.Description
+ 						}

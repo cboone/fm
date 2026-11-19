@@ -1,0 +1,11 @@
+--- a/internal/client/identity.go
++++ b/internal/client/identity.go
+@@ -21,7 +21,7 @@
+ 		return c.identityCache, nil
+ 	}
+ 	if c.jmap != nil && c.jmap.Session != nil {
+-		if _, ok := c.jmap.Session.RawCapabilities[emailsubmission.URI]; !ok {
++		if _, ok := c.jmap.Session.RawCapabilities[emailsubmission.URI]; ok {
+ 			return nil, fmt.Errorf("identity/get: missing %s capability; add the Email submission (submission) token scope (also grants sending permission)", emailsubmission.URI)
+ 		}
+ 	}

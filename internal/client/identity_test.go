@@ -1,13 +1,48 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
 	"git.sr.ht/~rockorager/go-jmap"
+	"git.sr.ht/~rockorager/go-jmap/mail/emailsubmission"
 	"git.sr.ht/~rockorager/go-jmap/mail/identity"
 )
+
+func TestGetAllIdentities_SubmissionCapability(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		t.Run(fmt.Sprintf("present=%t", present), func(t *testing.T) {
+			caps := map[jmap.URI]json.RawMessage{jmap.CoreURI: json.RawMessage(`{}`)}
+			if present {
+				caps[emailsubmission.URI] = json.RawMessage(`{}`)
+			}
+			called := false
+			c := &Client{
+				jmap: &jmap.Client{Session: &jmap.Session{RawCapabilities: caps}},
+				doFunc: func(req *jmap.Request) (*jmap.Response, error) {
+					called = true
+					if !present {
+						t.Fatal("Identity/get attempted without submission capability")
+					}
+					return mockIdentityGetSuccess(testIdentities())(req)
+				},
+			}
+			_, err := c.GetAllIdentities()
+			if present {
+				if err != nil || !called {
+					t.Fatalf("GetAllIdentities() error = %v, called = %t", err, called)
+				}
+				return
+			}
+			want := "identity/get: missing urn:ietf:params:jmap:submission capability; add the Email submission (submission) token scope (also grants sending permission)"
+			if err == nil || err.Error() != want || called {
+				t.Fatalf("GetAllIdentities() error = %v, called = %t; want %q, false", err, called, want)
+			}
+		})
+	}
+}
 
 func testIdentities() []*identity.Identity {
 	return []*identity.Identity{

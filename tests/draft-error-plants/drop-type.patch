@@ -1,0 +1,11 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -231,7 +231,7 @@
+ 				desc := "unknown error"
+ 				if setErr != nil {
+ 					if setErr.Type != "" {
+-						desc = setErr.Type
++						desc = "unknown error"
+ 					}
+ 					if setErr.Description != nil && *setErr.Description != "" {
+ 						if setErr.Type != "" {
