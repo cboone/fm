@@ -37,6 +37,9 @@ func TestOneClickSenders(t *testing.T) {
 		{[]string{"--one-click", "--sender", "a@example.com", "--sender", "A@example.com", "--sender", "b@example.com"}, true},
 		{[]string{"--sender", "a@example.com"}, false},
 		{[]string{"--one-click"}, false},
+		{[]string{"--one-click", "--sender", "a@liſt.example"}, false},
+		{[]string{"--one-click", "--sender", "a@K.example"}, false},
+		{[]string{"--one-click", "--sender", "a@lİst.example"}, false},
 		{[]string{"--one-click", "--sender", "Name <a@example.com>"}, false},
 		{[]string{"--one-click", "--sender", "a@example.com,b@example.com"}, false},
 		{[]string{"--one-click", "--sender", "*@example.com"}, false},
@@ -476,5 +479,18 @@ func TestOneClickHTTPBatchFailure(t *testing.T) {
 				t.Fatalf("status=%d failed=%v results=%v calls=%d", status, failed, results, calls)
 			}
 		})
+	}
+}
+
+func TestOneClickFromASCII(t *testing.T) {
+	message := oneClickMessage()
+	message.From = []string{"a@liſt.example"}
+	for i := range message.Headers {
+		message.Headers[i].Value = strings.ReplaceAll(message.Headers[i].Value, "example.com", "list.example")
+	}
+	selectEmail := func(string) (*unsubscribe.Candidate, error) { return message, nil }
+	result, failed := oneClickResult(context.Background(), "a@list.example", false, selectEmail, nil)
+	if failed || result.Status != "skipped" || result.Reason != "ambiguous or nonmatching From address" {
+		t.Errorf("Unicode From result=%+v failed=%v", result, failed)
 	}
 }

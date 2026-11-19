@@ -19,7 +19,7 @@ func Authenticated(headers []Header, domain string) error {
 	var results []string
 	var receiver string
 	for _, h := range headers {
-		if strings.EqualFold(h.Name, "Received") {
+		if EqualFoldASCII(h.Name, "Received") {
 			value, ok := withoutComments(h.Value)
 			if !ok {
 				break
@@ -29,15 +29,15 @@ func Authenticated(headers []Header, domain string) error {
 				break
 			}
 			// Local LMTP delivery precedes the provider's SMTP trace and results.
-			if len(results) == 0 && strings.HasSuffix(strings.ToLower(parts[1]), ".internal") && internalDelivery.MatchString(value) {
+			if len(results) == 0 && isASCII(parts[1]) && strings.HasSuffix(strings.ToLower(parts[1]), ".internal") && internalDelivery.MatchString(value) {
 				continue
 			}
-			if fastmailHost.MatchString(parts[2]) {
+			if isASCII(parts[2]) && fastmailHost.MatchString(parts[2]) {
 				receiver = parts[2]
 			}
 			break
 		}
-		if strings.EqualFold(h.Name, "Authentication-Results") {
+		if EqualFoldASCII(h.Name, "Authentication-Results") {
 			results = append(results, h.Value)
 		}
 	}
@@ -51,12 +51,12 @@ func Authenticated(headers []Header, domain string) error {
 			return errors.New("unverified: malformed authentication result")
 		}
 		parts := strings.Split(value, ";")
-		if !strings.EqualFold(strings.TrimSpace(parts[0]), receiver) {
+		if !EqualFoldASCII(strings.TrimSpace(parts[0]), receiver) {
 			continue
 		}
 		for _, method := range parts[1:] {
 			fields := strings.Fields(method)
-			if len(fields) == 0 || !strings.EqualFold(fields[0], "dkim=pass") {
+			if len(fields) == 0 || !EqualFoldASCII(fields[0], "dkim=pass") {
 				continue
 			}
 			props := make(map[string]string)
@@ -67,7 +67,7 @@ func Authenticated(headers []Header, domain string) error {
 				}
 				props[strings.ToLower(key)] = val
 			}
-			if strings.EqualFold(props["header.d"], domain) {
+			if EqualFoldASCII(props["header.d"], domain) {
 				passes = append(passes, props["header.b"])
 			}
 		}
@@ -78,11 +78,11 @@ func Authenticated(headers []Header, domain string) error {
 	for _, signaturePrefix := range passes {
 		var matching []map[string]string
 		for _, h := range headers {
-			if !strings.EqualFold(h.Name, "DKIM-Signature") {
+			if !EqualFoldASCII(h.Name, "DKIM-Signature") {
 				continue
 			}
 			tags := signatureTags(h.Value)
-			if !strings.EqualFold(tags["d"], domain) || tags["b"] == "" {
+			if !EqualFoldASCII(tags["d"], domain) || tags["b"] == "" {
 				continue
 			}
 			if signaturePrefix == "" || strings.HasPrefix(tags["b"], signaturePrefix) {
@@ -93,8 +93,11 @@ func Authenticated(headers []Header, domain string) error {
 			continue
 		}
 		covered := make(map[string]bool)
-		for _, name := range strings.Split(strings.ToLower(matching[0]["h"]), ":") {
-			covered[strings.TrimSpace(name)] = true
+		for _, name := range strings.Split(matching[0]["h"], ":") {
+			if !isASCII(name) {
+				continue
+			}
+			covered[strings.ToLower(strings.TrimSpace(name))] = true
 		}
 		if covered["list-unsubscribe"] && covered["list-unsubscribe-post"] {
 			return nil

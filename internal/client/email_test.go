@@ -3069,3 +3069,18 @@ func TestAggregateSummary_SubjectFilter(t *testing.T) {
 		t.Errorf("expected Subject=%q, got %q", "Daily Digest", fc.Subject)
 	}
 }
+
+func TestUnsubscribeHeaderNamesASCII(t *testing.T) {
+	for _, name := range []string{"Liſt-Id", "Liſt-Unsubscribe", "Liſt-Unsubscribe-Post", "Lİst-Id", "Lİst-Unsubscribe", "Lİst-Unsubscribe-Post"} {
+		t.Run(name, func(t *testing.T) {
+			headers := []*email.Header{{Name: name, Value: "https://example.invalid/unsub"}}
+			if hasListHeaders(headers) {
+				t.Error("accepted non-ASCII list header")
+			}
+			detail := convertDetail(&email.Email{ID: "M1", Headers: headers, BodyValues: map[string]*email.BodyValue{}}, false, false)
+			if detail.ListUnsubscribe != "" || detail.ListUnsubscribePost != "" {
+				t.Errorf("accepted non-ASCII unsubscribe header: %+v", detail)
+			}
+		})
+	}
+}

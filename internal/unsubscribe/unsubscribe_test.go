@@ -1,6 +1,7 @@
 package unsubscribe
 
 import (
+	"os"
 	"testing"
 )
 
@@ -76,7 +77,8 @@ func TestParse(t *testing.T) {
 		{
 			name:          "bare uri without brackets",
 			header:        "mailto:unsub@example.com",
-			wantMechanism: MechanismNone,
+			wantMechanism: MechanismMailto,
+			wantAddress:   "unsub@example.com",
 		},
 		{
 			name:          "one-click post header",
@@ -184,6 +186,65 @@ func TestParse(t *testing.T) {
 
 			if got.OneClick != tt.wantOneClick {
 				t.Errorf("OneClick = %v, want %v", got.OneClick, tt.wantOneClick)
+			}
+		})
+	}
+}
+
+func TestParseBareAndOneClick(t *testing.T) {
+	const marker = "List-Unsubscribe=One-Click"
+	tests := []struct {
+		name, header, post, mechanism, url, address string
+		oneClick                                    bool
+		subject, body                               string
+	}{
+		{"bare HTTPS", "https://example.invalid/unsub", marker, MechanismURL, "https://example.invalid/unsub", "", true, "", ""},
+		{"bare HTTP", "http://example.invalid/unsub", marker, MechanismURL, "http://example.invalid/unsub", "", false, "", ""},
+		{"bare mailto", "mailto:unsub@example.invalid?subject=Unsubscribe&body=Remove%20me", marker, MechanismMailto, "", "unsub@example.invalid", false, "Unsubscribe", "Remove me"},
+		{"surrounding whitespace", " \thttps://example.invalid/unsub\r\n", marker, MechanismURL, "https://example.invalid/unsub", "", true, "", ""},
+		{"case insensitive scheme", "HTTPS://example.invalid/unsub", marker, MechanismURL, "HTTPS://example.invalid/unsub", "", true, "", ""},
+		{"missing marker", "https://example.invalid/unsub", "", MechanismURL, "https://example.invalid/unsub", "", false, "", ""},
+		{"bracketed HTTP", "<http://example.invalid/unsub>", marker, MechanismURL, "http://example.invalid/unsub", "", false, "", ""},
+		{"bracketed mailto", "<mailto:unsub@example.invalid>", marker, MechanismMailto, "", "unsub@example.invalid", false, "", ""},
+		{"bracketed alternatives", "<mailto:unsub@example.invalid>, <https://example.invalid/u,a>", marker, MechanismBoth, "https://example.invalid/u,a", "unsub@example.invalid", true, "", ""},
+		{"bare payload comma", "https://example.invalid/u,a?key=a,b", marker, MechanismURL, "https://example.invalid/u,a?key=a,b", "", true, "", ""},
+		{"encoded bare HTTPS", "=?us-ascii?Q?https=3A=2F=2Fexample.invalid=2Funsub?=", marker, MechanismURL, "https://example.invalid/unsub", "", true, "", ""},
+		{"empty", "", marker, MechanismNone, "", "", false, "", ""},
+		{"unsupported scheme", "ftp://example.invalid/unsub", marker, MechanismNone, "", "", false, "", ""},
+		{"relative URL", "/unsubscribe", marker, MechanismNone, "", "", false, "", ""},
+		{"missing host", "https:///unsubscribe", marker, MechanismNone, "", "", false, "", ""},
+		{"opaque HTTPS", "https:unsubscribe", marker, MechanismNone, "", "", false, "", ""},
+		{"invalid escape", "https://example.invalid/%zz", marker, MechanismNone, "", "", false, "", ""},
+		{"embedded whitespace", "https://example.invalid/un subscribe", marker, MechanismNone, "", "", false, "", ""},
+		{"multiple bare values", "mailto:unsub@example.invalid, https://example.invalid/unsub", marker, MechanismNone, "", "", false, "", ""},
+		{"unclosed bracket", "<https://example.invalid/unsub", marker, MechanismNone, "", "", false, "", ""},
+		{"unopened bracket", "https://example.invalid/unsub>", marker, MechanismNone, "", "", false, "", ""},
+		{"malformed bracketed URL", "<https:///unsubscribe>", marker, MechanismNone, "", "", false, "", ""},
+		{"unrecognized value", "not a URL", marker, MechanismNone, "", "", false, "", ""},
+		{"prefixed marker", "https://example.invalid/unsub", "xList-Unsubscribe=One-Click", MechanismURL, "https://example.invalid/unsub", "", false, "", ""},
+		{"suffixed marker", "<https://example.invalid/unsub>", "List-Unsubscribe=One-Click-disabled", MechanismURL, "https://example.invalid/unsub", "", false, "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "bare HTTPS" && os.Getenv("FM_PARSER_TEST_WRONG_URL") == "1" {
+				tt.url = "https://wrong.invalid/judge"
+			}
+			got := Parse(tt.header, tt.post)
+			if got.Mechanism != tt.mechanism || got.URL != tt.url || got.OneClick != tt.oneClick {
+				t.Errorf("Parse(%q, %q) = %+v; want mechanism=%q URL=%q oneClick=%v", tt.header, tt.post, got, tt.mechanism, tt.url, tt.oneClick)
+			}
+			if tt.address == "" {
+				if got.Mailto != nil {
+					t.Errorf("Mailto = %+v, want nil", got.Mailto)
+				}
+			} else if got.Mailto == nil || got.Mailto.Address != tt.address {
+				t.Errorf("Mailto = %+v, want address %q", got.Mailto, tt.address)
+			}
+			if got.Mailto != nil && (got.Mailto.Subject != tt.subject || got.Mailto.Body != tt.body) {
+				t.Errorf("Mailto = %+v, want decoded subject and body", got.Mailto)
+			}
+			if tt.header != "" && got.Raw != decodeHeader(tt.header) {
+				t.Errorf("Raw = %q, want decoded original header", got.Raw)
 			}
 		})
 	}
