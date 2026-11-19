@@ -1,0 +1,12 @@
+--- a/internal/client/draft.go
++++ b/internal/client/draft.go
+@@ -49,6 +49,9 @@
+ 		return types.DraftResult{}, fmt.Errorf("drafts mailbox not found: %w", err)
+ 	}
+ 
++	if _, ok := c.jmap.Session.RawCapabilities["urn:ietf:params:jmap:submission"]; !ok {
++		return types.DraftResult{}, fmt.Errorf("missing submission")
++	}
+ 	draftsID := draftsMB.ID
+ 
+ 	// Resolve From: use --from identity if provided, else session username.
