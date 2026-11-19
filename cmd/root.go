@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -25,6 +27,7 @@ var ErrSilent = errors.New("error already printed")
 var (
 	cfgFile       string
 	initConfigErr error
+	config        = viper.New()
 	version       = "dev"
 	rootCmd       = &cobra.Command{
 		Use:   "fm",
@@ -54,22 +57,11 @@ func init() {
 	rootCmd.PersistentFlags().String("format", "json", "output format: json or text")
 	rootCmd.PersistentFlags().String("account-id", "", "Fastmail account ID (auto-detected if blank)")
 
-	for _, bind := range []struct{ key, flag string }{
-		{"credential_command", "credential-command"},
-		{"session_url", "session-url"},
-		{"format", "format"},
-		{"account_id", "account-id"},
-	} {
-		if err := viper.BindPFlag(bind.key, rootCmd.PersistentFlags().Lookup(bind.flag)); err != nil {
-			panic(fmt.Sprintf("failed to bind flag %q: %v", bind.flag, err))
-		}
-	}
-
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if initConfigErr != nil {
 			return exitError("config_error", "failed to read config: "+initConfigErr.Error(), configErrorHint())
 		}
-		format := viper.GetString("format")
+		format := config.GetString("format")
 		if format != "json" && format != "text" {
 			return exitError("general_error",
 				fmt.Sprintf("unsupported output format: %q", format),
@@ -80,33 +72,65 @@ func init() {
 }
 
 func initConfig() {
-	initConfigErr = nil
+	config = viper.New()
+	initConfigErr = readConfig(config)
 
+	config.SetEnvPrefix("FM")
+	config.AutomaticEnv()
+	config.SetDefault("session_url", "https://api.fastmail.com/jmap/session")
+	config.SetDefault("format", "json")
+	for _, bind := range []struct{ key, flag string }{
+		{"credential_command", "credential-command"},
+		{"session_url", "session-url"},
+		{"format", "format"},
+		{"account_id", "account-id"},
+	} {
+		if err := config.BindPFlag(bind.key, rootCmd.PersistentFlags().Lookup(bind.flag)); err != nil {
+			panic(fmt.Sprintf("failed to bind flag %q: %v", bind.flag, err))
+		}
+	}
+}
+
+func readConfig(config *viper.Viper) error {
 	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+		config.SetConfigFile(cfgFile)
 	} else {
 		home, err := os.UserHomeDir()
 		if err == nil {
 			configDir := filepath.Join(home, ".config", "fm")
-			viper.AddConfigPath(configDir)
-			viper.SetConfigName("config")
-			viper.SetConfigType("yaml")
+			config.AddConfigPath(configDir)
+			config.SetConfigName("config")
+			config.SetConfigType("yaml")
 		}
 	}
 
-	viper.SetEnvPrefix("FM")
-	viper.AutomaticEnv()
-
-	viper.SetDefault("session_url", "https://api.fastmail.com/jmap/session")
-	viper.SetDefault("format", "json")
-
-	if err := viper.ReadInConfig(); err != nil {
+	if err := config.ReadInConfig(); err != nil {
 		var notFound viper.ConfigFileNotFoundError
 		if errors.As(err, &notFound) {
-			return
+			return nil
 		}
-		initConfigErr = err
+		return err
 	}
+
+	return normalizeCredentialCommand(config)
+}
+
+// Normalize before binding flags and the environment so validation sees only file values.
+func normalizeCredentialCommand(config *viper.Viper) error {
+	const canonical, alias = "credential_command", "credential-command"
+	existing, value := config.Get(canonical), config.Get(alias)
+	if !reflect.DeepEqual(existing, value) {
+		// AllKeys retains explicit null keys, which Get treats as missing.
+		keys := config.AllKeys()
+		if (existing != nil || slices.Contains(keys, canonical)) &&
+			(value != nil || slices.Contains(keys, alias)) {
+			return errors.New("credential_command and credential-command have different values; use one spelling")
+		}
+	}
+	if existing == nil && value != nil {
+		return config.MergeConfigMap(map[string]any{canonical: value})
+	}
+	return nil
 }
 
 func configErrorHint() string {
@@ -134,7 +158,7 @@ const credentialTimeout = 10 * time.Second
 
 // resolveToken executes the configured credential command and returns the token.
 func resolveToken() (string, error) {
-	credCmd := viper.GetString("credential_command")
+	credCmd := config.GetString("credential_command")
 	if credCmd == "" {
 		credCmd = defaultCredentialCommand()
 	}
@@ -173,15 +197,14 @@ func newClient() (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	sessionURL := viper.GetString("session_url")
-	accountID := viper.GetString("account_id")
+	sessionURL := config.GetString("session_url")
+	accountID := config.GetString("account_id")
 
 	return client.New(sessionURL, token, accountID)
 }
 
-// formatter returns the configured output formatter.
 func formatter() output.Formatter {
-	return output.New(viper.GetString("format"))
+	return output.New(config.GetString("format"))
 }
 
 // exitError writes a structured error to stderr and returns ErrSilent

@@ -13,7 +13,6 @@ import (
 	"git.sr.ht/~rockorager/go-jmap"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cboone/fm/internal/client"
 	"github.com/cboone/fm/internal/types"
@@ -42,7 +41,7 @@ func openOneClickMailbox() (oneClickMailbox, error) {
 	if err != nil {
 		return nil, &oneClickSetupError{credential: true, err: err}
 	}
-	c, err := client.New(viper.GetString("session_url"), token, viper.GetString("account_id"))
+	c, err := client.New(config.GetString("session_url"), token, config.GetString("account_id"))
 	if err != nil {
 		return nil, &oneClickSetupError{err: err}
 	}
@@ -88,7 +87,7 @@ func runOneClickCommand(cmd *cobra.Command, args []string) error {
 		return exitError("general_error", err.Error(), "")
 	}
 	// Authentication headers are meaningful only within the Fastmail trust boundary.
-	if viper.GetString("session_url") != "https://api.fastmail.com/jmap/session" {
+	if config.GetString("session_url") != "https://api.fastmail.com/jmap/session" {
 		return exitError("general_error", "one-click requires the Fastmail session endpoint", "")
 	}
 	c, err := oneClickOpenMailbox()
