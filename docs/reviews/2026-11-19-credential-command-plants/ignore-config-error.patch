@@ -1,0 +1,7 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -75,3 +75,3 @@
+ 	config = viper.New()
+-	initConfigErr = readConfig(config)
++	_ = readConfig(config)
+

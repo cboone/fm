@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cboone/fm/internal/client"
 	"github.com/cboone/fm/internal/types"
@@ -108,7 +107,7 @@ It is NOT sent. Review and send from Fastmail.`,
 }
 
 func formatDraftResult(cmd *cobra.Command, result types.DraftResult) error {
-	if viper.GetString("format") == "text" {
+	if config.GetString("format") == "text" {
 		for _, warning := range result.Warnings {
 			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Warning: "+warning); err != nil {
 				return err

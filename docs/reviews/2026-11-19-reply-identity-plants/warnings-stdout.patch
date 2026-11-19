@@ -2,7 +2,7 @@
 +++ b/cmd/draft.go
 @@ -110,7 +110,7 @@
  func formatDraftResult(cmd *cobra.Command, result types.DraftResult) error {
- 	if viper.GetString("format") == "text" {
+ 	if config.GetString("format") == "text" {
  		for _, warning := range result.Warnings {
 -			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Warning: "+warning); err != nil {
 +			if _, err := fmt.Fprintln(cmd.OutOrStdout(), "Warning: "+warning); err != nil {

@@ -294,6 +294,9 @@ Resolution order (highest first):
 
 ### Optional Config File
 
+`credential-command` aliases `credential_command`. If both spellings
+appear in the file, their values must match.
+
 ```yaml
 # ~/.config/fm/config.yaml
 credential_command: "op read op://Private/Fastmail/token"

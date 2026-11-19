@@ -1,0 +1,8 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -87,2 +87,5 @@
+ 	} {
++		if bind.key == "credential_command" {
++			continue
++		}
+ 		if err := config.BindPFlag(bind.key, rootCmd.PersistentFlags().Lookup(bind.flag)); err != nil {

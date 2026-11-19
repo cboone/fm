@@ -1,0 +1,7 @@
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -125,3 +125,3 @@
+ 		if (existing != nil || slices.Contains(keys, canonical)) &&
+-			(value != nil || slices.Contains(keys, alias)) {
++			value != nil {
+ 			return errors.New("credential_command and credential-command have different values; use one spelling")
