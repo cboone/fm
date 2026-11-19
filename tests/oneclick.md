@@ -1,5 +1,16 @@
 # One-click unsubscribe validation
 
+## One-click rejects exact filters
+
+```scrut
+$ "$TESTDIR/../fm" unsubscribe --one-click --sender a@example.com --from-domain example.com 2>&1
+{
+  "error": "general_error",
+  "message": "--one-click does not accept filter flags"
+}
+[1]
+```
+
 ## One-click rejects a non-Fastmail session flag before authentication
 
 ```scrut

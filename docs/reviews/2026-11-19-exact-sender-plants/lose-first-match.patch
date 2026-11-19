@@ -1,0 +1,11 @@
+--- a/internal/client/email.go
++++ b/internal/client/email.go
+@@ -582,7 +582,7 @@
+ // if none match. Exact sender selection pages until it verifies a match.
+ // It ignores Limit, Offset, SortField, and SortAsc from opts.
+ func (c *Client) QueryFirstEmailID(opts SearchOptions) (string, error) {
+-	if opts.hasExactSender() {
++	if opts.hasExactSender() && opts.FromExact == "" {
+ 		opts.SortField, opts.SortAsc = "receivedAt", false
+ 		ids, _, err := c.exactSenderIDs(opts, 0, 1, true)
+ 		if err != nil || len(ids) == 0 {

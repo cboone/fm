@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -23,7 +23,7 @@
+ 		return false
+ 	}
+ 	return (opts.FromExact == "" || unsubscribe.EqualSenderAddress(address, opts.FromExact)) &&
+-		(opts.FromDomain == "" || unsubscribe.EqualFoldASCII(address[at+1:], opts.FromDomain))
++		(opts.FromExact != "" || opts.FromDomain == "" || unsubscribe.EqualFoldASCII(address[at+1:], opts.FromDomain))
+ }
+ 
+ func buildExactSenderFilter(opts SearchOptions) email.Filter {

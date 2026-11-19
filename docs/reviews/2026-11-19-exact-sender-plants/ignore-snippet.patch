@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -111,7 +111,7 @@
+ 			return types.EmailListResult{}, fmt.Errorf("exact sender summaries: %w", err)
+ 		}
+ 		summaries := convertSummaries(messages)
+-		if opts.Text != "" {
++		if opts.Text == "" {
+ 			if err := c.attachSenderSnippets(batch, buildSearchFilter(opts), summaries); err != nil {
+ 				return types.EmailListResult{}, err
+ 			}

@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -112,10 +113,26 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 						callID,
 					})
 				case "Email/get":
+					var get struct {
+						IDs []string `json:"ids"`
+					}
+					if err := json.Unmarshal(call[1], &get); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+						return
+					}
+					messages := m.emails
+					if get.IDs != nil {
+						messages = nil
+						for _, message := range m.emails {
+							if slices.Contains(get.IDs, message["id"].(string)) {
+								messages = append(messages, message)
+							}
+						}
+					}
 					args := map[string]any{
 						"accountId": "A1",
 						"state":     "state-1",
-						"list":      m.emails,
+						"list":      messages,
 					}
 					if len(m.notFound) > 0 {
 						args["notFound"] = m.notFound
@@ -123,7 +140,9 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 					resp.MethodResponses = append(resp.MethodResponses, []any{"Email/get", args, callID})
 				case "Email/query":
 					var query struct {
-						Filter json.RawMessage `json:"filter"`
+						Filter   json.RawMessage `json:"filter"`
+						Position int             `json:"position"`
+						Limit    int             `json:"limit"`
 					}
 					if err := json.Unmarshal(call[1], &query); err != nil {
 						http.Error(w, err.Error(), http.StatusBadRequest)
@@ -132,8 +151,17 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 					m.mu.Lock()
 					m.queryFilters = append(m.queryFilters, query.Filter)
 					m.mu.Unlock()
-					ids := make([]string, len(m.emails))
-					for i, e := range m.emails {
+					if query.Position < 0 || query.Limit < 0 {
+						http.Error(w, "unsupported synthetic query position or limit", http.StatusBadRequest)
+						return
+					}
+					position := min(query.Position, len(m.emails))
+					end := len(m.emails)
+					if query.Limit > 0 {
+						end = position + min(query.Limit, end-position)
+					}
+					ids := make([]string, end-position)
+					for i, e := range m.emails[position:end] {
 						ids[i] = e["id"].(string)
 					}
 					resp.MethodResponses = append(resp.MethodResponses, []any{
@@ -143,7 +171,7 @@ func newJMAPMockServer(t *testing.T, mailboxes []map[string]any, emails []map[st
 							"queryState": "q-1",
 							"total":      uint64(len(m.emails)),
 							"ids":        ids,
-							"position":   0,
+							"position":   position,
 						},
 						callID,
 					})

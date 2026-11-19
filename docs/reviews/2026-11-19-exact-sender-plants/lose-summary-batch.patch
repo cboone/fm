@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -116,7 +116,7 @@
+ 				return types.EmailListResult{}, err
+ 			}
+ 		}
+-		result.Emails = append(result.Emails, summaries...)
++		result.Emails = summaries
+ 	}
+ 	return result, nil
+ }

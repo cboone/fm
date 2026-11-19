@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -71,7 +71,7 @@
+ 		}
+ 		messages, err := c.senderMessages(ids, []string{"id", "from", "receivedAt"})
+ 		if err != nil {
+-			return nil, 0, fmt.Errorf("exact sender candidates: %w", err)
++			continue
+ 		}
+ 		for _, message := range messages {
+ 			for _, from := range message.From {

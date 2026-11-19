@@ -1,0 +1,10 @@
+--- a/cmd/search.go
++++ b/cmd/search.go
+@@ -49,6 +49,7 @@
+ 			return err
+ 		}
+ 		opts.FlagColor = color
++		opts.FlagColor = nil
+ 
+ 		sortStr, _ := cmd.Flags().GetString("sort")
+ 		sortField, sortAsc, err := parseSort(sortStr)

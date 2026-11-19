@@ -1,0 +1,11 @@
+--- a/internal/client/exact_sender.go
++++ b/internal/client/exact_sender.go
+@@ -82,7 +82,7 @@
+ 					matches = append(matches, message.ID)
+ 				}
+ 				total++
+-				if firstOnly {
++				if firstOnly || (limit > 0 && uint64(len(matches)) == limit) {
+ 					return matches, total, nil
+ 				}
+ 				break

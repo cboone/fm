@@ -1,0 +1,10 @@
+--- a/cmd/filters.go
++++ b/cmd/filters.go
+@@ -63,6 +63,7 @@
+ func parseExactSenderFlags(cmd *cobra.Command, opts *client.SearchOptions) error {
+ 	if cmd.Flags().Changed("from-exact") {
+ 		value, _ := cmd.Flags().GetString("from-exact")
++		if value == "" { return nil }
+ 		addr, err := mail.ParseAddress(value)
+ 		if err != nil || addr.Address != value || !validSenderDomain(value[strings.LastIndexByte(value, '@')+1:]) {
+ 			return exitError("general_error", "--from-exact requires a plain email address", "")

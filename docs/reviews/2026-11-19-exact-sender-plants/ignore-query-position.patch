@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -113,7 +113,7 @@
+ 	}
+ 	switch page := resp.Responses[0].Args.(type) {
+ 	case *email.QueryResponse:
+-		if page.Position != uint64(cursor.position) || (cursor.position > 0 && page.QueryState != cursor.state) {
++		if (cursor.position > 0 && page.QueryState != cursor.state) {
+ 			return nil, ErrSenderSelectionChanged
+ 		}
+ 		if uint64(len(page.IDs)) > query.Limit {
