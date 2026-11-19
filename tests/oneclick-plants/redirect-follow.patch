@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -153,7 +153,7 @@
+ 	dialer := &net.Dialer{Timeout: 10 * time.Second}
+ 	return &http.Client{
+ 		Timeout:       30 * time.Second,
+-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
++		CheckRedirect: func(*http.Request, []*http.Request) error { return nil },
+ 		Transport: &http.Transport{
+ 			DialContext:         publicDial(net.DefaultResolver.LookupNetIP, dialer.DialContext),
+ 			DisableKeepAlives:   true,

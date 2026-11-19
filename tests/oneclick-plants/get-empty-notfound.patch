@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -59,7 +59,7 @@
+ 			return ErrSenderResponseInvalid
+ 		}
+ 		for _, id := range r.NotFound {
+-			if id == "" {
++			if id == "" && false {
+ 				return ErrSenderResponseInvalid
+ 			}
+ 		}

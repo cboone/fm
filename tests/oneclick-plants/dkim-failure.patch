@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -56,7 +56,7 @@
+ 		}
+ 		for _, method := range parts[1:] {
+ 			fields := strings.Fields(method)
+-			if len(fields) == 0 || !strings.EqualFold(fields[0], "dkim=pass") {
++			if len(fields) == 0 || !strings.EqualFold(fields[0], "dkim=fail") {
+ 				continue
+ 			}
+ 			props := make(map[string]string)

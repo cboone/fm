@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CLI_TEST_HOME=''
+SESSION_FIXTURE_PID=''
+
+function cleanup() {
+  exec 3>&-
+  if [[ -n "${SESSION_FIXTURE_PID}" ]]; then
+    if ! wait "${SESSION_FIXTURE_PID}"; then
+      echo 'CLI session fixture exited unsuccessfully' >&2
+      return 1
+    fi
+  fi
+  if [[ -n "${CLI_TEST_HOME}" && -d "${CLI_TEST_HOME}" ]]; then
+    rm -r -- "${CLI_TEST_HOME}"
+  fi
+}
+
+function main() {
+  local root stub_dir tool test_file
+  local check_only=false
+  if [[ "${1:-}" == --check-only ]]; then
+    check_only=true
+    shift
+  fi
+  root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  stub_dir="${root}/tests/credential-stubs"
+  export PATH="${stub_dir}:${PATH}"
+  for tool in security secret-tool; do
+    if [[ "$(command -v "${tool}")" != "${stub_dir}/${tool}" ]]; then
+      echo "refusing CLI tests: ${tool} stub not selected" >&2
+      return 1
+    fi
+  done
+
+  if [[ $# -eq 0 ]]; then
+    set -- tests/errors.md tests/flags.md tests/arguments.md tests/help.md tests/sieve.md tests/oneclick.md
+  fi
+  for test_file in "$@"; do
+    case "${test_file}" in
+    tests/errors.md | tests/flags.md | tests/arguments.md | tests/help.md | tests/sieve.md | tests/oneclick.md) ;;
+    *)
+      echo 'refusing CLI tests: only non-live fixtures are allowed' >&2
+      return 1
+      ;;
+    esac
+    check_fixture "${root}/${test_file}"
+  done
+  if [[ "${check_only}" == true ]]; then
+    echo 'CLI_PREFLIGHT_COMPLETE'
+    return 0
+  fi
+
+  CLI_TEST_HOME="$(mktemp -d "${TMPDIR:-/tmp}/fm-cli-tests.XXXXXX")"
+  trap cleanup EXIT
+  cd "${root}"
+  echo 'Preparing owned CLI session fixture'
+  go build -o "${CLI_TEST_HOME}/session-fixture" ./tests/session-fixture
+  mkfifo "${CLI_TEST_HOME}/control" "${CLI_TEST_HOME}/endpoint"
+  "${CLI_TEST_HOME}/session-fixture" <"${CLI_TEST_HOME}/control" >"${CLI_TEST_HOME}/endpoint" &
+  SESSION_FIXTURE_PID=$!
+  exec 3>"${CLI_TEST_HOME}/control"
+  local endpoint
+  IFS= read -r endpoint <"${CLI_TEST_HOME}/endpoint"
+  if [[ ! "${endpoint}" =~ ^http://127\.0\.0\.1:[0-9]+/session$ ]]; then
+    echo 'CLI session fixture returned an invalid local endpoint' >&2
+    return 1
+  fi
+  env -i PATH="${PATH}" HOME="${CLI_TEST_HOME}" \
+    FM_CREDENTIAL_COMMAND='exit 99' FM_SESSION_URL="${endpoint}" FM_TEST_SESSION_URL="${endpoint}" \
+    HTTP_PROXY="${endpoint%/session}" HTTPS_PROXY="${endpoint%/session}" \
+    scrut test "$@" 3>&-
+}
+
+function check_fixture() {
+  local line safe credential pattern
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    [[ "${line}" == '$ '* ]] || continue
+    safe="${line}"
+    for credential in 'exit 99' 'echo test-token' 'echo env-token' 'echo flag-token' 'echo test' 'echo invalid-token-xxx'; do
+      for pattern in \
+        "FM_CREDENTIAL_COMMAND='${credential}'" \
+        "FM_CREDENTIAL_COMMAND=\"${credential}\"" \
+        "--credential-command '${credential}'" \
+        "--credential-command \"${credential}\""; do
+        safe="${safe//"${pattern}"/}"
+      done
+    done
+    if [[ "${safe}" == *FM_CREDENTIAL_COMMAND=* || "${safe}" == *--credential-command* || "${safe}" == *FM_TOKEN=* || "${safe}" == *'-u FM_CREDENTIAL_COMMAND'* ]]; then
+      echo 'refusing CLI tests: credential source is not an allowed literal fixture' >&2
+      return 1
+    fi
+    for pattern in "FM_SESSION_URL=\"\$FM_TEST_SESSION_URL\"" "--session-url \"\$FM_TEST_SESSION_URL\""; do
+      safe="${safe//"${pattern}"/}"
+    done
+    if [[ "${safe}" == *FM_SESSION_URL=* || "${safe}" == *--session-url* || "${safe}" == *'-u FM_SESSION_URL'* || "${safe}" == *FM_TEST_SESSION_URL=* || "${safe}" == *HTTP_PROXY* || "${safe}" == *HTTPS_PROXY* || "${safe}" == *NO_PROXY* ]]; then
+      echo 'refusing CLI tests: endpoint is outside the owned session fixture' >&2
+      return 1
+    fi
+  done <"$1"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -50,7 +50,7 @@
+ 			return ErrSenderResponseInvalid
+ 		}
+ 		for _, id := range r.IDs {
+-			if id == "" {
++			if id == "" && false {
+ 				return ErrSenderResponseInvalid
+ 			}
+ 		}

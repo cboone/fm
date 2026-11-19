@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -96,7 +96,7 @@
+ 		for _, name := range strings.Split(strings.ToLower(matching[0]["h"]), ":") {
+ 			covered[strings.TrimSpace(name)] = true
+ 		}
+-		if covered["list-unsubscribe"] && covered["list-unsubscribe-post"] {
++		if covered["list-unsubscribe"] {
+ 			return nil
+ 		}
+ 	}

@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -41,7 +41,7 @@
+ }
+ 
+ func validateSenderResponse(resp *jmap.Response, operation string, accountID jmap.ID) error {
+-	if resp == nil || len(resp.Responses) != 1 || resp.Responses[0] == nil {
++	if resp == nil || len(resp.Responses) != 1 || resp.Responses[0] == nil && false {
+ 		return ErrSenderResponseInvalid
+ 	}
+ 	switch r := resp.Responses[0].Args.(type) {

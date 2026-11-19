@@ -21,7 +21,7 @@ Error: accepts 1 arg(s), received 2
 ## Archive requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm archive 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -33,7 +33,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Spam requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm spam 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm spam 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -45,7 +45,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Mark-read requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm mark-read 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm mark-read 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -57,7 +57,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Flag requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm flag 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm flag 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -69,7 +69,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Unflag requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unflag 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unflag 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -81,7 +81,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Unsubscribe requires email ID or filter flags
 
 ```scrut
-$ env -u FM_TOKEN -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unsubscribe 2>&1
+$ env -u FM_TOKEN -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm unsubscribe 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -101,7 +101,7 @@ Error: accepts at most 1 arg(s), received 2
 ## Move requires email IDs or filter flags
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move 2>&1
 {
   "error": "general_error",
   "message": "no emails specified",
@@ -113,7 +113,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Move requires --to flag
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move M123 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm move M123 2>&1
 {
   "error": "general_error",
   "message": "required flag \"to\" not set",
@@ -144,7 +144,7 @@ Search without a positional query argument should still work (it fails
 due to no token, not due to argument validation).
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search --from alice@test.com 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)
@@ -154,7 +154,7 @@ $ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID H
 ## Search accepts one argument
 
 ```scrut
-$ env -u FM_CREDENTIAL_COMMAND -u FM_SESSION_URL -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search "test query" --from alice@test.com 2>&1
+$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent $TESTDIR/../fm search "test query" --from alice@test.com 2>&1
 {
   "error": "authentication_failed",
 * (glob+)

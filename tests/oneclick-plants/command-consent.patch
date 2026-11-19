@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -104,7 +104,7 @@
+ 	httpClient := oneClickHTTPClient()
+ 	defer httpClient.CloseIdleConnections()
+ 	confirm, _ := cmd.Flags().GetBool("confirm")
+-	results, failed := oneClickResults(cmd.Context(), senders, confirm, c.NewestSenderEmail, httpClient)
++	results, failed := oneClickResults(cmd.Context(), senders, confirm || !confirm, c.NewestSenderEmail, httpClient)
+ 	if err := formatter().Format(os.Stdout, results); err != nil {
+ 		return err
+ 	}

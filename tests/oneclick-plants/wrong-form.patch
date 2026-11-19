@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -165,7 +165,7 @@
+ // Post sends the RFC 8058 form once. Errors omit the capability URL and response
+ // body; a transport error may mean the request was received, so callers must not retry.
+ func Post(ctx context.Context, c *http.Client, target *url.URL) (int, error) {
+-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), strings.NewReader("List-Unsubscribe=One-Click"))
++	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), strings.NewReader("List-Unsubscribe=Other"))
+ 	if err != nil {
+ 		return 0, errors.New("cannot construct unsubscribe request")
+ 	}

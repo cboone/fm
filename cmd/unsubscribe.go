@@ -21,9 +21,20 @@ Shows the unsubscribe mechanism: mailto, url, both, or none.
 With --draft, creates a draft email for mailto-based unsubscribe.
 
 Accepts a single email ID as argument, or use filter flags to select
-an email (e.g. --from sender@example.com).`,
+an email (e.g. --from sender@example.com).
+
+With --one-click --sender a@example.com (repeatable), preview the newest
+exact sender message's RFC 8058 target. --confirm POSTs once per eligible
+sender; --dry-run explicitly previews. No filters, IDs or --draft in this mode.
+Unknown Fastmail DKIM results or unsigned unsubscribe headers are skipped.
+Only the destination host is displayed. See README Limits for the delivered-mail
+trust assumption and the limits of HTTP acceptance.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		oneClick, _ := cmd.Flags().GetBool("one-click")
+		if oneClick || cmd.Flags().Changed("sender") || cmd.Flags().Changed("confirm") || cmd.Flags().Changed("dry-run") {
+			return runOneClickCommand(cmd, args)
+		}
 		if err := validateIDsOrFilters(cmd, args); err != nil {
 			return err
 		}
@@ -102,6 +113,10 @@ an email (e.g. --from sender@example.com).`,
 
 func init() {
 	unsubscribeCmd.Flags().Bool("draft", false, "create a draft unsubscribe email (mailto only)")
+	unsubscribeCmd.Flags().Bool("one-click", false, "preview RFC 8058 unsubscribe for explicit senders")
+	unsubscribeCmd.Flags().StringArray("sender", nil, "exact sender address (repeatable; requires --one-click)")
+	unsubscribeCmd.Flags().Bool("confirm", false, "POST each eligible one-click unsubscribe once")
+	unsubscribeCmd.Flags().Bool("dry-run", false, "preview only (the default for --one-click)")
 	addFilterFlags(unsubscribeCmd)
 	rootCmd.AddCommand(unsubscribeCmd)
 }

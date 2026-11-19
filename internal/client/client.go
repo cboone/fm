@@ -20,6 +20,9 @@ import (
 // ErrNotFound indicates that a requested resource was not found.
 var ErrNotFound = fmt.Errorf("not found")
 
+// ErrNoPrimaryAccount means the session has no default mail account.
+var ErrNoPrimaryAccount = fmt.Errorf("no primary mail account found in session")
+
 const maxRetries = 3
 const defaultBatchSize = 50
 
@@ -58,7 +61,7 @@ func New(sessionURL, token, accountID string) (*Client, error) {
 	} else {
 		primary, ok := jc.Session.PrimaryAccounts[mail.URI]
 		if !ok {
-			return nil, fmt.Errorf("no primary mail account found in session")
+			return nil, ErrNoPrimaryAccount
 		}
 		c.accountID = primary
 	}

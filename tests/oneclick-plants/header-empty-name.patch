@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -89,7 +89,7 @@
+ }
+ 
+ func validSenderHeaderName(name string) bool {
+-	if name == "" {
++	if name == "" && false {
+ 		return false
+ 	}
+ 	for _, ch := range name {

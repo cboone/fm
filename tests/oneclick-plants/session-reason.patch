@@ -1,0 +1,11 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -116,7 +116,7 @@
+ 
+ func oneClickSessionFailure(err error) types.AppError {
+ 	failure := types.AppError{Error: "authentication_failed", Message: "Fastmail session discovery failed", Hint: "Check token permissions and --account-id"}
+-	if errors.Is(err, client.ErrNoPrimaryAccount) {
++	if errors.Is(err, client.ErrNoPrimaryAccount) && false {
+ 		failure.Message, failure.Hint = "Fastmail session has no primary mail account", "Check --account-id and token permissions"
+ 		return failure
+ 	}

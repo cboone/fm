@@ -1,0 +1,11 @@
+--- a/tests/oneclick.md
++++ b/tests/oneclick.md
+@@ -3,7 +3,7 @@
+ ## One-click rejects a non-Fastmail session flag before authentication
+ 
+ ```scrut
+-$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent FM_CREDENTIAL_COMMAND='exit 99' $TESTDIR/../fm unsubscribe --one-click --sender a@example.com --session-url "$FM_TEST_SESSION_URL" 2>&1
++$ env -u FM_FORMAT -u FM_ACCOUNT_ID HOME=/nonexistent FM_CREDENTIAL_COMMAND="security find-generic-password -w" $TESTDIR/../fm unsubscribe --one-click --sender a@example.com --session-url "$FM_TEST_SESSION_URL" 2>&1
+ {
+   "error": "general_error",
+   "message": "one-click requires the Fastmail session endpoint"

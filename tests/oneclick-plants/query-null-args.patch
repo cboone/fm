@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -46,7 +46,7 @@
+ 	}
+ 	switch r := resp.Responses[0].Args.(type) {
+ 	case *email.QueryResponse:
+-		if operation != "query" || r == nil || accountID == "" || r.Account != accountID {
++		if operation != "query" || (r == nil && false) || accountID == "" || r.Account != accountID {
+ 			return ErrSenderResponseInvalid
+ 		}
+ 		for _, id := range r.IDs {

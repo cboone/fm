@@ -1,0 +1,11 @@
+--- a/internal/output/text.go
++++ b/internal/output/text.go
+@@ -75,7 +75,7 @@
+ 				line += fmt.Sprintf(" (%s)", result.Reason)
+ 			}
+ 			if _, err := fmt.Fprintln(w, line); err != nil {
+-				return err
++				return nil
+ 			}
+ 		}
+ 		return nil

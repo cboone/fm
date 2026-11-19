@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellcheck source=tests/run-cli-tests
+source "$(dirname "${BASH_SOURCE[0]}")/run-cli-tests"
+
+function main() {
+  local fixture forbidden root
+  root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  CLI_TEST_HOME="$(mktemp -d "${TMPDIR:-/tmp}/fm-cli-policy.XXXXXX")"
+  trap cleanup EXIT
+  mkdir -p "${CLI_TEST_HOME}/tests/credential-stubs"
+  cp "${root}/tests/run-cli-tests" "${CLI_TEST_HOME}/tests/run-cli-tests"
+  cp -p "${root}/tests/credential-stubs/security" "${root}/tests/credential-stubs/secret-tool" \
+    "${CLI_TEST_HOME}/tests/credential-stubs/"
+  fixture="${CLI_TEST_HOME}/tests/oneclick.md"
+  printf '%s\n' "\$ env FM_CREDENTIAL_COMMAND=\"echo test-token\" FM_SESSION_URL=\"\$FM_TEST_SESSION_URL\" fm session" >"${fixture}"
+  bash "${CLI_TEST_HOME}/tests/run-cli-tests" --check-only tests/oneclick.md
+  for forbidden in \
+    '$ env FM_CREDENTIAL_COMMAND="security find-generic-password -w" fm session' \
+    '$ env -u FM_CREDENTIAL_COMMAND fm session' \
+    '$ env FM_CREDENTIAL_COMMAND="" fm session'; do
+    printf '%s\n' "${forbidden}" >"${fixture}"
+    if bash "${CLI_TEST_HOME}/tests/run-cli-tests" --check-only tests/oneclick.md; then
+      echo 'ASSERT CLI wrapper accepted a secret-capable credential' >&2
+      return 1
+    fi
+  done
+  printf '%s\n' '$ fm session --session-url https://api.fastmail.com/jmap/session' >"${fixture}"
+  if bash "${CLI_TEST_HOME}/tests/run-cli-tests" --check-only tests/oneclick.md; then
+    echo 'ASSERT CLI wrapper accepted an external endpoint' >&2
+    return 1
+  fi
+  echo 'CLI_CONTAINMENT_CHECK_COMPLETE'
+}
+
+main "$@"

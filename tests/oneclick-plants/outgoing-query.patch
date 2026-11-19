@@ -1,0 +1,10 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -170,6 +170,7 @@
+ 		return 0, errors.New("cannot construct unsubscribe request")
+ 	}
+ 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
++	req.URL.RawQuery = ""
+ 	req.GetBody = nil
+ 	resp, err := c.Do(req)
+ 	if err != nil {

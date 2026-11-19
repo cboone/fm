@@ -1,0 +1,10 @@
+--- a/cmd/unsubscribe_oneclick.go
++++ b/cmd/unsubscribe_oneclick.go
+@@ -167,6 +167,7 @@
+ 		result, senderFailed := oneClickResult(ctx, sender, confirm, selectEmail, httpClient)
+ 		results = append(results, result)
+ 		failed = failed || senderFailed
++		if senderFailed { break }
+ 	}
+ 	return results, failed
+ }

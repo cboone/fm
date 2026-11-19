@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/auth.go
++++ b/internal/unsubscribe/auth.go
+@@ -35,7 +35,7 @@
+ 			if fastmailHost.MatchString(parts[2]) {
+ 				receiver = parts[2]
+ 			}
+-			break
++			continue
+ 		}
+ 		if strings.EqualFold(h.Name, "Authentication-Results") {
+ 			results = append(results, h.Value)

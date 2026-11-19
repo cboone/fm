@@ -1,0 +1,11 @@
+--- a/internal/types/types.go
++++ b/internal/types/types.go
+@@ -256,7 +256,7 @@
+ 	EmailID    string `json:"email_id,omitempty"`
+ 	ReceivedAt string `json:"received_at,omitempty"`
+ 	Host       string `json:"host,omitempty"`
+-	HTTPStatus int    `json:"http_status,omitempty"`
++	HTTPStatus int    `json:"httpStatus,omitempty"`
+ }
+ 
+ // AppError is a structured error for JSON output.

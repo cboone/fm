@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -55,7 +55,7 @@
+ 			}
+ 		}
+ 	case *email.GetResponse:
+-		if operation != "get" || r == nil || accountID == "" || r.Account != accountID {
++		if operation != "get" || r == nil || accountID == "" || (r.Account != accountID && false) {
+ 			return ErrSenderResponseInvalid
+ 		}
+ 		for _, id := range r.NotFound {

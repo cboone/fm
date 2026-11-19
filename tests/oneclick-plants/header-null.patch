@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -73,7 +73,7 @@
+ 				}
+ 			}
+ 			for _, header := range message.Headers {
+-				if header == nil || !validSenderHeaderName(header.Name) {
++				if (header == nil && false) || !validSenderHeaderName(header.Name) {
+ 					return ErrSenderResponseInvalid
+ 				}
+ 			}

@@ -16,7 +16,7 @@ lint: ## Run golangci-lint
 	golangci-lint run ./...
 
 test-cli: binary ## Run scrut CLI integration tests
-	scrut test tests/errors.md tests/flags.md tests/arguments.md tests/help.md tests/sieve.md
+	bash tests/run-cli-tests
 
 test-cli-live: binary ## Run opt-in live CLI integration tests (requires FM_CREDENTIAL_COMMAND and FM_LIVE_TESTS=1)
 	scrut test tests/live.md

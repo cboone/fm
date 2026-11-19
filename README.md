@@ -43,6 +43,56 @@ If you are an LLM agent, follow this sequence on every run:
 6. Verify post-state with follow-up reads (`summary`, `list`, `search`).
 7. If the user asks to reply, create a draft and clearly state it was not sent.
 
+## Reviewed one-click unsubscribe
+
+Preview an explicit reviewed sender list with repeatable addresses:
+
+```bash
+fm unsubscribe --one-click --sender a@example.com --sender b@example.com
+```
+
+Preview sends no unsubscribe request, including DNS lookups. After reviewing the
+results, repeat the list with `--confirm` to send one RFC 8058 HTTPS POST per
+eligible sender. `--dry-run` explicitly requests the default preview; it cannot
+be combined with `--confirm`. No mailbox mutation or email submission occurs.
+
+Each sender selects its newest message whose actual From address matches exactly
+(case insensitive), paging past fuzzy JMAP matches. Multiple From addresses,
+missing or duplicate unsubscribe fields, ambiguous HTTPS targets and unknown or
+failed DKIM results are skipped. A mailto alternative may accompany the single
+HTTPS target but is never a fallback.
+
+Authentication requires a Fastmail Authentication-Results `dkim=pass` for the
+exact sender domain above the receiving SMTP Received boundary. A matching
+DKIM-Signature (`d=`, and `header.b` when available) must cover both unsubscribe
+fields in its `h=` list. Ambiguous signature matches are skipped. Only the
+standard Fastmail JMAP session endpoint is accepted for this mode.
+
+The separate HTTP client sends no cookies or JMAP token, uses a timeout, refuses
+private/loopback/link-local and other special-purpose dial addresses, follows no
+redirects and never retries. Results contain only the destination host, never its
+capability path/query or response body. JSON returns an array with one outcome
+per deduplicated sender; text prints one line per sender. Skips carry a reason.
+Lookup/transport errors and non-2xx statuses produce `partial_failure` after all
+results are emitted. A timeout can follow a completed request: do not retry it
+automatically.
+
+Connection setup can try another already validated public address before sending
+the HTTP request. Policy refusals, DNS failures, exhausted connection attempts
+and certificate-verification failures have explicit no-request-sent results.
+Other failures, including deadline expiry during connection setup, may retain an
+outcome-unknown warning.
+
+### Limits
+
+The authentication policy assumes provider-delivered mail. Imported or rewritten
+messages cannot be distinguished from delivered messages by their headers alone.
+Only the selected message's list is handled, not every subscription using that
+sender. Each invocation selects fresh mail, so a new message between preview and
+confirmation can select a different list. Recheck the preview when mail changes.
+HTTP acceptance reports the endpoint's status, not verified removal from a list.
+Discovery, combined reports, volume thresholds and file input are deferred.
+
 ## Quick Install
 
 ### Homebrew

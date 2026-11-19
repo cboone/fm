@@ -1,0 +1,11 @@
+--- a/internal/unsubscribe/oneclick.go
++++ b/internal/unsubscribe/oneclick.go
+@@ -37,7 +37,7 @@
+ 			posts = append(posts, h.Value)
+ 		}
+ 	}
+-	if len(links) != 1 || len(posts) != 1 || strings.TrimSpace(posts[0]) != "List-Unsubscribe=One-Click" {
++	if len(links) != 1 || len(posts) != 1 || !strings.Contains(posts[0], "List-Unsubscribe=One-Click") {
+ 		return nil, errors.New("missing or ambiguous one-click headers")
+ 	}
+ 	var target *url.URL

@@ -1,0 +1,11 @@
+--- a/internal/client/unsubscribe.go
++++ b/internal/client/unsubscribe.go
+@@ -68,7 +68,7 @@
+ 				return ErrSenderResponseInvalid
+ 			}
+ 			for _, from := range message.From {
+-				if from == nil {
++				if from == nil && false {
+ 					return ErrSenderResponseInvalid
+ 				}
+ 			}
