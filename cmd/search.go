@@ -41,6 +41,12 @@ If omitted, only the provided flags/filters are used for matching.`,
 			return exitError("general_error", "--offset must be non-negative", "")
 		}
 
+		color, err := parseColorFilter(cmd, opts.FlaggedOnly)
+		if err != nil {
+			return err
+		}
+		opts.FlagColor = color
+
 		sortStr, _ := cmd.Flags().GetString("sort")
 		sortField, sortAsc, err := parseSort(sortStr)
 		if err != nil {
@@ -99,6 +105,7 @@ func init() {
 	searchCmd.Flags().BoolP("unread", "u", false, "only show unread messages")
 	searchCmd.Flags().BoolP("flagged", "f", false, "only show flagged messages")
 	searchCmd.Flags().Bool("unflagged", false, "only show unflagged messages")
+	searchCmd.Flags().String("color", "", colorFilterUsage)
 	searchCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	searchCmd.Flags().String("from", "", "filter by sender address/name")
 	searchCmd.Flags().String("to", "", "filter by recipient address/name")

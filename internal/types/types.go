@@ -37,6 +37,7 @@ type EmailSummary struct {
 	Size       uint64    `json:"size"`
 	IsUnread   bool      `json:"is_unread"`
 	IsFlagged  bool      `json:"is_flagged"`
+	FlagColor  *string   `json:"flag_color"`
 	Preview    string    `json:"preview"`
 	Snippet    string    `json:"snippet,omitempty"`
 }
@@ -62,6 +63,7 @@ type EmailDetail struct {
 	ReceivedAt          time.Time    `json:"received_at"`
 	IsUnread            bool         `json:"is_unread"`
 	IsFlagged           bool         `json:"is_flagged"`
+	FlagColor           *string      `json:"flag_color"`
 	Body                string       `json:"body"`
 	ListUnsubscribe     string       `json:"list_unsubscribe,omitempty"`
 	ListUnsubscribePost string       `json:"list_unsubscribe_post,omitempty"`
@@ -84,6 +86,7 @@ type ThreadEmail struct {
 	ReceivedAt time.Time `json:"received_at"`
 	Preview    string    `json:"preview"`
 	IsUnread   bool      `json:"is_unread"`
+	FlagColor  *string   `json:"flag_color"`
 }
 
 // ThreadView wraps a full email with surrounding thread context.

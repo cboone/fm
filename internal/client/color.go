@@ -2,13 +2,14 @@ package client
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"git.sr.ht/~rockorager/go-jmap"
+	"git.sr.ht/~rockorager/go-jmap/mail/email"
 )
 
-// FlagColor represents a flag color per the IETF MailFlagBit spec
-// (draft-eggert-mailflagcolors-00). The three keywords $MailFlagBit0,
+// FlagColor represents a flag color per RFC 9979. The three keywords $MailFlagBit0,
 // $MailFlagBit1, and $MailFlagBit2 encode a 3-bit value (0-6) that
 // maps to a display color in Apple Mail and Fastmail.
 type FlagColor int
@@ -23,7 +24,7 @@ const (
 	FlagColorGray   FlagColor = 6
 )
 
-var colorNames = map[FlagColor]string{
+var colorNames = [...]string{
 	FlagColorRed:    "red",
 	FlagColorOrange: "orange",
 	FlagColorYellow: "yellow",
@@ -35,7 +36,7 @@ var colorNames = map[FlagColor]string{
 
 // ValidColorNames returns the list of valid color names for use in error messages.
 func ValidColorNames() []string {
-	return []string{"red", "orange", "yellow", "green", "blue", "purple", "gray"}
+	return slices.Clone(colorNames[:])
 }
 
 // ParseFlagColor parses a color name (case-insensitive) into a FlagColor.
@@ -43,43 +44,86 @@ func ParseFlagColor(s string) (FlagColor, error) {
 	lower := strings.ToLower(s)
 	for color, name := range colorNames {
 		if name == lower {
-			return color, nil
+			return FlagColor(color), nil
 		}
 	}
 	return 0, fmt.Errorf("invalid color %q; valid colors: %s", s, strings.Join(ValidColorNames(), ", "))
 }
 
 func (c FlagColor) String() string {
-	if name, ok := colorNames[c]; ok {
-		return name
+	if c >= 0 && int(c) < len(colorNames) {
+		return colorNames[c]
 	}
 	return fmt.Sprintf("unknown(%d)", int(c))
 }
 
-// bit returns true/nil for a single bit position (0, 1, or 2).
-func (c FlagColor) bit(pos int) any {
-	if int(c)&(1<<pos) != 0 {
-		return true
-	}
-	return nil
+type flagColorKeyword struct {
+	name      string
+	lowercase string
+	patchPath string
+}
+
+func newFlagColorKeyword(name string) flagColorKeyword {
+	return flagColorKeyword{name, strings.ToLower(name), "keywords/" + name}
+}
+
+var flagColorKeywords = [...]flagColorKeyword{
+	newFlagColorKeyword("$MailFlagBit0"),
+	newFlagColorKeyword("$MailFlagBit1"),
+	newFlagColorKeyword("$MailFlagBit2"),
 }
 
 // Patch returns a jmap.Patch that sets the three $MailFlagBit keywords
 // for this color. Bits that should be set use true; bits that should be
 // cleared use nil (JMAP patch deletion).
 func (c FlagColor) Patch() jmap.Patch {
-	return jmap.Patch{
-		"keywords/$MailFlagBit0": c.bit(0),
-		"keywords/$MailFlagBit1": c.bit(1),
-		"keywords/$MailFlagBit2": c.bit(2),
+	patch := make(jmap.Patch, len(flagColorKeywords))
+	for bit, keyword := range flagColorKeywords {
+		var value any
+		if c&(1<<bit) != 0 {
+			value = true
+		}
+		patch[keyword.patchPath] = value
 	}
+	return patch
 }
 
 // clearColorPatch returns a jmap.Patch that clears all three $MailFlagBit keywords.
 func clearColorPatch() jmap.Patch {
-	return jmap.Patch{
-		"keywords/$MailFlagBit0": nil,
-		"keywords/$MailFlagBit1": nil,
-		"keywords/$MailFlagBit2": nil,
+	return FlagColorRed.Patch()
+}
+
+func decodeFlagColor(keywords map[string]bool) *string {
+	if !keywords["$flagged"] {
+		return nil
+	}
+	var color FlagColor
+	for bit, keyword := range flagColorKeywords {
+		// JMAP servers return keywords in lowercase.
+		if keywords[keyword.lowercase] || keywords[keyword.name] {
+			color |= 1 << bit
+		}
+	}
+	if int(color) >= len(colorNames) {
+		return nil
+	}
+	name := colorNames[color]
+	return &name
+}
+
+func (c FlagColor) filter(base email.Filter) email.Filter {
+	conditions := []email.Filter{base}
+	for bit, keyword := range flagColorKeywords {
+		condition := &email.FilterCondition{}
+		if c&(1<<bit) != 0 {
+			condition.HasKeyword = keyword.lowercase
+		} else {
+			condition.NotKeyword = keyword.lowercase
+		}
+		conditions = append(conditions, condition)
+	}
+	return &email.FilterOperator{
+		Operator:   jmap.OperatorAND,
+		Conditions: conditions,
 	}
 }
