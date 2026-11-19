@@ -247,6 +247,18 @@ type UnsubscribeResult struct {
 	DraftID   string `json:"draft_id,omitempty"`
 }
 
+// OneClickResult reports one sender's preview, skip, HTTP status or error.
+// Host deliberately excludes the unsubscribe capability path and query.
+type OneClickResult struct {
+	Sender     string `json:"sender"`
+	Status     string `json:"status"`
+	Reason     string `json:"reason,omitempty"`
+	EmailID    string `json:"email_id,omitempty"`
+	ReceivedAt string `json:"received_at,omitempty"`
+	Host       string `json:"host,omitempty"`
+	HTTPStatus int    `json:"http_status,omitempty"`
+}
+
 // AppError is a structured error for JSON output.
 type AppError struct {
 	Error   string `json:"error"`

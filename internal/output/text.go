@@ -59,6 +59,26 @@ func (f *TextFormatter) Format(w io.Writer, v any) error {
 		return f.formatSieveDryRunResult(w, val)
 	case types.UnsubscribeResult:
 		return f.formatUnsubscribeResult(w, val)
+	case []types.OneClickResult:
+		for _, result := range val {
+			line := fmt.Sprintf("%s: %s", result.Sender, result.Status)
+			if result.HTTPStatus != 0 {
+				line += fmt.Sprintf(" HTTP %d", result.HTTPStatus)
+			}
+			if result.EmailID != "" {
+				line += fmt.Sprintf(" message=%s received=%s", result.EmailID, result.ReceivedAt)
+			}
+			if result.Host != "" {
+				line += fmt.Sprintf(" host=%s", result.Host)
+			}
+			if result.Reason != "" {
+				line += fmt.Sprintf(" (%s)", result.Reason)
+			}
+			if _, err := fmt.Fprintln(w, line); err != nil {
+				return err
+			}
+		}
+		return nil
 	default:
 		// Fall back to JSON formatter for unknown types.
 		return (&JSONFormatter{}).Format(w, v)
