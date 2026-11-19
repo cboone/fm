@@ -141,7 +141,9 @@ export FM_CREDENTIAL_COMMAND="op read op://Private/Fastmail/token"
 fm session
 ```
 
-`urn:ietf:params:jmap:submission` is intentionally not required.
+Basic read and triage operations do not require
+`urn:ietf:params:jmap:submission`. See [Drafting Protocol](#drafting-protocol)
+for the identity lookup scope and reply fallback behavior.
 
 ## Canonical Agent Loop
 
@@ -209,6 +211,18 @@ All triage mutations support `--dry-run`: `archive`, `spam`, `mark-read`, `flag`
 ## Drafting Protocol
 
 `draft` supports four modes: new, reply, reply-all, and forward.
+
+Replies select the first original To recipient matching an account identity,
+then the first matching Cc recipient, in message order. Matching ignores case;
+the identity supplies the sender address and name. With no match, the
+default sender stays. `--from` overrides automatic selection.
+
+If the token lacks `urn:ietf:params:jmap:submission`, automatic reply selection
+keeps the default sender and warns. Explicit `--from`
+still requires the Email submission (`submission`) token scope, which also
+grants sending permission. Other identity lookup errors stop draft creation.
+JSON results include an optional `warnings` array; text mode writes `Warning:`
+lines to stderr. New messages and forwards retain their existing sender rules.
 
 ```bash
 fm draft --to alice@example.com --subject "Hello" --body "Hi Alice"

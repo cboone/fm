@@ -487,7 +487,19 @@ No positional arguments.
 
 **Address format:** RFC 5322 format is supported: `"Name <email>"` or bare `email@example.com`.
 
-**From identity:** When `--from` is provided, it must match the email address of a configured JMAP identity (case-insensitive). If no match is found, the error message lists all available identity emails. When omitted, the From address is derived from the session username.
+**From identity:** `--from` must match a configured JMAP
+identity email address (case-insensitive). If no identity matches, the error lists
+the available identity emails. Without `--from`, replies choose the first
+original To recipient matching an identity, then Cc, in message order. The
+identity supplies the sender address and name. No match keeps the session
+username default; new messages and forwards also keep that default.
+
+**Identity lookup warnings:** Missing `urn:ietf:params:jmap:submission` keeps the
+default sender for automatic reply selection and reports a warning. Explicit
+`--from` still requires the Email submission (`submission`) token scope, which
+also grants sending permission. Other identity lookup errors stop creation.
+JSON includes an optional `warnings` array; text writes `Warning:` lines to
+stderr.
 
 **Reply behavior:**
 - To: original `Reply-To` header (or `From` if absent); user `--to` appended
@@ -1348,16 +1360,20 @@ Returned by `archive`, `spam`, `mark-read`, `flag`, `unflag`, and `move` command
 
 Returned by the `draft` command.
 
-| Field         | Type            | Notes                                           |
-| ------------- | --------------- | ----------------------------------------------- |
-| `id`          | string          | Server-assigned ID of the created draft          |
-| `mode`        | string          | One of: `new`, `reply`, `reply-all`, `forward`  |
-| `mailbox`     | DestinationInfo | The Drafts mailbox                              |
-| `from`        | Address[]       | Omitted if session username is not an email      |
-| `to`          | Address[]       | Recipients                                       |
-| `cc`          | Address[]       | Omitted if empty                                 |
-| `subject`     | string          | Final subject line                               |
-| `in_reply_to` | string          | Omitted for new/forward; message IDs for replies |
+`from` is omitted when no identity is selected and the session username is not
+an email address.
+
+| Field         | Type            | Notes                                              |
+| ------------- | --------------- | -------------------------------------------------- |
+| `id`          | string          | Server-assigned ID of the created draft            |
+| `mode`        | string          | One of: `new`, `reply`, `reply-all`, `forward`     |
+| `mailbox`     | DestinationInfo | The Drafts mailbox                                 |
+| `from`        | Address[]       | Selected identity or session username              |
+| `to`          | Address[]       | Recipients                                         |
+| `cc`          | Address[]       | Omitted if empty                                   |
+| `subject`     | string          | Final subject line                                 |
+| `in_reply_to` | string          | Omitted for new/forward; message IDs for replies   |
+| `warnings`    | string[]        | Omitted unless reply identity selection falls back |
 
 ### UnsubscribeResult
 
