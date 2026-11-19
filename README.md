@@ -43,6 +43,12 @@ If you are an LLM agent, follow this sequence on every run:
 6. Verify post-state with follow-up reads (`summary`, `list`, `search`).
 7. If the user asks to reply, create a draft and clearly state it was not sent.
 
+Use `--from-exact notices@example.com` for a single sender or
+`--from-domain example.com` for a whole domain. Both compare parsed From
+addresses case-insensitively and accept other filters such as `--unread`.
+Use these flags on `search` or in action queries.
+[See the search reference](docs/CLI-REFERENCE.md#search).
+
 ## Reviewed one-click unsubscribe
 
 Preview an explicit reviewed sender list with repeatable addresses:

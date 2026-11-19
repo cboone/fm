@@ -17,20 +17,26 @@ Detailed operational procedures for email triage sessions.
 
 For each sender cohort, follow this sequence:
 
-1. `fm mark-read --from <sender>` to mark read
-1. `fm unflag --from <sender>` to remove flags (if applicable)
-1. `fm archive --from <sender>` to archive
+1. `fm mark-read --from-exact <sender>` to mark read
+1. `fm unflag --from-exact <sender>` to remove flags (if applicable)
+1. `fm archive --from-exact <sender>` to archive
 
 For action commands (`archive`, `spam`, `mark-read`, `flag`, `unflag`, `move`), use `--dry-run` to preview changes before committing.
 
 ### Filter-Based Operations
 
-Action commands support filter flags (`--from`, `--unread`, `--mailbox`, etc.) so you can operate on sender cohorts directly without collecting IDs first:
+Use `--from-exact` for a reviewed sender address and `--from-domain` for an
+exact domain. Case does not affect selection. Specify a subdomain explicitly
+to match it. Check the results before applying a mutation.
 
 ```bash
-fm mark-read --from notifications@github.com
-fm archive --from notifications@github.com
+fm search --mailbox inbox --from-exact notices@example.com --unread
+fm archive --dry-run --mailbox inbox --from-exact notices@example.com --unread
+fm search --mailbox inbox --from-domain example.org
+fm archive --dry-run --mailbox inbox --from-domain example.org
 ```
+
+Action queries also accept mailbox and status filters such as `--unread`.
 
 ### Verification
 
