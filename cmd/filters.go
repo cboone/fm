@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"net/mail"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ func parseColorFilter(cmd *cobra.Command, flagged bool) (*client.FlagColor, erro
 
 // filterFlagNames lists all flags that addFilterFlags may register.
 var filterFlagNames = []string{
-	"mailbox", "from", "to", "subject",
+	"mailbox", "from", "from-domain", "from-exact", "to", "subject",
 	"before", "after", "has-attachment",
 	"unread", "flagged", "unflagged",
 }
@@ -41,6 +42,7 @@ var filterFlagNames = []string{
 func addFilterFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("mailbox", "m", "", "restrict to a specific mailbox")
 	cmd.Flags().String("from", "", "filter by sender address/name")
+	addExactSenderFlags(cmd)
 	if cmd.Flags().Lookup("to") == nil {
 		cmd.Flags().String("to", "", recipientToUsage)
 	}
@@ -51,6 +53,49 @@ func addFilterFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolP("unread", "u", false, "only unread messages")
 	cmd.Flags().BoolP("flagged", "f", false, "only flagged messages")
 	cmd.Flags().Bool("unflagged", false, "only unflagged messages")
+}
+
+func addExactSenderFlags(cmd *cobra.Command) {
+	cmd.Flags().String("from-exact", "", "match an exact sender email address")
+	cmd.Flags().String("from-domain", "", "match an exact sender domain")
+}
+
+func parseExactSenderFlags(cmd *cobra.Command, opts *client.SearchOptions) error {
+	if cmd.Flags().Changed("from-exact") {
+		value, _ := cmd.Flags().GetString("from-exact")
+		addr, err := mail.ParseAddress(value)
+		if err != nil || addr.Address != value || !validSenderDomain(value[strings.LastIndexByte(value, '@')+1:]) {
+			return exitError("general_error", "--from-exact requires a plain email address", "")
+		}
+		opts.FromExact = value
+	}
+	if cmd.Flags().Changed("from-domain") {
+		value, _ := cmd.Flags().GetString("from-domain")
+		if !validSenderDomain(value) {
+			return exitError("general_error", "--from-domain requires a bare ASCII domain", "")
+		}
+		opts.FromDomain = value
+	}
+	return nil
+}
+
+func validSenderDomain(domain string) bool {
+	if len(domain) > 253 {
+		return false
+	}
+	for label := range strings.SplitSeq(domain, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for _, ch := range label {
+			switch {
+			case 'a' <= ch && ch <= 'z', 'A' <= ch && ch <= 'Z', '0' <= ch && ch <= '9', ch == '-':
+			default:
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // hasFilterFlags returns true if any filter flag has an effective value.
@@ -65,6 +110,8 @@ func hasFilterFlags(cmd *cobra.Command) bool {
 		}
 
 		switch name {
+		case "from-domain", "from-exact":
+			return true // Explicit empty values are invalid, not omitted filters.
 		case "mailbox", "from", "to", "subject", "before", "after":
 			if name == "to" && !isRecipientToFilterFlag(cmd) {
 				continue
@@ -91,6 +138,9 @@ func isRecipientToFilterFlag(cmd *cobra.Command) bool {
 // parseFilterOptions reads filter flags from the command and builds SearchOptions.
 func parseFilterOptions(cmd *cobra.Command, c *client.Client) (client.SearchOptions, error) {
 	opts := client.SearchOptions{}
+	if err := parseExactSenderFlags(cmd, &opts); err != nil {
+		return client.SearchOptions{}, err
+	}
 
 	if from, _ := cmd.Flags().GetString("from"); strings.TrimSpace(from) != "" {
 		opts.From = from
@@ -157,6 +207,10 @@ func validateIDsOrFilters(cmd *cobra.Command, args []string) error {
 	if !hasIDs && !hasFilters {
 		return exitError("general_error", "no emails specified",
 			"Provide email IDs as arguments or use filter flags (e.g. --mailbox inbox --unread)")
+	}
+
+	if err := parseExactSenderFlags(cmd, &client.SearchOptions{}); err != nil {
+		return err
 	}
 
 	// Check mutually exclusive flags early (before client creation).

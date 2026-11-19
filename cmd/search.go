@@ -23,6 +23,9 @@ If omitted, only the provided flags/filters are used for matching.`,
 		}
 
 		opts.From, _ = cmd.Flags().GetString("from")
+		if err := parseExactSenderFlags(cmd, &opts); err != nil {
+			return err
+		}
 		opts.To, _ = cmd.Flags().GetString("to")
 		opts.Subject, _ = cmd.Flags().GetString("subject")
 		opts.HasAttachment, _ = cmd.Flags().GetBool("has-attachment")
@@ -108,6 +111,7 @@ func init() {
 	searchCmd.Flags().String("color", "", colorFilterUsage)
 	searchCmd.Flags().StringP("sort", "s", "receivedAt desc", "sort order (receivedAt, sentAt, from, subject) with asc/desc")
 	searchCmd.Flags().String("from", "", "filter by sender address/name")
+	addExactSenderFlags(searchCmd)
 	searchCmd.Flags().String("to", "", "filter by recipient address/name")
 	searchCmd.Flags().String("subject", "", "filter by subject text")
 	searchCmd.Flags().String("before", "", "emails received before this date (RFC 3339 or YYYY-MM-DD)")
