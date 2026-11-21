@@ -45,7 +45,7 @@ Run `make help` for the full target list. The ones that matter:
 | `make test`          | Unit tests only                                           |
 | `make test-cli`      | Build, then run the scrut CLI tests in `tests/`           |
 | `make test-all`      | Unit plus CLI tests                                       |
-| `make test-ci`       | What CI runs: `vet`, `fmt`, `lint`, `test-all`            |
+| `make test-ci`       | Run CI checks locally (`vet`, `fmt`, `lint`, `test-all`)  |
 | `make lint`          | golangci-lint                                             |
 | `make cover`         | Unit tests with coverage                                  |
 
@@ -56,4 +56,6 @@ against docs falling behind the command surface.
 `make test-cli-live` runs the opt-in tests that talk to a real account. It requires
 `FM_CREDENTIAL_COMMAND` and `FM_LIVE_TESTS=1`. Never hardcode a token to run these.
 
-CI is `.github/workflows/ci.yml`, with `gitleaks.yml` and `release.yml` alongside.
+CI runs `make vet`, `make fmt`, `make lint`, and `make test` through the reusable Go workflow.
+The separate Scrut job runs `make test-cli`. See `.github/workflows/ci.yml`, with `gitleaks.yml`
+and `release.yml` alongside.
