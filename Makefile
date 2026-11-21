@@ -32,8 +32,12 @@ cover: ## Run unit tests with coverage
 vet: ## Run go vet
 	go vet ./...
 
-fmt: ## Check formatting (exits non-zero if files need formatting)
-	@test -z "$$(gofmt -l .)" || { gofmt -l . && exit 1; }
+fmt: ## Check formatting (exits non-zero on errors or unformatted files)
+	@unformatted=$$(gofmt -l .) || exit $$?; \
+	if [ -n "$$unformatted" ]; then \
+		printf '%s\n' "$$unformatted"; \
+		exit 1; \
+	fi
 
 clean: ## Remove build artifacts
 	rm -f $(BINARY) coverage.out
