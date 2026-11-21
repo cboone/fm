@@ -56,6 +56,6 @@ against docs falling behind the command surface.
 `make test-cli-live` runs the opt-in tests that talk to a real account. It requires
 `FM_CREDENTIAL_COMMAND` and `FM_LIVE_TESTS=1`. Never hardcode a token to run these.
 
-CI runs `make vet`, `make fmt`, `make lint`, and `make test` through the reusable Go workflow.
-The separate Scrut job runs `make test-cli`. See `.github/workflows/ci.yml`, with `gitleaks.yml`
-and `release.yml` alongside.
+The reusable Go workflow runs `make vet`, `make fmt`, `make lint`, and
+`make test`. The separate Scrut job runs `make test-cli`. See
+`.github/workflows/ci.yml`, with `gitleaks.yml` and `release.yml` alongside.
