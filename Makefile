@@ -43,4 +43,6 @@ clean: ## Remove build artifacts
 	rm -f $(BINARY) coverage.out
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*## "} \
+		/^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2; found = 1} \
+		END {if (!found) exit 1}' $(MAKEFILE_LIST)
