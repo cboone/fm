@@ -13,3 +13,37 @@ The planted run printed `main.go` and Make reported recipe error 1.
 
 plant unformatted-main: named assertion reached; red exit 2; restored;
 green exit 0.
+
+## Nit-round format check plants
+
+Ran these commands in a scratch copy of the Go sources and Makefile. The
+malformed fixture produced a gofmt syntax diagnostic. The spacing plant printed
+`main.go`.
+
+```bash
+export PATH="$(GOTOOLCHAIN=go1.24.7 go env GOROOT)/bin:${PATH}"
+make fmt
+
+mkdir testdata
+printf 'package fixture\n\nfunc broken(\n' > testdata/format-plant.go
+fmt_status=0
+make fmt || fmt_status=$?
+test "$fmt_status" -eq 2
+rm testdata/format-plant.go
+rmdir testdata
+make fmt
+
+cp main.go main.go.original
+sed 's/^func main() {$/func main(){/' main.go.original > main.go
+fmt_status=0
+make fmt || fmt_status=$?
+test "$fmt_status" -eq 2
+mv main.go.original main.go
+make fmt
+```
+
+plant malformed-testdata: named assertion reached; red exit 2; restored;
+green exit 0.
+
+plant unformatted-main: named assertion reached; red exit 2; restored;
+green exit 0.
