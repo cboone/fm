@@ -32,11 +32,17 @@ cover: ## Run unit tests with coverage
 vet: ## Run go vet
 	go vet ./...
 
-fmt: ## Check formatting (exits non-zero if files need formatting)
-	@test -z "$$(gofmt -l .)" || { gofmt -l . && exit 1; }
+fmt: ## Check formatting (exits non-zero on errors or unformatted files)
+	@unformatted=$$(gofmt -l .) || exit $$?; \
+	if [ -n "$$unformatted" ]; then \
+		printf '%s\n' "$$unformatted"; \
+		exit 1; \
+	fi
 
 clean: ## Remove build artifacts
 	rm -f $(BINARY) coverage.out
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*## "} \
+		/^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2; found = 1} \
+		END {if (!found) exit 1}' $(MAKEFILE_LIST)
